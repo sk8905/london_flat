@@ -10,7 +10,7 @@
 
 export const META = {
   asOf: "2026-06-30",
-  build: "v21 · 2026-06-30", // bump on each change so the footer confirms the live build
+  build: "v22 · 2026-06-30", // bump on each change so the footer confirms the live build
   currency: "GBP",
   disclaimer:
     "This tool is an informational model, not financial, tax, mortgage or legal advice. " +
@@ -244,6 +244,11 @@ export const RATES = {
   rateSource: "rightmoveRates",
   baseRateNow: 3.75, // BoE Bank Rate, held June 2026 (live-refreshable)
   baseRateAsOf: "2026-06-17",
+  // 2-year GBP interest-rate swap (SONIA) — the wholesale rate UK lenders price
+  // fixed-rate mortgages and real-estate lending off. Sits above Bank Rate when
+  // the market expects cuts to be slow; the key driver of fixed mortgage pricing.
+  swap2yrNow: 4.06,
+  swap2yrAsOf: "2026-06-26",
   cpiPct: 2.8, // CPI to May 2026
   nextDecision: "2026-07-30",
   // Bank Rate path (history + light forward estimate)

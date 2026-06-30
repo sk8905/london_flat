@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow" />
   <title>London Flat — Sell-Timing Forecaster</title>
-  <link rel="stylesheet" href="assets/css/styles.css?v=21" />
+  <link rel="stylesheet" href="assets/css/styles.css?v=22" />
 </head>
 <body>
 
@@ -13,7 +13,7 @@
   <header class="topnav">
     <div class="wrap topnav-top">
       <div class="brand">
-        <span class="brand-mark">⌂</span>
+        <span class="brand-mark"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7M5 10v10h14V10"/></svg></span>
         <div class="brand-text">
           <div class="brand-title">Flat Forecaster</div>
           <div class="brand-sub">N1 7TX · Islington</div>
@@ -69,6 +69,7 @@
       </div>
       <div class="topbar-right">
         <span class="badge" id="live-rate" title="Bank of England base rate">—</span>
+        <span class="badge" id="live-swap" title="2-year GBP interest-rate swap (SONIA) — what UK lenders price fixed mortgages off">—</span>
         <span class="badge muted" id="as-of">—</span>
       </div>
     </div>
@@ -120,7 +121,7 @@
           <p class="section-lead">The data, the reasoning, and links to source material so you can check the working.</p>
 
           <article class="factor">
-            <div class="factor-head"><h3>① Price trajectory</h3><span class="factor-weight">weight 30%</span></div>
+            <div class="factor-head"><h3><span class="factor-num">1</span> Price trajectory</h3><span class="factor-weight">weight 30%</span></div>
             <p>Islington's average price was <strong>£673k (Mar 2025)</strong> and <strong>£679k (Mar 2026)</strong>
               (<strong>+0.9%</strong>), but <strong>flats were broadly flat</strong> over the year while London-wide
               fell <strong>2.1%</strong> — six straight months of annual decline. Indices anchored to your purchase
@@ -138,7 +139,7 @@
           </article>
 
           <article class="factor">
-            <div class="factor-head"><h3>② Forecast trajectory &amp; scenarios</h3><span class="factor-weight">feeds price + proceeds</span></div>
+            <div class="factor-head"><h3><span class="factor-num">2</span> Forecast trajectory &amp; scenarios</h3><span class="factor-weight">feeds price + proceeds</span></div>
             <p>Consensus: a soft 2026 then recovery. <strong>Savills</strong> revised 2026 to <strong>−2%</strong>, with
               <strong>+4%</strong> (2027) and <strong>+5%</strong> (2028); <strong>Knight Frank</strong> sees
               <strong>+3%</strong> then <strong>+4%</strong> and ~<strong>13.6% cumulative London growth 2026–2030</strong>.
@@ -152,7 +153,7 @@
           </article>
 
           <article class="factor">
-            <div class="factor-head"><h3>③ Financing, rates &amp; your ERC</h3><span class="factor-weight">weight 25%</span></div>
+            <div class="factor-head"><h3><span class="factor-num">3</span> Financing, rates &amp; your ERC</h3><span class="factor-weight">weight 25%</span></div>
             <p>Your <strong>4.38% fix is now below market</strong> — average 2-year fix ~<strong>5.55%</strong>, base rate
               <strong>3.75%</strong>. It <strong>ends March 2027</strong>: selling before then triggers your
               <strong>1% early-repayment charge</strong>; holding past it means remortgaging higher. Crucially, the
@@ -168,7 +169,7 @@
           </article>
 
           <article class="factor">
-            <div class="factor-head"><h3>④ Seasonality</h3><span class="factor-weight">weight 10%</span></div>
+            <div class="factor-head"><h3><span class="factor-num">4</span> Seasonality</h3><span class="factor-weight">weight 10%</span></div>
             <p><strong>Feb–May</strong> are the strongest months to list (~66% of Feb/Mar listings complete), and
               <strong>flats sell especially well in late spring</strong> — handily, your fix also ends in spring 2027.</p>
             <p class="muted small">Source:
@@ -176,7 +177,7 @@
           </article>
 
           <article class="factor">
-            <div class="factor-head"><h3>⑤ Political &amp; macro factors</h3><span class="factor-weight">weight 15%</span></div>
+            <div class="factor-head"><h3><span class="factor-num">5</span> Political &amp; macro factors</h3><span class="factor-weight">weight 15%</span></div>
             <ul class="policy-list">
               <li><span class="tag pos">Neutral / mild +</span><strong>‘Mansion tax’</strong> from April 2028 on homes
                 over £2m — your flat is well below, but it cools the top of the London market.</li>
@@ -293,6 +294,6 @@
       </footer>
   </main>
 
-<script type="module" src="assets/js/app.js?v=21"></script>
+<script type="module" src="assets/js/app.js?v=22"></script>
 </body>
 </html>

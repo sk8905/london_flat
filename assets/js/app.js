@@ -2,11 +2,11 @@
 // app.js  —  Entry point: load data, run model, render the single page, wire UI
 // =============================================================================
 
-import * as DATA from "../data/dataset.js?v=21";
-import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=21";
-import * as C from "./charts.js?v=21";
-import { monthlyPayment, monthsBetween, ymIndex, ymToISO } from "./finance.js?v=21";
-import { rentVsSell } from "./letting.js?v=21";
+import * as DATA from "../data/dataset.js?v=22";
+import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=22";
+import * as C from "./charts.js?v=22";
+import { monthlyPayment, monthsBetween, ymIndex, ymToISO } from "./finance.js?v=22";
+import { rentVsSell } from "./letting.js?v=22";
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const gbp = (n) => (n < 0 ? "−" : "") + "£" + Math.abs(Math.round(n)).toLocaleString("en-GB");
@@ -16,11 +16,11 @@ const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "
 const monthName = (iso) => MONTHS[parseInt(iso.slice(5, 7), 10) - 1] + " " + iso.slice(0, 4);
 
 const FACTOR_COLORS = {
-  priceTrajectory: "#33566b",
+  priceTrajectory: "#1f5a73",
   financingCost: "#6b5b7b",
   netProceeds: "#4a7c8c",
   seasonality: "#9a7b4f",
-  policyMacro: "#3a6b54",
+  policyMacro: "#2f7d57",
 };
 
 const num = (v, fb = 0) => { const n = parseFloat(v); return Number.isFinite(n) ? n : fb; };
@@ -137,7 +137,7 @@ function currentOverrides() {
 function showFatal(msg) {
   let b = document.getElementById("fatal-banner");
   if (!b) { b = document.createElement("div"); b.id = "fatal-banner"; document.body.prepend(b); }
-  b.textContent = "⚠ " + msg + " — please screenshot this.";
+  b.textContent = msg + " — please screenshot this.";
 }
 window.addEventListener("error", (e) => {
   // Only surface genuine errors thrown by THIS app's own scripts. Opaque
@@ -261,7 +261,12 @@ function renderHeader() {
   $("#as-of").textContent = "Data as of " + monthName(DATA.META.asOf);
   const badge = $("#live-rate");
   badge.textContent = pct(DATA.RATES.baseRateNow) + " base rate";
-  badge.title = "Snapshot value — " + DATA.RATES.baseRateAsOf;
+  badge.title = "Bank of England base rate · snapshot " + DATA.RATES.baseRateAsOf;
+  const swap = $("#live-swap");
+  if (swap && DATA.RATES.swap2yrNow != null) {
+    swap.textContent = pct(DATA.RATES.swap2yrNow) + " 2yr swap";
+    swap.title = "2-year GBP interest-rate swap (SONIA) — what UK lenders price fixed mortgages off · snapshot " + DATA.RATES.swap2yrAsOf;
+  }
   const build = $("#build");
   if (build) build.textContent = "build " + (DATA.META.build || "—");
   // No network calls: the rate is the curated snapshot in dataset.js. This keeps the
@@ -322,7 +327,7 @@ function renderDashboard(r) {
   C.barChart($("#dash-signal-chart"), {
     bars: r.windows.map((w) => ({
       label: w.window.label.replace(/ \(.*\)/, ""), value: Math.round(w.composite),
-      color: w === best ? "#33566b" : (w.composite >= 0 ? "#aebfc9" : "#d9b3b3"),
+      color: w === best ? "#1f5a73" : (w.composite >= 0 ? "#aebfc9" : "#d9b3b3"),
       valueLabel: signed(w.composite),
     })),
     yFormat: (v) => v.toFixed(0), height: 240, baseline: 0, yUnit: "signal score",
@@ -330,7 +335,7 @@ function renderDashboard(r) {
   C.barChart($("#dash-proceeds-chart"), {
     bars: r.windows.map((w) => ({
       label: w.window.label.replace(/ \(.*\)/, ""), value: w.net,
-      color: w === best ? "#3a6b54" : "#a9c6b6", valueLabel: gbp(w.net),
+      color: w === best ? "#2f7d57" : "#a9c6b6", valueLabel: gbp(w.net),
       sub: (w.net - cashIn >= 0 ? "+" + gbp(w.net - cashIn) + " profit" : gbp(w.net - cashIn) + " short"),
     })),
     yFormat: (v) => "£" + Math.round(v / 1000) + "k", height: 260, yUnit: "£ proceeds",
@@ -402,11 +407,11 @@ function renderPosition(r) {
       <div class="val-head">Estimated current value — anchored to <strong>actual sold prices</strong></div>
       <div class="val-main">${gbp(r.presentValue)} <span class="val-sub">≈ ${gbp(v.impliedPerSqm)}/m² · ${p.floorAreaSqm} m² (${p.bedrooms}-bed/${p.bathrooms}-bath, built ${p.buildYear})</span></div>
       <div class="val-anchors">
-        <span>① Your purchase, trended by the Islington <strong>sold-price</strong> index: <strong>${gbp(v.indexVal)}</strong></span>
-        <span>② £/m² comparable from N1 <strong>Land Registry sales</strong> (${gbp(v.perSqm.median)}/m²): <strong>${gbp(v.compVal)}</strong> <span class="muted">(range ${gbp(v.compLow)}–${gbp(v.compHigh)})</span></span>
+        <span><span class="anchor-num">A</span> Your purchase, trended by the Islington <strong>sold-price</strong> index: <strong>${gbp(v.indexVal)}</strong></span>
+        <span><span class="anchor-num">B</span> £/m² comparable from N1 <strong>Land Registry sales</strong> (${gbp(v.perSqm.median)}/m²): <strong>${gbp(v.compVal)}</strong> <span class="muted">(range ${gbp(v.compLow)}–${gbp(v.compHigh)})</span></span>
         <span>For reference, you paid <strong>${gbp(p.purchasePrice)}</strong> = ${gbp(v.purchasePerSqm)}/m² in ${monthName(p.purchaseDate)}</span>
       </div>
-      <p class="muted small">The headline value is the <strong>blend of anchors ① and ②</strong> — both based on real
+      <p class="muted small">The headline value is the <strong>blend of anchors A and B</strong> — both based on real
         transactions, not asking prices or forecasts. Forward forecasts are used only to project this value into the future.</p>
     </div>` : "";
   host.innerHTML = valBox + `
@@ -459,7 +464,7 @@ function renderSignal(r) {
     const sig = signalLabel(w.composite);
     const profit = w.net - cashIn;
     return `<tr class="${i === 0 ? "best-row" : ""}">
-      <td>${i === 0 ? "★ " : ""}${w.window.label}</td>
+      <td>${i === 0 ? `<span class="best-tag">Best</span> ` : ""}${w.window.label}</td>
       <td><span class="pill pill-${sig.tone} mini">${signed(w.composite)}</span></td>
       <td>${gbp(w.saleValue)}</td>
       <td>${gbp(w.net)}</td>
@@ -495,7 +500,7 @@ function renderProceeds(r) {
   const bars = r.windows.map((w) => ({
     label: w.window.label,
     value: w.net, // net proceeds (cash in hand)
-    color: w === r.best ? "#3a6b54" : "#a9c6b6",
+    color: w === r.best ? "#2f7d57" : "#a9c6b6",
     valueLabel: gbp(w.net),
     sub: (w.net - cashIn >= 0 ? "+" + gbp(w.net - cashIn) + " profit" : gbp(w.net - cashIn) + " short"),
   }));
@@ -539,11 +544,11 @@ function renderForecastChart(r) {
   C.lineChart(host, {
     height: 320,
     series: [
-      { name: "Active scenario", color: "#33566b", points: toPts(active), width: 3, dots: false },
-      { name: "Optimistic", color: "#3a6b54", points: toPts(opt), dashed: true, dots: false },
-      { name: "Pessimistic", color: "#9c4040", points: toPts(pes), dashed: true, dots: false },
+      { name: "Active scenario", color: "#1f5a73", points: toPts(active), width: 3, dots: false },
+      { name: "Optimistic", color: "#2f7d57", points: toPts(opt), dashed: true, dots: false },
+      { name: "Pessimistic", color: "#b04545", points: toPts(pes), dashed: true, dots: false },
     ],
-    band: { lower: pes.map((p) => p.value), upper: opt.map((p) => p.value), color: "#33566b" },
+    band: { lower: pes.map((p) => p.value), upper: opt.map((p) => p.value), color: "#1f5a73" },
     yFormat: (v) => "£" + Math.round(v / 1000) + "k",
     yUnit: "£ value",
     yRef: r.inputs.property.purchasePrice,
@@ -578,7 +583,7 @@ function renderFactorCharts(r) {
   C.lineChart($("#price-chart"), {
     height: 300,
     series: [
-      { name: "Your flat (Islington-tracked)", color: "#33566b",
+      { name: "Your flat (Islington-tracked)", color: "#1f5a73",
         points: ph.series.map((s) => ({ x: monthName(s.date), y: toGBP(s.islington) })) },
       { name: "London-wide", color: "#6b5b7b", dashed: true,
         points: ph.series.map((s) => ({ x: monthName(s.date), y: toGBP(s.london) })) },
@@ -594,10 +599,10 @@ function renderFactorCharts(r) {
   C.lineChart($("#rates-chart"), {
     height: 300,
     series: [
-      { name: "Avg 2yr fix", color: "#9c4040", points: rr.fix2yrSeries.map((s) => ({ x: monthName(s.date), y: s.rate })) },
+      { name: "Avg 2yr fix", color: "#b04545", points: rr.fix2yrSeries.map((s) => ({ x: monthName(s.date), y: s.rate })) },
       { name: "BoE base rate", color: "#4a7c8c",
         points: rr.fix2yrSeries.map((s) => ({ x: monthName(s.date), y: nearestBase(rr.baseSeries, s.date) })) },
-      { name: "Your fixed rate", color: "#3a6b54", dashed: true,
+      { name: "Your fixed rate", color: "#2f7d57", dashed: true,
         points: rr.fix2yrSeries.map((s) => ({ x: monthName(s.date), y: yourRate })) },
     ],
     yFormat: (v) => v.toFixed(1) + "%",
@@ -643,7 +648,7 @@ function renderComps(r) {
     <div class="table-wrap"><table class="rank-table comps-table">
       <thead><tr><th>Sold</th><th>Address / area</th><th>Price</th><th>Beds</th><th>Baths</th><th>Building type</th><th>Size (m²)</th><th>£/m²</th></tr></thead>
       <tbody>${rows.map((x) => `<tr class="${x.you ? "best-row" : ""}">
-        <td>${monthName(x.date)}</td><td>${x.you ? "★ " : ""}${x.addr}</td><td>${gbp(x.price)}</td>
+        <td>${monthName(x.date)}</td><td>${x.you ? `<span class="best-tag">Yours</span> ` : ""}${x.addr}</td><td>${gbp(x.price)}</td>
         <td>${x.beds}</td><td>${x.baths}</td><td>${x.type}</td><td>${x.sqm}</td>
         <td><strong>${gbp(x.perSqm)}</strong></td></tr>`).join("")}</tbody>
     </table></div>
@@ -724,8 +729,8 @@ function renderLetting(r) {
 
   C.barChart($("#letting-chart"), {
     bars: [
-      { label: "Let & sell later", value: res.letTotal, color: wins ? "#3a6b54" : "#4a7c8c", valueLabel: gbp(res.letTotal) },
-      { label: "Sell now & invest", value: res.sellNowGrown, color: wins ? "#4a7c8c" : "#3a6b54", valueLabel: gbp(res.sellNowGrown) },
+      { label: "Let & sell later", value: res.letTotal, color: wins ? "#2f7d57" : "#4a7c8c", valueLabel: gbp(res.letTotal) },
+      { label: "Sell now & invest", value: res.sellNowGrown, color: wins ? "#4a7c8c" : "#2f7d57", valueLabel: gbp(res.sellNowGrown) },
     ],
     yFormat: (v) => "£" + Math.round(v / 1000) + "k", height: 280, yUnit: "£ total wealth",
   });
@@ -866,7 +871,7 @@ function buildInputs() {
       </div></div>
     <div class="input-actions">
       <button id="in-reset" class="btn-reset" type="button">Reset to defaults</button>
-      <span class="muted small">✓ Saved automatically in this browser (this device only). Rent &amp; service charge are on the <strong>Sell vs let</strong> tab.</span>
+      <span class="muted small">Saved automatically in this browser (this device only). Rent &amp; service charge are on the <strong>Sell vs let</strong> tab.</span>
     </div>`;
 
   const bind = (sel, key, ev, parse) => $(sel).addEventListener(ev, (e) => {
