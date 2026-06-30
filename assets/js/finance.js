@@ -96,8 +96,11 @@ export function economicsForWindow(opts) {
   const monthsPaidAtWindow = monthsBetween(property.purchaseDate, windowDate);
   const insideFix = ymIndex(windowDate) < ymIndex(mortgage.fixEndDate);
 
+  const io = mortgage.repaymentType === "interest_only";
   let outstanding;
-  if (insideFix) {
+  if (io) {
+    outstanding = mortgage.principal; // interest-only: balance never reduces
+  } else if (insideFix) {
     outstanding = balanceAfter(mortgage.principal, mortgage.ratePct, mortgage.termYears, monthsPaidAtWindow);
   } else {
     // Pay at the fixed rate until the fix ends, then continue amortising the
@@ -129,13 +132,17 @@ export function economicsForWindow(opts) {
 
 // Monthly mortgage payment now vs. after remortgage — the "holding cost" signal.
 export function holdingCostDelta(mortgage) {
-  const now = monthlyPayment(mortgage.principal, mortgage.ratePct, mortgage.termYears);
-  const monthsPaidAtFix = monthsBetween(
-    // purchase->fix end uses dataset dates; caller passes via mortgage object owner
-    mortgage._purchaseDate, mortgage.fixEndDate
-  );
-  const balAtFix = balanceAfter(mortgage.principal, mortgage.ratePct, mortgage.termYears, monthsPaidAtFix);
+  const io = mortgage.repaymentType === "interest_only";
+  const now = io
+    ? mortgage.principal * (mortgage.ratePct / 100 / 12)
+    : monthlyPayment(mortgage.principal, mortgage.ratePct, mortgage.termYears);
+  const monthsPaidAtFix = monthsBetween(mortgage._purchaseDate, mortgage.fixEndDate);
+  const balAtFix = io
+    ? mortgage.principal
+    : balanceAfter(mortgage.principal, mortgage.ratePct, mortgage.termYears, monthsPaidAtFix);
   const remainingTermYears = mortgage.termYears - monthsPaidAtFix / 12;
-  const after = monthlyPayment(balAtFix, mortgage.remortgageRatePctAssumed, remainingTermYears);
+  const after = io
+    ? balAtFix * (mortgage.remortgageRatePctAssumed / 100 / 12)
+    : monthlyPayment(balAtFix, mortgage.remortgageRatePctAssumed, remainingTermYears);
   return { now, after, deltaMonthly: after - now, deltaAnnual: (after - now) * 12 };
 }

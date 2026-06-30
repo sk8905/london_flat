@@ -2,11 +2,11 @@
 // app.js  —  Entry point: load data, run model, render the single page, wire UI
 // =============================================================================
 
-import * as DATA from "../data/dataset.js?v=14";
-import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=14";
-import * as C from "./charts.js?v=14";
-import { monthlyPayment, monthsBetween, ymIndex, ymToISO } from "./finance.js?v=14";
-import { rentVsSell } from "./letting.js?v=14";
+import * as DATA from "../data/dataset.js?v=15";
+import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=15";
+import * as C from "./charts.js?v=15";
+import { monthlyPayment, monthsBetween, ymIndex, ymToISO } from "./finance.js?v=15";
+import { rentVsSell } from "./letting.js?v=15";
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const gbp = (n) => (n < 0 ? "−" : "") + "£" + Math.abs(Math.round(n)).toLocaleString("en-GB");
@@ -23,6 +23,49 @@ const FACTOR_COLORS = {
   policyMacro: "#10b981",
 };
 
+const num = (v, fb = 0) => { const n = parseFloat(v); return Number.isFinite(n) ? n : fb; };
+
+// ---- editable inputs (your real figures), persisted to the browser ----------
+const LS_KEY = "flatForecaster.inputs.v1";
+function defaultInputs() {
+  return {
+    purchasePrice: DATA.PROPERTY.purchasePrice,
+    purchaseDate: DATA.PROPERTY.purchaseDate.slice(0, 7),
+    postcode: DATA.PROPERTY.postcode,
+    isPrimaryResidence: DATA.PROPERTY.isPrimaryResidence,
+    mortgageAmount: DATA.MORTGAGE.principal,
+    ratePct: DATA.MORTGAGE.ratePct,
+    fixEndDate: DATA.MORTGAGE.fixEndDate.slice(0, 7),
+    termYears: DATA.MORTGAGE.termYears,
+    repaymentType: DATA.MORTGAGE.repaymentType,
+    ercPct: DATA.MORTGAGE.ercPctWhileFixed,
+    agentPct: DATA.SELLING_COSTS.agentPct,
+    vatPct: DATA.SELLING_COSTS.vatPct,
+    legalFixed: DATA.SELLING_COSTS.legalFixed,
+    epcMisc: DATA.SELLING_COSTS.epcAndMiscFixed,
+  };
+}
+function loadInputs() {
+  try { const s = localStorage.getItem(LS_KEY); return s ? { ...defaultInputs(), ...JSON.parse(s) } : defaultInputs(); }
+  catch (_) { return defaultInputs(); }
+}
+function saveInputs() { try { localStorage.setItem(LS_KEY, JSON.stringify(state.inputs)); } catch (_) {} }
+
+// Merge the user's inputs onto the curated dataset before running the model.
+function effectiveData() {
+  const i = state.inputs;
+  const purchasePrice = num(i.purchasePrice, DATA.PROPERTY.purchasePrice);
+  const principal = num(i.mortgageAmount, DATA.MORTGAGE.principal);
+  return {
+    ...DATA,
+    PROPERTY: { ...DATA.PROPERTY, purchasePrice, purchaseDate: i.purchaseDate, postcode: i.postcode, isPrimaryResidence: !!i.isPrimaryResidence },
+    MORTGAGE: { ...DATA.MORTGAGE, principal, ltv: purchasePrice ? principal / purchasePrice : 0,
+      ratePct: num(i.ratePct, DATA.MORTGAGE.ratePct), fixEndDate: i.fixEndDate, termYears: num(i.termYears, DATA.MORTGAGE.termYears),
+      repaymentType: i.repaymentType, ercPctWhileFixed: num(i.ercPct, DATA.MORTGAGE.ercPctWhileFixed) },
+    SELLING_COSTS: { ...DATA.SELLING_COSTS, agentPct: num(i.agentPct), vatPct: num(i.vatPct), legalFixed: num(i.legalFixed), epcAndMiscFixed: num(i.epcMisc) },
+  };
+}
+
 // Mutable override state driven by the controls.
 const state = {
   scenario: DATA.FORECAST.defaultScenario,
@@ -30,6 +73,7 @@ const state = {
   remortgageRate: DATA.MORTGAGE.remortgageRatePctAssumed,
   presentValue: null, // null => derive from index
   custom: false,
+  inputs: loadInputs(),
   letting: {
     horizon: "2028-04-01",
     monthlyRent: DATA.LETTING.monthlyRent,
@@ -88,7 +132,8 @@ const PAGE_META = {
   market: ["Market & factors", "Prices, rates, forecasts and policy — with sources"],
   finances: ["Your finances", "Your position and projected net proceeds"],
   selllet: ["Sell vs let", "Keep and rent it out, or sell now?"],
-  assumptions: ["Assumptions", "Tweak the inputs and read the methodology"],
+  assumptions: ["Assumptions", "Tweak the forecast and read the methodology"],
+  inputs: ["Inputs", "Enter your real purchase, mortgage & cost figures"],
 };
 
 function switchTab(id) {
@@ -114,7 +159,7 @@ function boot() {
     rerender();
     buildControls();
     buildLettingControls();
-    renderStaticFactorChartsOnce();
+    buildInputs();
     wireNav();
     loadIdentity();
   } catch (err) {
@@ -167,7 +212,7 @@ function scheduleLetting() {
 }
 
 function rerender() {
-  const result = runModel(DATA, currentOverrides());
+  const result = runModel(effectiveData(), currentOverrides());
   window.__model = result; // handy for inspection
   renderVerdict(result);
   renderDashboard(result);
@@ -175,6 +220,7 @@ function rerender() {
   renderSignal(result);
   renderProceeds(result);
   renderForecastChart(result);
+  renderFactorCharts(result);
   renderFactorScores(result);
   renderLetting(result);
 }
@@ -203,7 +249,7 @@ function renderVerdict(r) {
 
   const runnerUp = r.ranked[1];
   const reasons = topReasons(best);
-  const deposit = DATA.PROPERTY.purchasePrice - r.inputs.mortgage.principal;
+  const deposit = r.inputs.property.purchasePrice - r.inputs.mortgage.principal;
   const profitBest = best.net - deposit;
 
   host.innerHTML = `
@@ -244,7 +290,7 @@ function renderDashboard(r) {
   const letWins = let2.advantageLet >= 0;
 
   // KPIs
-  const deposit = DATA.PROPERTY.purchasePrice - r.inputs.mortgage.principal; // your original cash in
+  const deposit = r.inputs.property.purchasePrice - r.inputs.mortgage.principal; // your original cash in
   const profitBest = best.net - deposit;
   $("#dash-kpis").innerHTML = [
     kpi("Best-window net proceeds", gbp(best.net), "total cash in hand · " + best.window.label, "pos"),
@@ -324,8 +370,9 @@ function topReasons(w) {
 // Your position
 // ---------------------------------------------------------------------------
 function renderPosition(r) {
-  const p = DATA.PROPERTY, m = r.inputs.mortgage;
-  const payNow = monthlyPayment(m.principal, m.ratePct, m.termYears);
+  const p = r.inputs.property, m = r.inputs.mortgage;
+  const io = m.repaymentType === "interest_only";
+  const payNow = io ? m.principal * (m.ratePct / 100 / 12) : monthlyPayment(m.principal, m.ratePct, m.termYears);
   const equityNow = r.presentValue - balanceNow(r);
   const host = $("#position-body");
   host.innerHTML = `
@@ -334,13 +381,15 @@ function renderPosition(r) {
       ${card("Est. value now", gbp(r.presentValue), valueDelta(r.presentValue - p.purchasePrice))}
       ${card("Mortgage", gbp(m.principal), (m.ltv * 100).toFixed(0) + "% LTV @ " + pct(m.ratePct))}
       ${card("Deposit / equity in", gbp(p.purchasePrice - m.principal), "at purchase")}
-      ${card("Monthly payment", gbp(payNow), "capital & interest, " + m.termYears + "yr")}
+      ${card("Monthly payment", gbp(payNow), (io ? "interest-only" : "capital & interest") + ", " + m.termYears + "yr")}
       ${card("Est. equity now", gbp(equityNow), "value − outstanding balance")}
       ${card("Fix ends", monthName(m.fixEndDate), "then remortgage @ ~" + pct(m.remortgageRatePctAssumed))}
       ${card("Post-fix payment", gbp(r.holdingCost.after), signed(r.holdingCost.deltaMonthly, (x) => gbp(x)) + "/mo vs now")}
     </div>
-    <p class="muted small">CGT: this is your main residence, so a sale qualifies for Private Residence Relief —
-      <strong>normally no Capital Gains Tax</strong> at any sale date.</p>`;
+    <p class="muted small">${p.isPrimaryResidence
+      ? "CGT: this is your main residence, so a sale qualifies for Private Residence Relief — <strong>normally no Capital Gains Tax</strong> at any sale date."
+      : "CGT: marked as <strong>not your main residence</strong> — a sale may be liable to Capital Gains Tax (see Sell vs let for the partial-relief estimate)."}</p>
+    <p class="muted small">Edit any of these on the <strong>Inputs</strong> tab — your figures are saved in this browser.</p>`;
 }
 
 function balanceNow(r) {
@@ -397,7 +446,7 @@ function renderSignal(r) {
 // ---------------------------------------------------------------------------
 function renderProceeds(r) {
   const host = $("#proceeds-body");
-  const deposit = DATA.PROPERTY.purchasePrice - r.inputs.mortgage.principal; // your original cash in
+  const deposit = r.inputs.property.purchasePrice - r.inputs.mortgage.principal; // your original cash in
   const bars = r.windows.map((w) => ({
     label: w.window.label,
     value: w.net - deposit, // profit above your original deposit
@@ -435,7 +484,7 @@ function renderForecastChart(r) {
   const active = r.forecastPaths.active;
 
   const markers = [];
-  const fixLabel = monthName(DATA.MORTGAGE.fixEndDate);
+  const fixLabel = monthName(r.inputs.mortgage.fixEndDate);
   if (base.some((p) => monthName(p.date) === fixLabel)) markers.push({ x: fixLabel, label: "fix ends" });
 
   C.lineChart(host, {
@@ -448,8 +497,8 @@ function renderForecastChart(r) {
     band: { lower: pes.map((p) => p.value), upper: opt.map((p) => p.value), color: "#2563eb" },
     yFormat: (v) => "£" + Math.round(v / 1000) + "k",
     yUnit: "£ value",
-    yRef: DATA.PROPERTY.purchasePrice,
-    yRefLabel: "purchase " + gbp(DATA.PROPERTY.purchasePrice),
+    yRef: r.inputs.property.purchasePrice,
+    yRefLabel: "purchase " + gbp(r.inputs.property.purchasePrice),
     markers,
   });
 }
@@ -470,12 +519,13 @@ function renderFactorScores(r) {
 }
 
 // ---------------------------------------------------------------------------
-// Static factor charts (price history, rates) — rendered once
+// Factor charts (price history, rates) — re-rendered so they track your inputs
 // ---------------------------------------------------------------------------
-function renderStaticFactorChartsOnce() {
-  // Price history (£) — Islington vs London, anchored to purchase
+function renderFactorCharts(r) {
+  // Price history (£) — Islington vs London, anchored to your purchase price
   const ph = DATA.PRICE_HISTORY;
-  const toGBP = (idx) => (idx / 100) * DATA.PROPERTY.purchasePrice;
+  const purchasePrice = r.inputs.property.purchasePrice;
+  const toGBP = (idx) => (idx / 100) * purchasePrice;
   C.lineChart($("#price-chart"), {
     height: 300,
     series: [
@@ -486,23 +536,20 @@ function renderStaticFactorChartsOnce() {
     ],
     yFormat: (v) => "£" + Math.round(v / 1000) + "k",
     yUnit: "£ value",
-    yRef: DATA.PROPERTY.purchasePrice, yRefLabel: "purchase",
+    yRef: purchasePrice, yRefLabel: "purchase",
   });
 
   // Rates chart — base rate, 2yr fix, your rate
   const rr = DATA.RATES;
-  const fixLabels = rr.fix2yrSeries.map((s) => monthName(s.date));
+  const yourRate = r.inputs.mortgage.ratePct;
   C.lineChart($("#rates-chart"), {
     height: 300,
     series: [
       { name: "Avg 2yr fix", color: "#dc2626", points: rr.fix2yrSeries.map((s) => ({ x: monthName(s.date), y: s.rate })) },
       { name: "BoE base rate", color: "#0891b2",
-        points: rr.fix2yrSeries.map((s) => {
-          const b = nearestBase(rr.baseSeries, s.date);
-          return { x: monthName(s.date), y: b };
-        }) },
+        points: rr.fix2yrSeries.map((s) => ({ x: monthName(s.date), y: nearestBase(rr.baseSeries, s.date) })) },
       { name: "Your fixed rate", color: "#16a34a", dashed: true,
-        points: rr.fix2yrSeries.map((s) => ({ x: monthName(s.date), y: rr.yourRate })) },
+        points: rr.fix2yrSeries.map((s) => ({ x: monthName(s.date), y: yourRate })) },
     ],
     yFormat: (v) => v.toFixed(1) + "%",
     yUnit: "interest rate",
@@ -531,10 +578,10 @@ function computeLetting(r) {
     letMortgageRatePctAfterFix: DATA.LETTING.letMortgageRatePctAfterFix,
   };
   const tax = { ...DATA.TAX, marginalBand: L.taxBand };
-  const mortgage = { ...r.inputs.mortgage, _purchaseDate: DATA.PROPERTY.purchaseDate };
+  const mortgage = { ...r.inputs.mortgage, _purchaseDate: r.inputs.property.purchaseDate };
   const sellNowNet = r.windows.find((w) => w.window.id === "now").net;
   return rentVsSell({
-    property: DATA.PROPERTY, mortgage, sellingCfg: r.inputs.sellingCfg,
+    property: r.inputs.property, mortgage, sellingCfg: r.inputs.sellingCfg,
     presentValue: r.presentValue, presentISO: DATA.META.asOf,
     growthByYear: r.growthByYear, saleDate: L.horizon,
     letCfg, TAX: tax, sellNowNet,
@@ -658,7 +705,80 @@ function buildLettingControls() {
 }
 
 function rerenderLetting() {
-  renderLetting(runModel(DATA, currentOverrides()));
+  renderLetting(runModel(effectiveData(), currentOverrides()));
+}
+
+// ---------------------------------------------------------------------------
+// Inputs tab — your real figures, saved to the browser
+// ---------------------------------------------------------------------------
+function buildInputs() {
+  const i = state.inputs;
+  const host = $("#inputs-body");
+  const fld = (id, label, type, value, attrs = "") =>
+    `<label class="ctrl"><span>${label}</span><input id="${id}" type="${type}" value="${value}" ${attrs}></label>`;
+  const deposit = num(i.purchasePrice) - num(i.mortgageAmount);
+
+  host.innerHTML = `
+    <div class="input-group"><h3 class="panel-h">Property</h3>
+      <div class="controls-grid">
+        ${fld("in-price", "Purchase price (£)", "number", i.purchasePrice, 'min="0" step="1000"')}
+        ${fld("in-pdate", "Purchase date", "month", i.purchaseDate)}
+        ${fld("in-postcode", "Postcode", "text", i.postcode)}
+        <label class="ctrl ctrl-check"><input id="in-primary" type="checkbox" ${i.isPrimaryResidence ? "checked" : ""}>
+          <span>Main residence (CGT-exempt)</span></label>
+      </div></div>
+    <div class="input-group"><h3 class="panel-h">Mortgage</h3>
+      <div class="controls-grid">
+        ${fld("in-mort", "Amount borrowed (£)", "number", i.mortgageAmount, 'min="0" step="1000"')}
+        ${fld("in-rate", "Interest rate (%)", "number", i.ratePct, 'min="0" max="15" step="0.01"')}
+        ${fld("in-fix", "Fixed rate ends", "month", i.fixEndDate)}
+        ${fld("in-term", "Term (years)", "number", i.termYears, 'min="1" max="40" step="1"')}
+        <label class="ctrl"><span>Repayment type</span><select id="in-rep">
+          <option value="capital_and_interest" ${i.repaymentType === "capital_and_interest" ? "selected" : ""}>Capital &amp; interest</option>
+          <option value="interest_only" ${i.repaymentType === "interest_only" ? "selected" : ""}>Interest-only</option>
+        </select></label>
+        ${fld("in-erc", "Early-repayment charge while fixed (% of balance)", "number", i.ercPct, 'min="0" max="10" step="0.1"')}
+      </div>
+      <p class="muted small">Deposit / cash you put in: <strong id="in-deposit">${gbp(deposit)}</strong> (purchase − amount borrowed).</p>
+    </div>
+    <div class="input-group"><h3 class="panel-h">Selling costs</h3>
+      <div class="controls-grid">
+        ${fld("in-agent", "Estate agent fee (% excl VAT)", "number", i.agentPct, 'min="0" max="5" step="0.05"')}
+        ${fld("in-vat", "VAT on agent fee (%)", "number", i.vatPct, 'min="0" max="25" step="1"')}
+        ${fld("in-legal", "Legal / conveyancing (£)", "number", i.legalFixed, 'min="0" step="50"')}
+        ${fld("in-epc", "EPC &amp; misc (£)", "number", i.epcMisc, 'min="0" step="50"')}
+      </div></div>
+    <div class="input-actions">
+      <button id="in-reset" class="btn-reset" type="button">Reset to defaults</button>
+      <span class="muted small">✓ Saved automatically in this browser (this device only). Rent &amp; service charge are on the <strong>Sell vs let</strong> tab.</span>
+    </div>`;
+
+  const bind = (sel, key, ev, parse) => $(sel).addEventListener(ev, (e) => {
+    state.inputs[key] = parse(e.target);
+    saveInputs();
+    const d = num(state.inputs.purchasePrice) - num(state.inputs.mortgageAmount);
+    const dep = $("#in-deposit"); if (dep) dep.textContent = gbp(d);
+    scheduleRerender();
+  });
+  const valNum = (t) => num(t.value);
+  const valStr = (t) => t.value;
+  bind("#in-price", "purchasePrice", "input", valNum);
+  bind("#in-pdate", "purchaseDate", "change", valStr);
+  bind("#in-postcode", "postcode", "change", valStr);
+  bind("#in-primary", "isPrimaryResidence", "change", (t) => t.checked);
+  bind("#in-mort", "mortgageAmount", "input", valNum);
+  bind("#in-rate", "ratePct", "input", valNum);
+  bind("#in-fix", "fixEndDate", "change", valStr);
+  bind("#in-term", "termYears", "input", valNum);
+  bind("#in-rep", "repaymentType", "change", valStr);
+  bind("#in-erc", "ercPct", "input", valNum);
+  bind("#in-agent", "agentPct", "input", valNum);
+  bind("#in-vat", "vatPct", "input", valNum);
+  bind("#in-legal", "legalFixed", "input", valNum);
+  bind("#in-epc", "epcMisc", "input", valNum);
+  $("#in-reset").addEventListener("click", () => {
+    state.inputs = defaultInputs(); saveInputs(); buildInputs(); scheduleRerender();
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -696,7 +816,7 @@ function buildControls() {
       Savills / Knight Frank / Zoopla consensus and the June 2026 rate market.</p>`;
 
   // init present-value slider to derived value
-  const derived = runModel(DATA, {}).presentValue;
+  const derived = runModel(effectiveData(), {}).presentValue;
   const pvInput = $("#ctrl-pv");
   pvInput.value = Math.round(derived / 5000) * 5000;
   $("#lbl-pv").textContent = gbp(pvInput.value);

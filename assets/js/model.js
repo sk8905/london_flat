@@ -9,7 +9,7 @@
 import {
   economicsForWindow, holdingCostDelta, monthsBetween,
   currentValueFromIndex, valueMultiplier, ymIndex, ymToISO, yearOfISO,
-} from "./finance.js?v=14";
+} from "./finance.js?v=15";
 
 const clamp = (x, lo, hi) => Math.max(lo, Math.min(hi, x));
 

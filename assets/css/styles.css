@@ -231,6 +231,15 @@ h1, h2, h3 { letter-spacing: -0.015em; }
 .ctrl span strong { color: var(--ink); }
 .ctrl select, .ctrl input[type="range"] { width: 100%; }
 .ctrl select { padding: 9px 11px; border-radius: 9px; border: 1px solid var(--line); background: #fff; font-size: 14px; color: var(--ink); }
+.ctrl input[type="number"], .ctrl input[type="text"], .ctrl input[type="month"] {
+  padding: 9px 11px; border-radius: 9px; border: 1px solid var(--line); background: #fff; font-size: 14px; color: var(--ink); width: 100%;
+}
+.ctrl input[type="number"]:focus, .ctrl input[type="text"]:focus, .ctrl input[type="month"]:focus, .ctrl select:focus {
+  outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px rgba(79,70,229,.12);
+}
+.input-group { margin-bottom: 24px; }
+.input-group .panel-h { padding-bottom: 8px; border-bottom: 1px solid var(--line-soft); }
+.input-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: 4px; }
 .ctrl-check { flex-direction: row; align-items: center; gap: 10px; }
 .ctrl-check input { width: auto; }
 input[type="range"] { accent-color: var(--brand); height: 5px; }
