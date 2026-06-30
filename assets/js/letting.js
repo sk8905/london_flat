@@ -14,7 +14,7 @@
 import {
   monthlyPayment, balanceAfter, monthsBetween, valueMultiplier, sellingCosts,
   ymIndex, ymToISO,
-} from "./finance.js?v=15";
+} from "./finance.js?v=16";
 
 // Build a month-by-month mortgage schedule from `fromISO` to `toISO`, handling the
 // switch from the residential fix to the post-fix (let/BTL) rate at fixEndDate.
@@ -126,7 +126,9 @@ export function rentVsSell(opts) {
   const monthsAsResidence = startMonths; // lived in it from purchase until letting begins (now)
   const exemptMonths = Math.min(monthsOwned, monthsAsResidence + TAX.finalPeriodExemptMonths);
   const chargeableFraction = Math.max(0, (monthsOwned - exemptMonths) / monthsOwned);
-  const totalGain = Math.max(0, saleValue - property.purchasePrice - costs.total);
+  // Acquisition cost base includes SDLT and other buying costs (they reduce the gain).
+  const acquisitionCost = property.purchasePrice + (property.sdltPaid || 0) + (property.otherBuyCosts || 0);
+  const totalGain = Math.max(0, saleValue - acquisitionCost - costs.total);
   const chargeableGain = Math.max(0, totalGain * chargeableFraction - TAX.cgtAnnualExempt);
   const cgt = chargeableGain * (TAX.cgtRates[band] || 0.24);
 

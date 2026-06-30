@@ -2,11 +2,11 @@
 // app.js  —  Entry point: load data, run model, render the single page, wire UI
 // =============================================================================
 
-import * as DATA from "../data/dataset.js?v=15";
-import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=15";
-import * as C from "./charts.js?v=15";
-import { monthlyPayment, monthsBetween, ymIndex, ymToISO } from "./finance.js?v=15";
-import { rentVsSell } from "./letting.js?v=15";
+import * as DATA from "../data/dataset.js?v=16";
+import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=16";
+import * as C from "./charts.js?v=16";
+import { monthlyPayment, monthsBetween, ymIndex, ymToISO } from "./finance.js?v=16";
+import { rentVsSell } from "./letting.js?v=16";
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const gbp = (n) => (n < 0 ? "−" : "") + "£" + Math.abs(Math.round(n)).toLocaleString("en-GB");
@@ -25,6 +25,18 @@ const FACTOR_COLORS = {
 
 const num = (v, fb = 0) => { const n = parseFloat(v); return Number.isFinite(n) ? n : fb; };
 
+// England & NI standard residential SDLT (single property, not first-time-buyer).
+function computeSDLT(price) {
+  const bands = [[125000, 0], [250000, 0.02], [925000, 0.05], [1500000, 0.10], [Infinity, 0.12]];
+  let tax = 0, prev = 0;
+  for (const [cap, rate] of bands) {
+    if (price <= prev) break;
+    tax += (Math.min(price, cap) - prev) * rate;
+    prev = cap;
+  }
+  return Math.round(tax);
+}
+
 // ---- editable inputs (your real figures), persisted to the browser ----------
 const LS_KEY = "flatForecaster.inputs.v1";
 function defaultInputs() {
@@ -33,6 +45,8 @@ function defaultInputs() {
     purchaseDate: DATA.PROPERTY.purchaseDate.slice(0, 7),
     postcode: DATA.PROPERTY.postcode,
     isPrimaryResidence: DATA.PROPERTY.isPrimaryResidence,
+    sdlt: computeSDLT(DATA.PROPERTY.purchasePrice),
+    otherBuyCosts: 0,
     mortgageAmount: DATA.MORTGAGE.principal,
     ratePct: DATA.MORTGAGE.ratePct,
     fixEndDate: DATA.MORTGAGE.fixEndDate.slice(0, 7),
@@ -58,7 +72,8 @@ function effectiveData() {
   const principal = num(i.mortgageAmount, DATA.MORTGAGE.principal);
   return {
     ...DATA,
-    PROPERTY: { ...DATA.PROPERTY, purchasePrice, purchaseDate: i.purchaseDate, postcode: i.postcode, isPrimaryResidence: !!i.isPrimaryResidence },
+    PROPERTY: { ...DATA.PROPERTY, purchasePrice, purchaseDate: i.purchaseDate, postcode: i.postcode,
+      isPrimaryResidence: !!i.isPrimaryResidence, sdltPaid: num(i.sdlt), otherBuyCosts: num(i.otherBuyCosts) },
     MORTGAGE: { ...DATA.MORTGAGE, principal, ltv: purchasePrice ? principal / purchasePrice : 0,
       ratePct: num(i.ratePct, DATA.MORTGAGE.ratePct), fixEndDate: i.fixEndDate, termYears: num(i.termYears, DATA.MORTGAGE.termYears),
       repaymentType: i.repaymentType, ercPctWhileFixed: num(i.ercPct, DATA.MORTGAGE.ercPctWhileFixed) },
@@ -250,7 +265,9 @@ function renderVerdict(r) {
   const runnerUp = r.ranked[1];
   const reasons = topReasons(best);
   const deposit = r.inputs.property.purchasePrice - r.inputs.mortgage.principal;
-  const profitBest = best.net - deposit;
+  const buyCosts = (r.inputs.property.sdltPaid || 0) + (r.inputs.property.otherBuyCosts || 0);
+  const cashIn = deposit + buyCosts;
+  const profitBest = best.net - cashIn;
 
   host.innerHTML = `
     <div class="verdict-grid">
@@ -263,7 +280,8 @@ function renderVerdict(r) {
           value <strong>${gbp(best.saleValue)}</strong> → estimated net proceeds
           <strong>${gbp(best.net)}</strong> after clearing the mortgage and all costs
           ${best.erc > 0 ? `(includes a ${gbp(best.erc)} early-repayment charge)` : `(no early-repayment charge — outside the fixed period)`}.
-          After returning your original <strong>${gbp(deposit)}</strong> deposit, that's a profit of
+          After returning your <strong>${gbp(deposit)}</strong> deposit and the
+          <strong>${gbp(buyCosts)}</strong> you paid in SDLT/buying costs, that's a profit of
           <strong>${gbp(profitBest)}</strong> on the cash you put in.
         </p>
         <ul class="verdict-reasons">${reasons.map((x) => `<li>${x}</li>`).join("")}</ul>
@@ -290,11 +308,13 @@ function renderDashboard(r) {
   const letWins = let2.advantageLet >= 0;
 
   // KPIs
-  const deposit = r.inputs.property.purchasePrice - r.inputs.mortgage.principal; // your original cash in
-  const profitBest = best.net - deposit;
+  const deposit = r.inputs.property.purchasePrice - r.inputs.mortgage.principal;
+  const buyCosts = (r.inputs.property.sdltPaid || 0) + (r.inputs.property.otherBuyCosts || 0);
+  const cashIn = deposit + buyCosts; // total cash you sank in at purchase
+  const profitBest = best.net - cashIn;
   $("#dash-kpis").innerHTML = [
     kpi("Best-window net proceeds", gbp(best.net), "total cash in hand · " + best.window.label, "pos"),
-    kpi("Profit after your deposit", gbp(profitBest), `net − your ${gbp(deposit)} deposit`, profitBest >= 0 ? "gold" : "neg"),
+    kpi("Profit after deposit &amp; SDLT", gbp(profitBest), `net − ${gbp(cashIn)} you put in`, profitBest >= 0 ? "gold" : "neg"),
     kpi("Est. equity now", gbp(equityNow), "value − mortgage balance"),
     kpi(`Let vs sell (to ${horizonLabel})`, signed(let2.advantageLet, gbp), letWins ? "letting ahead" : "selling ahead", letWins ? "pos" : "neg"),
   ].join("");
@@ -447,30 +467,32 @@ function renderSignal(r) {
 function renderProceeds(r) {
   const host = $("#proceeds-body");
   const deposit = r.inputs.property.purchasePrice - r.inputs.mortgage.principal; // your original cash in
+  const buyCosts = (r.inputs.property.sdltPaid || 0) + (r.inputs.property.otherBuyCosts || 0);
+  const cashIn = deposit + buyCosts;
   const bars = r.windows.map((w) => ({
     label: w.window.label,
-    value: w.net - deposit, // profit above your original deposit
+    value: w.net - cashIn, // profit above all the cash you put in
     color: w === r.best ? "#16a34a" : "#0891b2",
-    valueLabel: gbp(w.net - deposit),
+    valueLabel: gbp(w.net - cashIn),
     sub: "net " + gbp(w.net),
   }));
   host.innerHTML = `
     <div class="chart-wrap"><div id="proceeds-chart"></div>
-      <p class="chart-cap"><strong>Bars = your profit above the £${Math.round(deposit / 1000)}k deposit you put in</strong>
-      (i.e. net proceeds − deposit). The grey "net" figure is the total cash you'd receive. Scenario:
-      <strong>${state.custom ? "Custom" : r.scenarioName}</strong>.</p></div>
+      <p class="chart-cap"><strong>Bars = your profit above the ${gbp(cashIn)} you put in</strong>
+      (deposit ${gbp(deposit)} + ${gbp(buyCosts)} SDLT/buying costs). The grey "net" figure is the total cash you'd
+      receive. Scenario: <strong>${state.custom ? "Custom" : r.scenarioName}</strong>.</p></div>
     <div class="table-wrap"><table class="rank-table">
-      <thead><tr><th>Window</th><th>Sale value</th><th>Outstanding</th><th>ERC</th><th>Selling costs</th><th>CGT</th><th>Net proceeds</th><th>Less deposit</th><th>Your profit</th></tr></thead>
+      <thead><tr><th>Window</th><th>Sale value</th><th>Outstanding</th><th>ERC</th><th>Selling costs</th><th>CGT</th><th>Net proceeds</th><th>Less deposit + SDLT</th><th>Your profit</th></tr></thead>
       <tbody>${r.windows.map((w) => `<tr class="${w === r.best ? "best-row" : ""}">
         <td>${w.window.label}</td><td>${gbp(w.saleValue)}</td><td>${gbp(w.outstanding)}</td>
         <td>${w.erc > 0 ? gbp(w.erc) : "—"}</td><td>${gbp(w.costs.total)}</td><td>£0</td>
-        <td>${gbp(w.net)}</td><td class="muted">−${gbp(deposit)}</td>
-        <td class="${w.net - deposit >= 0 ? "" : "neg-cell"}"><strong>${gbp(w.net - deposit)}</strong></td></tr>`).join("")}</tbody>
+        <td>${gbp(w.net)}</td><td class="muted">−${gbp(cashIn)}</td>
+        <td class="${w.net - cashIn >= 0 ? "" : "neg-cell"}"><strong>${gbp(w.net - cashIn)}</strong></td></tr>`).join("")}</tbody>
     </table>
     <p class="muted small"><strong>Net proceeds</strong> = sale value − outstanding mortgage − ERC − selling costs − CGT:
-      the total cash you'd receive. <strong>Your profit</strong> returns your original
-      <strong>${gbp(deposit)}</strong> deposit first, leaving the gain you've actually made on the cash you put in
-      (your repaid mortgage principal and price growth, net of costs).</p></div>`;
+      the total cash you'd receive. <strong>Your profit</strong> returns the <strong>${gbp(cashIn)}</strong> you originally
+      put in (${gbp(deposit)} deposit + ${gbp(buyCosts)} SDLT/buying costs), leaving the true gain on your cash —
+      your repaid mortgage principal and price growth, net of costs.</p></div>`;
   C.barChart($("#proceeds-chart"), { bars, yFormat: (v) => "£" + Math.round(v / 1000) + "k", height: 300, yUnit: "£ profit" });
 }
 
@@ -719,14 +741,19 @@ function buildInputs() {
   const deposit = num(i.purchasePrice) - num(i.mortgageAmount);
 
   host.innerHTML = `
-    <div class="input-group"><h3 class="panel-h">Property</h3>
+    <div class="input-group"><h3 class="panel-h">Property &amp; purchase costs</h3>
       <div class="controls-grid">
         ${fld("in-price", "Purchase price (£)", "number", i.purchasePrice, 'min="0" step="1000"')}
         ${fld("in-pdate", "Purchase date", "month", i.purchaseDate)}
         ${fld("in-postcode", "Postcode", "text", i.postcode)}
         <label class="ctrl ctrl-check"><input id="in-primary" type="checkbox" ${i.isPrimaryResidence ? "checked" : ""}>
           <span>Main residence (CGT-exempt)</span></label>
-      </div></div>
+        ${fld("in-sdlt", "Stamp Duty (SDLT) paid (£)", "number", i.sdlt, 'min="0" step="100"')}
+        ${fld("in-buycosts", "Other buying costs — legal, survey (£)", "number", i.otherBuyCosts, 'min="0" step="50"')}
+      </div>
+      <p class="muted small">SDLT defaults to the England standard residential estimate for your purchase price.
+        <button id="in-sdlt-est" type="button" class="link-btn">Re-estimate from price</button> — or just type your actual figure.</p>
+    </div>
     <div class="input-group"><h3 class="panel-h">Mortgage</h3>
       <div class="controls-grid">
         ${fld("in-mort", "Amount borrowed (£)", "number", i.mortgageAmount, 'min="0" step="1000"')}
@@ -766,6 +793,12 @@ function buildInputs() {
   bind("#in-pdate", "purchaseDate", "change", valStr);
   bind("#in-postcode", "postcode", "change", valStr);
   bind("#in-primary", "isPrimaryResidence", "change", (t) => t.checked);
+  bind("#in-sdlt", "sdlt", "input", valNum);
+  bind("#in-buycosts", "otherBuyCosts", "input", valNum);
+  $("#in-sdlt-est").addEventListener("click", () => {
+    state.inputs.sdlt = computeSDLT(num(state.inputs.purchasePrice));
+    $("#in-sdlt").value = state.inputs.sdlt; saveInputs(); scheduleRerender();
+  });
   bind("#in-mort", "mortgageAmount", "input", valNum);
   bind("#in-rate", "ratePct", "input", valNum);
   bind("#in-fix", "fixEndDate", "change", valStr);

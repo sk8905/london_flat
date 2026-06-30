@@ -240,6 +240,7 @@ h1, h2, h3 { letter-spacing: -0.015em; }
 .input-group { margin-bottom: 24px; }
 .input-group .panel-h { padding-bottom: 8px; border-bottom: 1px solid var(--line-soft); }
 .input-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: 4px; }
+.link-btn { background: none; border: 0; padding: 0; color: var(--brand-dark); font: inherit; font-size: inherit; cursor: pointer; text-decoration: underline; }
 .ctrl-check { flex-direction: row; align-items: center; gap: 10px; }
 .ctrl-check input { width: auto; }
 input[type="range"] { accent-color: var(--brand); height: 5px; }
