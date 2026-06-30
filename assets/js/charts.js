@@ -156,7 +156,8 @@ export function barChart(container, opts) {
 
   const vals = opts.bars.map((b) => b.value);
   const base = opts.baseline ?? 0;
-  let yMin = Math.min(base, ...vals), yMax = Math.max(base, ...vals);
+  const extra = opts.yRef != null ? [opts.yRef] : [];
+  let yMin = Math.min(base, ...vals, ...extra), yMax = Math.max(base, ...vals, ...extra);
   const ticks = niceTicks(yMin, yMax, 5);
   yMin = ticks[0]; yMax = ticks[ticks.length - 1];
   const yAt = (v) => m.t + ih - ((v - yMin) / (yMax - yMin)) * ih;
@@ -167,6 +168,15 @@ export function barChart(container, opts) {
     const tx = el("text", { x: m.l - 8, y: yAt(t) + 4, class: "axis-y" }, svg);
     tx.textContent = yFormat(t);
   });
+
+  // optional reference line (e.g. total cash invested)
+  if (opts.yRef != null) {
+    el("line", { x1: m.l, y1: yAt(opts.yRef), x2: W - m.r, y2: yAt(opts.yRef), class: "ref-line" }, svg);
+    if (opts.yRefLabel) {
+      const rt = el("text", { x: m.l + 4, y: yAt(opts.yRef) - 5, class: "ref-label" }, svg);
+      rt.textContent = opts.yRefLabel;
+    }
+  }
 
   const n = opts.bars.length;
   const slot = iw / n;

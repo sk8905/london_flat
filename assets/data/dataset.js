@@ -10,7 +10,7 @@
 
 export const META = {
   asOf: "2026-06-30",
-  build: "v17 · 2026-06-30", // bump on each change so the footer confirms the live build
+  build: "v18 · 2026-06-30", // bump on each change so the footer confirms the live build
   currency: "GBP",
   disclaimer:
     "This tool is an informational model, not financial, tax, mortgage or legal advice. " +
@@ -145,10 +145,8 @@ export const COMPARABLES = {
 };
 
 export const MORTGAGE = {
-  ltv: 0.70, // 70% loan-to-value
-  get principal() {
-    return Math.round(PROPERTY.purchasePrice * this.ltv);
-  },
+  principal: 615000, // amount borrowed = £890k − £275k deposit
+  ltv: 615000 / 890000, // ~69% loan-to-value
   ratePct: 4.38, // fixed rate on the 2-year deal
   fixEndDate: "2027-03-01",
   repaymentType: "capital_and_interest",

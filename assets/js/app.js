@@ -2,11 +2,11 @@
 // app.js  —  Entry point: load data, run model, render the single page, wire UI
 // =============================================================================
 
-import * as DATA from "../data/dataset.js?v=17";
-import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=17";
-import * as C from "./charts.js?v=17";
-import { monthlyPayment, monthsBetween, ymIndex, ymToISO } from "./finance.js?v=17";
-import { rentVsSell } from "./letting.js?v=17";
+import * as DATA from "../data/dataset.js?v=18";
+import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=18";
+import * as C from "./charts.js?v=18";
+import { monthlyPayment, monthsBetween, ymIndex, ymToISO } from "./finance.js?v=18";
+import { rentVsSell } from "./letting.js?v=18";
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const gbp = (n) => (n < 0 ? "−" : "") + "£" + Math.abs(Math.round(n)).toLocaleString("en-GB");
@@ -38,7 +38,7 @@ function computeSDLT(price) {
 }
 
 // ---- editable inputs (your real figures), persisted to the browser ----------
-const LS_KEY = "flatForecaster.inputs.v1";
+const LS_KEY = "flatForecaster.inputs.v2";
 function defaultInputs() {
   return {
     purchasePrice: DATA.PROPERTY.purchasePrice,
@@ -50,7 +50,7 @@ function defaultInputs() {
     bathrooms: DATA.PROPERTY.bathrooms,
     buildYear: DATA.PROPERTY.buildYear,
     perSqmMedian: DATA.COMPARABLES.perSqm.median,
-    sdlt: computeSDLT(DATA.PROPERTY.purchasePrice),
+    sdlt: 35500, // your actual SDLT paid
     otherBuyCosts: 0,
     mortgageAmount: DATA.MORTGAGE.principal,
     ratePct: DATA.MORTGAGE.ratePct,
@@ -340,8 +340,10 @@ function renderDashboard(r) {
     bars: r.windows.map((w) => ({
       label: w.window.label.replace(/ \(.*\)/, ""), value: w.net,
       color: w === best ? "#15803d" : "#86efac", valueLabel: gbp(w.net),
+      sub: (w.net - cashIn >= 0 ? "+" + gbp(w.net - cashIn) + " profit" : gbp(w.net - cashIn) + " short"),
     })),
-    yFormat: (v) => "£" + Math.round(v / 1000) + "k", height: 240, yUnit: "£ proceeds",
+    yFormat: (v) => "£" + Math.round(v / 1000) + "k", height: 260, yUnit: "£ proceeds",
+    yRef: cashIn, yRefLabel: "you put in " + gbp(cashIn) + " (deposit + SDLT)",
   });
 
   // drivers
