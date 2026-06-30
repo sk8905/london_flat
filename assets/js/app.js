@@ -2,11 +2,11 @@
 // app.js  —  Entry point: load data, run model, render the single page, wire UI
 // =============================================================================
 
-import * as DATA from "../data/dataset.js?v=20";
-import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=20";
-import * as C from "./charts.js?v=20";
-import { monthlyPayment, monthsBetween, ymIndex, ymToISO } from "./finance.js?v=20";
-import { rentVsSell } from "./letting.js?v=20";
+import * as DATA from "../data/dataset.js?v=21";
+import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=21";
+import * as C from "./charts.js?v=21";
+import { monthlyPayment, monthsBetween, ymIndex, ymToISO } from "./finance.js?v=21";
+import { rentVsSell } from "./letting.js?v=21";
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const gbp = (n) => (n < 0 ? "−" : "") + "£" + Math.abs(Math.round(n)).toLocaleString("en-GB");
@@ -16,11 +16,11 @@ const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "
 const monthName = (iso) => MONTHS[parseInt(iso.slice(5, 7), 10) - 1] + " " + iso.slice(0, 4);
 
 const FACTOR_COLORS = {
-  priceTrajectory: "#2563eb",
-  financingCost: "#9333ea",
-  netProceeds: "#0891b2",
-  seasonality: "#f59e0b",
-  policyMacro: "#10b981",
+  priceTrajectory: "#33566b",
+  financingCost: "#6b5b7b",
+  netProceeds: "#4a7c8c",
+  seasonality: "#9a7b4f",
+  policyMacro: "#3a6b54",
 };
 
 const num = (v, fb = 0) => { const n = parseFloat(v); return Number.isFinite(n) ? n : fb; };
@@ -58,6 +58,8 @@ function defaultInputs() {
     termYears: DATA.MORTGAGE.termYears,
     repaymentType: DATA.MORTGAGE.repaymentType,
     ercPct: DATA.MORTGAGE.ercPctWhileFixed,
+    remortgageFixYears: DATA.MORTGAGE.remortgageFixYears,
+    remortgageErcPct: DATA.MORTGAGE.remortgageErcPct,
     agentPct: DATA.SELLING_COSTS.agentPct,
     vatPct: DATA.SELLING_COSTS.vatPct,
     legalFixed: DATA.SELLING_COSTS.legalFixed,
@@ -84,7 +86,9 @@ function effectiveData() {
     COMPARABLES: { ...DATA.COMPARABLES, perSqm: { ...DATA.COMPARABLES.perSqm, median: num(i.perSqmMedian, DATA.COMPARABLES.perSqm.median) } },
     MORTGAGE: { ...DATA.MORTGAGE, principal, ltv: purchasePrice ? principal / purchasePrice : 0,
       ratePct: num(i.ratePct, DATA.MORTGAGE.ratePct), fixEndDate: i.fixEndDate, termYears: num(i.termYears, DATA.MORTGAGE.termYears),
-      repaymentType: i.repaymentType, ercPctWhileFixed: num(i.ercPct, DATA.MORTGAGE.ercPctWhileFixed) },
+      repaymentType: i.repaymentType, ercPctWhileFixed: num(i.ercPct, DATA.MORTGAGE.ercPctWhileFixed),
+      remortgageFixYears: num(i.remortgageFixYears, DATA.MORTGAGE.remortgageFixYears),
+      remortgageErcPct: num(i.remortgageErcPct, DATA.MORTGAGE.remortgageErcPct) },
     SELLING_COSTS: { ...DATA.SELLING_COSTS, agentPct: num(i.agentPct), vatPct: num(i.vatPct), legalFixed: num(i.legalFixed), epcAndMiscFixed: num(i.epcMisc) },
   };
 }
@@ -318,7 +322,7 @@ function renderDashboard(r) {
   C.barChart($("#dash-signal-chart"), {
     bars: r.windows.map((w) => ({
       label: w.window.label.replace(/ \(.*\)/, ""), value: Math.round(w.composite),
-      color: w === best ? "#4f46e5" : (w.composite >= 0 ? "#a5b4fc" : "#fca5a5"),
+      color: w === best ? "#33566b" : (w.composite >= 0 ? "#aebfc9" : "#d9b3b3"),
       valueLabel: signed(w.composite),
     })),
     yFormat: (v) => v.toFixed(0), height: 240, baseline: 0, yUnit: "signal score",
@@ -326,7 +330,7 @@ function renderDashboard(r) {
   C.barChart($("#dash-proceeds-chart"), {
     bars: r.windows.map((w) => ({
       label: w.window.label.replace(/ \(.*\)/, ""), value: w.net,
-      color: w === best ? "#15803d" : "#86efac", valueLabel: gbp(w.net),
+      color: w === best ? "#3a6b54" : "#a9c6b6", valueLabel: gbp(w.net),
       sub: (w.net - cashIn >= 0 ? "+" + gbp(w.net - cashIn) + " profit" : gbp(w.net - cashIn) + " short"),
     })),
     yFormat: (v) => "£" + Math.round(v / 1000) + "k", height: 260, yUnit: "£ proceeds",
@@ -491,7 +495,7 @@ function renderProceeds(r) {
   const bars = r.windows.map((w) => ({
     label: w.window.label,
     value: w.net, // net proceeds (cash in hand)
-    color: w === r.best ? "#15803d" : "#86efac",
+    color: w === r.best ? "#3a6b54" : "#a9c6b6",
     valueLabel: gbp(w.net),
     sub: (w.net - cashIn >= 0 ? "+" + gbp(w.net - cashIn) + " profit" : gbp(w.net - cashIn) + " short"),
   }));
@@ -535,11 +539,11 @@ function renderForecastChart(r) {
   C.lineChart(host, {
     height: 320,
     series: [
-      { name: "Active scenario", color: "#2563eb", points: toPts(active), width: 3, dots: false },
-      { name: "Optimistic", color: "#16a34a", points: toPts(opt), dashed: true, dots: false },
-      { name: "Pessimistic", color: "#dc2626", points: toPts(pes), dashed: true, dots: false },
+      { name: "Active scenario", color: "#33566b", points: toPts(active), width: 3, dots: false },
+      { name: "Optimistic", color: "#3a6b54", points: toPts(opt), dashed: true, dots: false },
+      { name: "Pessimistic", color: "#9c4040", points: toPts(pes), dashed: true, dots: false },
     ],
-    band: { lower: pes.map((p) => p.value), upper: opt.map((p) => p.value), color: "#2563eb" },
+    band: { lower: pes.map((p) => p.value), upper: opt.map((p) => p.value), color: "#33566b" },
     yFormat: (v) => "£" + Math.round(v / 1000) + "k",
     yUnit: "£ value",
     yRef: r.inputs.property.purchasePrice,
@@ -574,9 +578,9 @@ function renderFactorCharts(r) {
   C.lineChart($("#price-chart"), {
     height: 300,
     series: [
-      { name: "Your flat (Islington-tracked)", color: "#2563eb",
+      { name: "Your flat (Islington-tracked)", color: "#33566b",
         points: ph.series.map((s) => ({ x: monthName(s.date), y: toGBP(s.islington) })) },
-      { name: "London-wide", color: "#9333ea", dashed: true,
+      { name: "London-wide", color: "#6b5b7b", dashed: true,
         points: ph.series.map((s) => ({ x: monthName(s.date), y: toGBP(s.london) })) },
     ],
     yFormat: (v) => "£" + Math.round(v / 1000) + "k",
@@ -590,10 +594,10 @@ function renderFactorCharts(r) {
   C.lineChart($("#rates-chart"), {
     height: 300,
     series: [
-      { name: "Avg 2yr fix", color: "#dc2626", points: rr.fix2yrSeries.map((s) => ({ x: monthName(s.date), y: s.rate })) },
-      { name: "BoE base rate", color: "#0891b2",
+      { name: "Avg 2yr fix", color: "#9c4040", points: rr.fix2yrSeries.map((s) => ({ x: monthName(s.date), y: s.rate })) },
+      { name: "BoE base rate", color: "#4a7c8c",
         points: rr.fix2yrSeries.map((s) => ({ x: monthName(s.date), y: nearestBase(rr.baseSeries, s.date) })) },
-      { name: "Your fixed rate", color: "#16a34a", dashed: true,
+      { name: "Your fixed rate", color: "#3a6b54", dashed: true,
         points: rr.fix2yrSeries.map((s) => ({ x: monthName(s.date), y: yourRate })) },
     ],
     yFormat: (v) => v.toFixed(1) + "%",
@@ -706,7 +710,7 @@ function renderLetting(r) {
       ${card("Let &amp; sell — total", gbp(res.letTotal), "net sale + rental cash flow")}
       ${card("Sell now &amp; invest", gbp(res.sellNowGrown), gbp(res.sellNowNet) + " grown @ " + pct(state.letting.opportunityRate))}
     </div>
-    <div class="cgt-box" style="background:#eff6ff;border-color:#bfdbfe;color:#1e3a8a;">
+    <div class="cgt-box">
       <strong>Why letting can lose despite a bigger sale figure.</strong> Selling in ${horizonLabel} nets
       <strong>${gbp(res.sale.netSaleProceeds)}</strong> versus <strong>${gbp(res.sellNowNet)}</strong> now — but holding
       costs <strong>${gbp(Math.abs(res.cumulativeNetRent))}</strong> of cash over the period${res.interestOnly ? "" : `, of which
@@ -720,8 +724,8 @@ function renderLetting(r) {
 
   C.barChart($("#letting-chart"), {
     bars: [
-      { label: "Let & sell later", value: res.letTotal, color: wins ? "#16a34a" : "#0891b2", valueLabel: gbp(res.letTotal) },
-      { label: "Sell now & invest", value: res.sellNowGrown, color: wins ? "#0891b2" : "#16a34a", valueLabel: gbp(res.sellNowGrown) },
+      { label: "Let & sell later", value: res.letTotal, color: wins ? "#3a6b54" : "#4a7c8c", valueLabel: gbp(res.letTotal) },
+      { label: "Sell now & invest", value: res.sellNowGrown, color: wins ? "#4a7c8c" : "#3a6b54", valueLabel: gbp(res.sellNowGrown) },
     ],
     yFormat: (v) => "£" + Math.round(v / 1000) + "k", height: 280, yUnit: "£ total wealth",
   });
@@ -845,9 +849,13 @@ function buildInputs() {
           <option value="capital_and_interest" ${i.repaymentType === "capital_and_interest" ? "selected" : ""}>Capital &amp; interest</option>
           <option value="interest_only" ${i.repaymentType === "interest_only" ? "selected" : ""}>Interest-only</option>
         </select></label>
-        ${fld("in-erc", "Early-repayment charge while fixed (% of balance)", "number", i.ercPct, 'min="0" max="10" step="0.1"')}
+        ${fld("in-erc", "Current-fix ERC (% of balance)", "number", i.ercPct, 'min="0" max="10" step="0.1"')}
+        ${fld("in-remo-fix", "Remortgage: new fixed term (years)", "number", i.remortgageFixYears, 'min="0" max="10" step="1"')}
+        ${fld("in-remo-erc", "Remortgage ERC while in new fix (% of balance)", "number", i.remortgageErcPct, 'min="0" max="10" step="0.1"')}
       </div>
-      <p class="muted small">Deposit / cash you put in: <strong id="in-deposit">${gbp(deposit)}</strong> (purchase − amount borrowed).</p>
+      <p class="muted small">Deposit / cash you put in: <strong id="in-deposit">${gbp(deposit)}</strong> (purchase − amount borrowed).
+        Selling inside the new fix you take in ${monthName(i.fixEndDate)} also triggers <em>its</em> ERC — set the remortgage
+        term or ERC to 0 if you'll go onto a tracker / no-ERC deal.</p>
     </div>
     <div class="input-group"><h3 class="panel-h">Selling costs</h3>
       <div class="controls-grid">
@@ -891,6 +899,8 @@ function buildInputs() {
   bind("#in-term", "termYears", "input", valNum);
   bind("#in-rep", "repaymentType", "change", valStr);
   bind("#in-erc", "ercPct", "input", valNum);
+  bind("#in-remo-fix", "remortgageFixYears", "input", valNum);
+  bind("#in-remo-erc", "remortgageErcPct", "input", valNum);
   bind("#in-agent", "agentPct", "input", valNum);
   bind("#in-vat", "vatPct", "input", valNum);
   bind("#in-legal", "legalFixed", "input", valNum);

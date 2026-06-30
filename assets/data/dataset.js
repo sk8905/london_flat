@@ -10,7 +10,7 @@
 
 export const META = {
   asOf: "2026-06-30",
-  build: "v20 · 2026-06-30", // bump on each change so the footer confirms the live build
+  build: "v21 · 2026-06-30", // bump on each change so the footer confirms the live build
   currency: "GBP",
   disclaimer:
     "This tool is an informational model, not financial, tax, mortgage or legal advice. " +
@@ -179,11 +179,16 @@ export const MORTGAGE = {
   fixEndDate: "2027-03-01",
   repaymentType: "capital_and_interest",
   termYears: 25,
-  // ERC: 1% of the outstanding balance while still inside the fixed period.
+  // ERC: 1% of the outstanding balance while still inside the current fixed period.
   ercPctWhileFixed: 1.0,
   // Assumed remortgage rate once the fix ends (editable). Anchored to the
   // current ~5.5% 2yr fix with a modest easing assumption by spring 2027.
   remortgageRatePctAssumed: 5.1,
+  // The NEW deal taken when the current fix ends also has its own fixed term and
+  // ERC — selling inside it triggers that charge too. Set the term to 0 (or the
+  // ERC to 0) if you plan to remortgage onto a tracker / no-ERC product.
+  remortgageFixYears: 2,
+  remortgageErcPct: 1.0, // % of balance while inside the new remortgage fix
 };
 
 export const SELLING_COSTS = {

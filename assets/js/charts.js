@@ -186,7 +186,7 @@ export function barChart(container, opts) {
     const y0 = yAt(base), y1 = yAt(b.value);
     el("rect", {
       x: cx - bw / 2, y: Math.min(y0, y1), width: bw, height: Math.abs(y1 - y0),
-      rx: 4, fill: b.color || "#3b82f6",
+      rx: 4, fill: b.color || "#33566b",
     }, svg);
     const vt = el("text", { x: cx, y: Math.min(y0, y1) - 6, class: "bar-value" }, svg);
     vt.textContent = b.valueLabel || yFormat(b.value);
@@ -224,7 +224,7 @@ export function divergingBars(container, opts) {
     const x0 = mid, x1 = xAt(it.value);
     el("rect", {
       x: Math.min(x0, x1), y: cy - 9, width: Math.max(2, Math.abs(x1 - x0)), height: 18,
-      rx: 3, fill: it.color || (it.value >= 0 ? "#16a34a" : "#dc2626"),
+      rx: 3, fill: it.color || (it.value >= 0 ? "#3a6b54" : "#9c4040"),
     }, svg);
     const lt = el("text", { x: m.l - 10, y: cy + 4, class: "row-label" }, svg);
     lt.setAttribute("text-anchor", "end");
@@ -247,11 +247,11 @@ export function gauge(container, value, label) {
 
   // coloured arc segments
   const segs = [
-    { from: -100, to: -40, color: "#dc2626" },
-    { from: -40, to: -12, color: "#f59e0b" },
+    { from: -100, to: -40, color: "#9c4040" },
+    { from: -40, to: -12, color: "#9a7b4f" },
     { from: -12, to: 12, color: "#9ca3af" },
     { from: 12, to: 40, color: "#84cc16" },
-    { from: 40, to: 100, color: "#16a34a" },
+    { from: 40, to: 100, color: "#3a6b54" },
   ];
   const valToAng = (v) => a0 + ((v + 100) / 200) * (a1 - a0);
   segs.forEach((s) => {

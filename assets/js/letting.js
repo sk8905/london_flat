@@ -14,7 +14,7 @@
 import {
   monthlyPayment, balanceAfter, monthsBetween, valueMultiplier, sellingCosts,
   ymIndex, ymToISO,
-} from "./finance.js?v=20";
+} from "./finance.js?v=21";
 
 // Build a month-by-month mortgage schedule from `fromISO` to `toISO`, handling the
 // switch from the residential fix to the post-fix (let/BTL) rate at fixEndDate.
@@ -117,9 +117,13 @@ export function rentVsSell(opts) {
   const saleValue = presentValue * valueMultiplier(property.purchaseDate, saleDate, growthByYear, presentISO);
   const costs = sellingCosts(saleValue, sellingCfg);
   const outstanding = sched.endBalance;
-  // ERC: only if the horizon is still inside the fix (unlikely) — reuse 1% rule.
-  const insideFix = ymIndex(saleDate) < ymIndex(mortgage.fixEndDate);
-  const erc = insideFix ? outstanding * (mortgage.ercPctWhileFixed / 100) : 0;
+  // ERC: applies inside the current fix OR the new remortgage fix taken after it.
+  const saleIdx = ymIndex(saleDate);
+  const fixIdx = ymIndex(mortgage.fixEndDate);
+  const newFixEndIdx = fixIdx + Math.round((mortgage.remortgageFixYears || 0) * 12);
+  let erc = 0;
+  if (saleIdx < fixIdx) erc = outstanding * (mortgage.ercPctWhileFixed / 100);
+  else if (saleIdx < newFixEndIdx) erc = outstanding * ((mortgage.remortgageErcPct || 0) / 100);
 
   // CGT — partial Private Residence Relief.
   const monthsOwned = monthsBetween(property.purchaseDate, saleDate);

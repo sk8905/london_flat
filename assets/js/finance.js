@@ -111,8 +111,14 @@ export function economicsForWindow(opts) {
     outstanding = balanceAfter(balAtFix, mortgage.remortgageRatePctAssumed, remainingTermYears, monthsAfterFix);
   }
 
-  // 3) Early Repayment Charge — only while inside the fixed period.
-  const erc = insideFix ? outstanding * (mortgage.ercPctWhileFixed / 100) : 0;
+  // 3) Early Repayment Charge — applies while inside EITHER the current fix or the
+  //    new fixed deal taken when the current fix ends (you'd remortgage into it).
+  const winIdx = ymIndex(windowDate);
+  const fixIdx = ymIndex(mortgage.fixEndDate);
+  const newFixEndIdx = fixIdx + Math.round((mortgage.remortgageFixYears || 0) * 12);
+  let erc = 0;
+  if (winIdx < fixIdx) erc = outstanding * (mortgage.ercPctWhileFixed / 100);
+  else if (winIdx < newFixEndIdx) erc = outstanding * ((mortgage.remortgageErcPct || 0) / 100);
 
   // 4) Selling costs.
   const costs = sellingCosts(saleValue, sellingCfg);
