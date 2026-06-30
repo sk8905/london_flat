@@ -60,13 +60,29 @@ function currentOverrides() {
 // ---------------------------------------------------------------------------
 // Boot
 // ---------------------------------------------------------------------------
+// Surface any runtime error as a visible banner instead of a silent freeze/blank,
+// so problems are diagnosable on a remote machine.
+function showFatal(msg) {
+  let b = document.getElementById("fatal-banner");
+  if (!b) { b = document.createElement("div"); b.id = "fatal-banner"; document.body.prepend(b); }
+  b.textContent = "⚠ " + msg + " — please screenshot this.";
+}
+window.addEventListener("error", (e) =>
+  showFatal((e.message || "script error") + (e.filename ? " @ " + e.filename.split("/").pop() + ":" + e.lineno : "")));
+window.addEventListener("unhandledrejection", (e) =>
+  showFatal("promise: " + (e.reason && (e.reason.message || e.reason))));
+
 function boot() {
-  renderHeader();
-  rerender();
-  buildControls();
-  buildLettingControls();
-  renderStaticFactorChartsOnce();
-  refreshLiveRate();
+  try {
+    renderHeader();
+    rerender();
+    buildControls();
+    buildLettingControls();
+    renderStaticFactorChartsOnce();
+  } catch (err) {
+    showFatal(err && err.message ? err.message : String(err));
+    throw err;
+  }
 }
 
 // Coalesce rapid slider 'input' events into one render per animation frame, so a
@@ -101,33 +117,13 @@ function rerender() {
 // ---------------------------------------------------------------------------
 function renderHeader() {
   $("#as-of").textContent = "Data as of " + monthName(DATA.META.asOf);
-  $("#live-rate").textContent = pct(DATA.RATES.baseRateNow) + " base rate";
-}
-
-async function refreshLiveRate() {
-  // The badge shows the curated snapshot by default. If an optional /api/boe-rate
-  // endpoint happens to exist (a Cloudflare function or Worker route), light it up
-  // with the live value. On a pure static host this fails fast — and it is strictly
-  // time-boxed and content-type-guarded so it can NEVER hang the page or the tab.
-  $("#live-rate").title = "Snapshot value — " + DATA.RATES.baseRateAsOf;
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 2500);
-  try {
-    const res = await fetch("/api/boe-rate", { headers: { accept: "application/json" }, signal: ctrl.signal });
-    if (!res.ok) return;
-    if (!(res.headers.get("content-type") || "").includes("application/json")) return; // static host returned HTML
-    const data = await res.json();
-    if (data && typeof data.rate === "number") {
-      const badge = $("#live-rate");
-      badge.textContent = pct(data.rate) + " base rate";
-      badge.classList.add("live");
-      badge.title = "Live from Bank of England" + (data.date ? " (" + data.date + ")" : "");
-    }
-  } catch (_) {
-    // offline / static / aborted: keep the curated snapshot value
-  } finally {
-    clearTimeout(timer);
-  }
+  const badge = $("#live-rate");
+  badge.textContent = pct(DATA.RATES.baseRateNow) + " base rate";
+  badge.title = "Snapshot value — " + DATA.RATES.baseRateAsOf;
+  const build = $("#build");
+  if (build) build.textContent = "build " + (DATA.META.build || "—");
+  // No network calls: the rate is the curated snapshot in dataset.js. This keeps the
+  // page 100% static with zero post-load activity behind Zero Trust.
 }
 
 // ---------------------------------------------------------------------------

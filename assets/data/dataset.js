@@ -4,12 +4,13 @@
 // Every figure below is a snapshot researched on 2026-06-30. Each block carries a
 // `source` key (an id into SOURCES) and a `note` so the UI can show provenance.
 // Anything forward-looking is flagged `estimate: true`. Edit freely — the app
-// recomputes everything from this file. Live values (e.g. BoE Bank Rate) can be
-// refreshed at runtime by the Cloudflare Function at /api/boe-rate.
+// recomputes everything from this file. Values such as the BoE Bank Rate are
+// curated snapshots here; update them and redeploy to refresh.
 // =============================================================================
 
 export const META = {
   asOf: "2026-06-30",
+  build: "v8 · 2026-06-30", // bump on each change so the footer confirms the live build
   currency: "GBP",
   disclaimer:
     "This tool is an informational model, not financial, tax, mortgage or legal advice. " +
