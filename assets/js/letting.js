@@ -11,7 +11,7 @@
 // All approximate and clearly flagged in the UI — not a substitute for an adviser.
 // =============================================================================
 
-import { monthlyPayment, balanceAfter, monthsBetween, valueMultiplier, sellingCosts } from "./finance.js";
+import { monthlyPayment, balanceAfter, monthsBetween, valueMultiplier, sellingCosts } from "./finance.js?v=13";
 
 const addMonthsISO = (iso, n) => {
   const d = new Date((iso.length === 7 ? iso + "-01" : iso));

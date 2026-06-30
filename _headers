@@ -1,0 +1,10 @@
+# Cloudflare (Pages / Workers static assets) — always revalidate so a new
+# deploy can never be masked by a stale browser cache. ETags still allow fast
+# 304s when nothing changed.
+/*
+  Cache-Control: no-cache, must-revalidate
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
+
+/assets/*
+  Cache-Control: no-cache, must-revalidate

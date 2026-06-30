@@ -2,11 +2,11 @@
 // app.js  —  Entry point: load data, run model, render the single page, wire UI
 // =============================================================================
 
-import * as DATA from "../data/dataset.js";
-import { runModel, signalLabel, FACTOR_LABELS } from "./model.js";
-import * as C from "./charts.js";
-import { monthlyPayment, monthsBetween } from "./finance.js";
-import { rentVsSell } from "./letting.js";
+import * as DATA from "../data/dataset.js?v=13";
+import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=13";
+import * as C from "./charts.js?v=13";
+import { monthlyPayment, monthsBetween } from "./finance.js?v=13";
+import { rentVsSell } from "./letting.js?v=13";
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const gbp = (n) => (n < 0 ? "−" : "") + "£" + Math.abs(Math.round(n)).toLocaleString("en-GB");
@@ -203,6 +203,8 @@ function renderVerdict(r) {
 
   const runnerUp = r.ranked[1];
   const reasons = topReasons(best);
+  const deposit = DATA.PROPERTY.purchasePrice - r.inputs.mortgage.principal;
+  const profitBest = best.net - deposit;
 
   host.innerHTML = `
     <div class="verdict-grid">
@@ -215,6 +217,8 @@ function renderVerdict(r) {
           value <strong>${gbp(best.saleValue)}</strong> → estimated net proceeds
           <strong>${gbp(best.net)}</strong> after clearing the mortgage and all costs
           ${best.erc > 0 ? `(includes a ${gbp(best.erc)} early-repayment charge)` : `(no early-repayment charge — outside the fixed period)`}.
+          After returning your original <strong>${gbp(deposit)}</strong> deposit, that's a profit of
+          <strong>${gbp(profitBest)}</strong> on the cash you put in.
         </p>
         <ul class="verdict-reasons">${reasons.map((x) => `<li>${x}</li>`).join("")}</ul>
         <p class="verdict-note">Next best: <strong>${runnerUp.window.label}</strong> (signal ${signed(runnerUp.composite)}).
@@ -240,10 +244,12 @@ function renderDashboard(r) {
   const letWins = let2.advantageLet >= 0;
 
   // KPIs
+  const deposit = DATA.PROPERTY.purchasePrice - r.inputs.mortgage.principal; // your original cash in
+  const profitBest = best.net - deposit;
   $("#dash-kpis").innerHTML = [
-    kpi("Est. value now", gbp(r.presentValue), `${signed(r.presentValue - DATA.PROPERTY.purchasePrice, gbp)} vs purchase`, r.presentValue >= DATA.PROPERTY.purchasePrice ? "pos" : "neg"),
-    kpi("Est. equity now", gbp(equityNow), "value − mortgage balance", "gold"),
-    kpi("Best-window net", gbp(best.net), "in " + best.window.label, "pos"),
+    kpi("Best-window net proceeds", gbp(best.net), "total cash in hand · " + best.window.label, "pos"),
+    kpi("Profit after your deposit", gbp(profitBest), `net − your ${gbp(deposit)} deposit`, profitBest >= 0 ? "gold" : "neg"),
+    kpi("Est. equity now", gbp(equityNow), "value − mortgage balance"),
     kpi(`Let vs sell (to ${horizonLabel})`, signed(let2.advantageLet, gbp), letWins ? "letting ahead" : "selling ahead", letWins ? "pos" : "neg"),
   ].join("");
 
@@ -391,25 +397,32 @@ function renderSignal(r) {
 // ---------------------------------------------------------------------------
 function renderProceeds(r) {
   const host = $("#proceeds-body");
+  const deposit = DATA.PROPERTY.purchasePrice - r.inputs.mortgage.principal; // your original cash in
   const bars = r.windows.map((w) => ({
     label: w.window.label,
-    value: w.net,
+    value: w.net - deposit, // profit above your original deposit
     color: w === r.best ? "#16a34a" : "#0891b2",
-    valueLabel: gbp(w.net),
-    sub: w.erc > 0 ? "−" + gbp(w.erc) + " ERC" : "no ERC",
+    valueLabel: gbp(w.net - deposit),
+    sub: "net " + gbp(w.net),
   }));
   host.innerHTML = `
     <div class="chart-wrap"><div id="proceeds-chart"></div>
-      <p class="chart-cap">Estimated cash in hand after repaying the mortgage, early-repayment charge (if any),
-      agent + VAT, legal and EPC costs. Scenario: <strong>${state.custom ? "Custom" : r.scenarioName}</strong>.</p></div>
+      <p class="chart-cap"><strong>Bars = your profit above the £${Math.round(deposit / 1000)}k deposit you put in</strong>
+      (i.e. net proceeds − deposit). The grey "net" figure is the total cash you'd receive. Scenario:
+      <strong>${state.custom ? "Custom" : r.scenarioName}</strong>.</p></div>
     <div class="table-wrap"><table class="rank-table">
-      <thead><tr><th>Window</th><th>Sale value</th><th>Outstanding</th><th>ERC</th><th>Selling costs</th><th>CGT</th><th>Net</th></tr></thead>
+      <thead><tr><th>Window</th><th>Sale value</th><th>Outstanding</th><th>ERC</th><th>Selling costs</th><th>CGT</th><th>Net proceeds</th><th>Less deposit</th><th>Your profit</th></tr></thead>
       <tbody>${r.windows.map((w) => `<tr class="${w === r.best ? "best-row" : ""}">
         <td>${w.window.label}</td><td>${gbp(w.saleValue)}</td><td>${gbp(w.outstanding)}</td>
         <td>${w.erc > 0 ? gbp(w.erc) : "—"}</td><td>${gbp(w.costs.total)}</td><td>£0</td>
-        <td><strong>${gbp(w.net)}</strong></td></tr>`).join("")}</tbody>
-    </table></div>`;
-  C.barChart($("#proceeds-chart"), { bars, yFormat: (v) => "£" + Math.round(v / 1000) + "k", height: 300, yUnit: "£ proceeds" });
+        <td>${gbp(w.net)}</td><td class="muted">−${gbp(deposit)}</td>
+        <td class="${w.net - deposit >= 0 ? "" : "neg-cell"}"><strong>${gbp(w.net - deposit)}</strong></td></tr>`).join("")}</tbody>
+    </table>
+    <p class="muted small"><strong>Net proceeds</strong> = sale value − outstanding mortgage − ERC − selling costs − CGT:
+      the total cash you'd receive. <strong>Your profit</strong> returns your original
+      <strong>${gbp(deposit)}</strong> deposit first, leaving the gain you've actually made on the cash you put in
+      (your repaid mortgage principal and price growth, net of costs).</p></div>`;
+  C.barChart($("#proceeds-chart"), { bars, yFormat: (v) => "£" + Math.round(v / 1000) + "k", height: 300, yUnit: "£ profit" });
 }
 
 // ---------------------------------------------------------------------------
