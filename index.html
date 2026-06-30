@@ -164,9 +164,32 @@
       <div id="proceeds-body" class="loading">Loading…</div>
     </section>
 
+    <!-- LETTING -->
+    <section class="panel" id="letting">
+      <h2>5 · Sell now, or rent it out and sell later?</h2>
+      <p class="section-lead">Keeping the flat and letting it is an alternative to selling. This compares the two
+        on a like-for-like wealth basis to your chosen horizon, with full UK income-tax treatment:
+        <strong>Section 24</strong> (mortgage interest gets a 20% tax credit, not full relief), the
+        <strong>April-2027 +2% landlord rate rise</strong>, and the <strong>partial loss of CGT relief</strong> from
+        moving out.</p>
+      <div id="letting-summary" class="loading">Loading…</div>
+      <h3 class="sub">Year-by-year rental cash flow</h3>
+      <div id="letting-table" class="loading">Loading…</div>
+      <h3 class="sub">Adjust the letting assumptions</h3>
+      <div id="letting-controls" class="loading">Loading…</div>
+      <p class="muted small">Sources:
+        <a href="https://www.gov.uk/government/news/uk-house-price-index-for-march-2026" target="_blank" rel="noopener">Islington rents (UK HPI / ONS)</a> ·
+        <a href="https://www.zoopla.co.uk/discover/property-news/autumn-budget-impact-on-uk-housing-market/" target="_blank" rel="noopener">landlord tax rise (Autumn Budget)</a> ·
+        <a href="https://www.gov.uk/capital-gains-tax/rates" target="_blank" rel="noopener">CGT rates &amp; allowances</a> ·
+        <a href="https://www.gov.uk/tax-sell-home" target="_blank" rel="noopener">Private Residence Relief</a></p>
+      <p class="disclaimer"><strong>Tax is simplified.</strong> Real liabilities depend on your total income, other
+        gains, allowable costs and reliefs. Section 24 and CGT-on-a-former-home are modelled approximately — confirm
+        with an accountant before letting.</p>
+    </section>
+
     <!-- CONTROLS -->
     <section class="panel" id="controls">
-      <h2>5 · Test your own assumptions</h2>
+      <h2>6 · Test your own assumptions</h2>
       <p class="section-lead">Don't agree with the consensus? Move the sliders — the recommendation, signal and every
         chart update live.</p>
       <div id="controls-body" class="loading">Loading…</div>
@@ -174,7 +197,7 @@
 
     <!-- METHODOLOGY -->
     <section class="panel" id="methodology">
-      <h2>6 · Methodology &amp; sources</h2>
+      <h2>7 · Methodology &amp; sources</h2>
       <p>The signal is a weighted blend of five factor scores, each in the range −100 (wait) to +100 (sell here),
         computed for four windows (now, spring 2027, H2 2027, spring 2028):</p>
       <ul>
@@ -185,6 +208,11 @@
         <li><strong>Seasonality (10%)</strong> — buyer-demand strength in the window's month.</li>
         <li><strong>Policy &amp; macro (15%)</strong> — time-aware tally of the political factors above.</li>
       </ul>
+      <p>The <strong>sell-vs-let</strong> comparison (section 5) is separate from the signal: it models monthly rental
+        cash flow (rent less voids, agent, maintenance, insurance, service charge and the full mortgage payment),
+        income tax under <strong>Section 24</strong> (interest gets a 20% credit) with the <strong>April-2027</strong>
+        landlord rate rise, and Capital Gains Tax on eventual sale with <strong>partial Private Residence Relief</strong>,
+        then compares the total against selling now and investing the proceeds at your chosen opportunity rate.</p>
       <p class="muted small">All figures are curated snapshots gathered on 30 June 2026 and forward-looking
         estimates; they will go stale. The Bank of England base rate badge attempts a live refresh via a Cloudflare
         Function. Full source list is linked inline in each factor above.</p>

@@ -157,6 +157,14 @@ input[type="range"] { accent-color: var(--brand); }
 }
 .btn-reset:hover { background: #f3f4f6; }
 
+/* letting */
+.letting-lead { font-size: 16px; color: var(--ink); max-width: 70ch; margin: 4px 0 16px; }
+.neg-cell { color: var(--neg); }
+.cgt-box { background: #f5f3ff; border: 1px solid #ddd6fe; border-radius: 10px; padding: 14px 16px; margin-top: 14px; font-size: 13.5px; color: #4c1d95; }
+.cgt-box strong { color: #5b21b6; }
+.ctrl-check { flex-direction: row; align-items: center; gap: 10px; }
+.ctrl-check input { width: auto; }
+
 /* methodology */
 .disclaimer { background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 12px 14px; color: #92400e; font-size: 13.5px; }
 

@@ -91,6 +91,11 @@ export const SOURCES = {
     url: "https://www.gov.uk/tax-sell-home",
     publisher: "GOV.UK / HMRC",
   },
+  cgtRates: {
+    label: "GOV.UK — Capital Gains Tax rates & allowances; property income tax",
+    url: "https://www.gov.uk/capital-gains-tax/rates",
+    publisher: "GOV.UK / HMRC",
+  },
 };
 
 // -----------------------------------------------------------------------------
@@ -216,6 +221,54 @@ export const FORECAST = {
     optimistic: { 2026: -1.0, 2027: 4.5, 2028: 5.5, 2029: 6.0 },
   },
   defaultScenario: "base",
+};
+
+// -----------------------------------------------------------------------------
+// Letting (rent-it-out instead of selling) assumptions & tax treatment.
+// Defaults are sourced; all are editable in the UI. Income tax matters a lot here.
+// -----------------------------------------------------------------------------
+export const LETTING = {
+  sources: ["hpiMar2026", "budgetZoopla", "cgtRates"],
+  note:
+    "Islington average private rent was £2,811/mo in April 2026 (+4.0% YoY). Section 24 " +
+    "means mortgage interest is NOT a deductible expense for individual landlords — instead " +
+    "you get a 20% tax credit on the interest. From April 2027 the Budget raised property- " +
+    "income tax rates by 2 points (to 22/42/47%). Letting your former home also erodes " +
+    "Private Residence Relief, so part of the eventual gain becomes liable to CGT.",
+  monthlyRent: 2811, // Islington average (Apr 2026); editable for your specific flat
+  rentGrowthPct: 4.0, // annual; Islington rent YoY to Apr 2026
+  voidMonthsPerYear: 1, // assume ~1 month vacant per year
+  agentFeePct: 10, // full-management letting agent fee (% of rent), excl VAT
+  agentVatPct: 20,
+  maintenancePctOfRent: 5, // repairs/maintenance allowance
+  insurancePerYear: 300, // landlord buildings/contents
+  serviceChargeGroundRentPerYear: 3000, // LEASEHOLD FLAT estimate — please verify your bill
+  selfManage: false, // if true, agentFee = 0
+  // Letting usually needs consent-to-let or a buy-to-let remortgage (rates higher
+  // than residential). Applied only after the current fix ends (Mar 2027).
+  letMortgageRatePctAfterFix: 5.6,
+  interestOnly: false, // BTL is often interest-only; false keeps capital & interest
+  // Opportunity cost: if you sell now instead, what return do you assume on the cash?
+  opportunityRatePct: 4.0,
+};
+
+// Income tax & CGT settings. Marginal band drives both rental-profit tax and the
+// residential CGT rate. Default: higher-rate taxpayer.
+export const TAX = {
+  source: "cgtRates",
+  marginalBand: "higher", // "basic" | "higher" | "additional"
+  // Property-income tax rates by band (pre-April-2027 / post-April-2027 +2pts).
+  incomeRates: {
+    basic: { pre: 0.20, post: 0.22 },
+    higher: { pre: 0.40, post: 0.42 },
+    additional: { pre: 0.45, post: 0.47 },
+  },
+  raisedFrom: "2027-04-01", // landlord rate rise (Autumn Budget 2025)
+  financeCreditPct: 20, // Section 24: 20% tax credit on mortgage interest
+  // Residential-property CGT rates (2024/25+): basic 18%, higher/additional 24%.
+  cgtRates: { basic: 0.18, higher: 0.24, additional: 0.24 },
+  cgtAnnualExempt: 3000, // 2025/26 annual exempt amount
+  finalPeriodExemptMonths: 9, // last 9 months of ownership always PRR-exempt
 };
 
 // -----------------------------------------------------------------------------

@@ -6,10 +6,10 @@ import * as DATA from "../data/dataset.js";
 import { runModel, signalLabel, FACTOR_LABELS } from "./model.js";
 import * as C from "./charts.js";
 import { monthlyPayment, monthsBetween } from "./finance.js";
+import { rentVsSell } from "./letting.js";
 
 const $ = (sel, root = document) => root.querySelector(sel);
-const gbp = (n) => "£" + Math.round(n).toLocaleString("en-GB");
-const gbp0 = (n) => "£" + Math.round(n).toLocaleString("en-GB");
+const gbp = (n) => (n < 0 ? "−" : "") + "£" + Math.abs(Math.round(n)).toLocaleString("en-GB");
 const signed = (n, f = (x) => x.toFixed(0)) => (n >= 0 ? "+" : "") + f(n);
 const pct = (n) => n.toFixed(2) + "%";
 const monthName = (iso) =>
@@ -30,7 +30,23 @@ const state = {
   remortgageRate: DATA.MORTGAGE.remortgageRatePctAssumed,
   presentValue: null, // null => derive from index
   custom: false,
+  letting: {
+    horizon: "2028-04-01",
+    monthlyRent: DATA.LETTING.monthlyRent,
+    taxBand: DATA.TAX.marginalBand,
+    serviceCharge: DATA.LETTING.serviceChargeGroundRentPerYear,
+    selfManage: DATA.LETTING.selfManage,
+    opportunityRate: DATA.LETTING.opportunityRatePct,
+  },
 };
+
+const LET_HORIZONS = [
+  { label: "Spring 2027", date: "2027-04-01" },
+  { label: "H2 2027", date: "2027-10-01" },
+  { label: "Spring 2028", date: "2028-04-01" },
+  { label: "Spring 2029", date: "2029-04-01" },
+  { label: "Spring 2030", date: "2030-04-01" },
+];
 
 function currentOverrides() {
   return {
@@ -48,6 +64,7 @@ function boot() {
   renderHeader();
   rerender();
   buildControls();
+  buildLettingControls();
   renderStaticFactorChartsOnce();
   refreshLiveRate();
 }
@@ -61,6 +78,7 @@ function rerender() {
   renderProceeds(result);
   renderForecastChart(result);
   renderFactorScores(result);
+  renderLetting(result);
 }
 
 // ---------------------------------------------------------------------------
@@ -318,6 +336,130 @@ function nearestBase(series, dateISO) {
   let best = series[0];
   for (const s of series) if (new Date(s.date + "-01") <= t) best = s;
   return best.rate;
+}
+
+// ---------------------------------------------------------------------------
+// Rent-it-out vs sell comparison
+// ---------------------------------------------------------------------------
+function computeLetting(r) {
+  const L = state.letting;
+  const letCfg = {
+    ...DATA.LETTING,
+    monthlyRent: L.monthlyRent,
+    serviceChargeGroundRentPerYear: L.serviceCharge,
+    selfManage: L.selfManage,
+    opportunityRatePct: L.opportunityRate,
+    letMortgageRatePctAfterFix: DATA.LETTING.letMortgageRatePctAfterFix,
+  };
+  const tax = { ...DATA.TAX, marginalBand: L.taxBand };
+  const mortgage = { ...r.inputs.mortgage, _purchaseDate: DATA.PROPERTY.purchaseDate };
+  const sellNowNet = r.windows.find((w) => w.window.id === "now").net;
+  return rentVsSell({
+    property: DATA.PROPERTY, mortgage, sellingCfg: r.inputs.sellingCfg,
+    presentValue: r.presentValue, presentISO: DATA.META.asOf,
+    growthByYear: r.growthByYear, saleDate: L.horizon,
+    letCfg, TAX: tax, sellNowNet,
+  });
+}
+
+function renderLetting(r) {
+  const res = computeLetting(r);
+  const host = $("#letting-summary");
+  const wins = res.advantageLet >= 0;
+  const horizonLabel = (LET_HORIZONS.find((h) => h.date === state.letting.horizon) || {}).label || res.saleDate;
+  const bandLabel = { basic: "basic-rate (20%)", higher: "higher-rate (40→42%)", additional: "additional-rate (45→47%)" }[res.band];
+
+  host.innerHTML = `
+    <div class="verdict-kicker">Sell now vs. let it &amp; sell in ${horizonLabel}</div>
+    <p class="letting-lead">
+      Over <strong>${res.years.toFixed(1)} years</strong>, letting it out and selling in ${horizonLabel} is projected to leave you
+      <strong class="${wins ? "delta up" : "delta down"}">${gbp(Math.abs(res.advantageLet))}</strong>
+      ${wins ? "better" : "worse"} off than selling now and investing the proceeds at ${pct(state.letting.opportunityRate)}.
+      Assumes a ${bandLabel} taxpayer; mortgage interest gets the 20% Section&nbsp;24 credit, not full relief.
+    </p>
+    <div class="cards">
+      ${card("Cumulative net rent", gbp(res.cumulativeNetRent), res.cumulativeNetRent < 0 ? "after mortgage, costs & tax" : "after costs & tax")}
+      ${card("Net sale in " + horizonLabel, gbp(res.sale.netSaleProceeds), res.sale.cgt > 0 ? "incl. " + gbp(res.sale.cgt) + " CGT" : "CGT £0 here")}
+      ${card("Let &amp; sell — total", gbp(res.letTotal), "rent cash-flow + net sale")}
+      ${card("Sell now &amp; invest", gbp(res.sellNowGrown), gbp(res.sellNowNet) + " grown @ " + pct(state.letting.opportunityRate))}
+    </div>
+    <div class="chart-wrap"><div id="letting-chart"></div>
+      <p class="chart-cap">Projected total wealth at ${horizonLabel} under each path. Letting is dragged down by
+      negative monthly cash flow (rent doesn't cover a capital-repayment mortgage of this size) but builds equity and
+      captures price recovery; selling now realises cash you can invest elsewhere.</p></div>`;
+
+  C.barChart($("#letting-chart"), {
+    bars: [
+      { label: "Let & sell later", value: res.letTotal, color: wins ? "#16a34a" : "#0891b2", valueLabel: gbp(res.letTotal) },
+      { label: "Sell now & invest", value: res.sellNowGrown, color: wins ? "#0891b2" : "#16a34a", valueLabel: gbp(res.sellNowGrown) },
+    ],
+    yFormat: (v) => "£" + Math.round(v / 1000) + "k", height: 280,
+  });
+
+  // year-by-year table + CGT/relief breakdown
+  const tHost = $("#letting-table");
+  const s = res.sale;
+  tHost.innerHTML = `
+    <div class="table-wrap"><table class="rank-table">
+      <thead><tr><th>Year from</th><th>Gross rent*</th><th>Running costs</th><th>Mortgage interest</th><th>Income tax</th><th>Net cash flow</th></tr></thead>
+      <tbody>${res.yearsTable.map((y) => `<tr>
+        <td>${monthName(y.label)}</td><td>${gbp(y.grossRent)}</td><td>${gbp(y.opex)}</td>
+        <td>${gbp(y.interest)}</td><td>${gbp(y.tax)}</td>
+        <td class="${y.netCashFlow >= 0 ? "" : "neg-cell"}"><strong>${gbp(y.netCashFlow)}</strong></td></tr>`).join("")}
+      </tbody>
+    </table>
+    <p class="muted small">*Effective of a ${DATA.LETTING.voidMonthsPerYear}-month/yr void allowance. Running costs =
+      letting agent ${state.letting.selfManage ? "(self-managed: £0)" : DATA.LETTING.agentFeePct + "%+VAT"} + ${DATA.LETTING.maintenancePctOfRent}% maintenance +
+      insurance + service charge/ground rent. Mortgage interest shown for the Section 24 credit; it is not a deductible expense.</p></div>
+    <div class="cgt-box">
+      <strong>Capital Gains Tax on the eventual sale</strong> — letting your former home erodes Private Residence Relief.
+      You lived in it for ${s.monthsAsResidence} months; with the final 9 months always exempt, about
+      <strong>${(s.chargeableFraction * 100).toFixed(0)}%</strong> of the gain over ${res.years.toFixed(1)} years is chargeable.
+      Estimated gain ${gbp(s.totalGain)} → chargeable ${gbp(s.chargeableGain)} → CGT <strong>${gbp(s.cgt)}</strong>
+      (residential rate for a ${res.band}-rate taxpayer, after the ${gbp(DATA.TAX.cgtAnnualExempt)} annual allowance).
+      Selling <em>now</em> keeps the gain fully CGT-exempt.
+    </div>`;
+}
+
+function buildLettingControls() {
+  const host = $("#letting-controls");
+  host.innerHTML = `
+    <div class="controls-grid">
+      <label class="ctrl"><span>Sell horizon (let until)</span>
+        <select id="let-horizon">${LET_HORIZONS.map((h) =>
+          `<option value="${h.date}" ${h.date === state.letting.horizon ? "selected" : ""}>${h.label}</option>`).join("")}</select></label>
+      <label class="ctrl"><span>Your income tax band</span>
+        <select id="let-band">
+          <option value="basic" ${state.letting.taxBand === "basic" ? "selected" : ""}>Basic (20%)</option>
+          <option value="higher" ${state.letting.taxBand === "higher" ? "selected" : ""}>Higher (40% → 42%)</option>
+          <option value="additional" ${state.letting.taxBand === "additional" ? "selected" : ""}>Additional (45% → 47%)</option>
+        </select></label>
+      <label class="ctrl"><span>Monthly rent: <strong id="lbl-rent">${gbp(state.letting.monthlyRent)}</strong></span>
+        <input id="let-rent" type="range" min="2000" max="4200" step="25" value="${state.letting.monthlyRent}"></label>
+      <label class="ctrl"><span>Service charge + ground rent/yr: <strong id="lbl-sc">${gbp(state.letting.serviceCharge)}</strong></span>
+        <input id="let-sc" type="range" min="0" max="8000" step="100" value="${state.letting.serviceCharge}"></label>
+      <label class="ctrl"><span>Opportunity return on sale cash: <strong id="lbl-opp">${pct(state.letting.opportunityRate)}</strong></span>
+        <input id="let-opp" type="range" min="0" max="8" step="0.25" value="${state.letting.opportunityRate}"></label>
+      <label class="ctrl ctrl-check"><input id="let-self" type="checkbox" ${state.letting.selfManage ? "checked" : ""}>
+        <span>Self-manage (no letting agent fee)</span></label>
+    </div>`;
+
+  $("#let-horizon").addEventListener("change", (e) => { state.letting.horizon = e.target.value; rerenderLetting(); });
+  $("#let-band").addEventListener("change", (e) => { state.letting.taxBand = e.target.value; rerenderLetting(); });
+  $("#let-rent").addEventListener("input", (e) => {
+    state.letting.monthlyRent = parseFloat(e.target.value); $("#lbl-rent").textContent = gbp(state.letting.monthlyRent); rerenderLetting();
+  });
+  $("#let-sc").addEventListener("input", (e) => {
+    state.letting.serviceCharge = parseFloat(e.target.value); $("#lbl-sc").textContent = gbp(state.letting.serviceCharge); rerenderLetting();
+  });
+  $("#let-opp").addEventListener("input", (e) => {
+    state.letting.opportunityRate = parseFloat(e.target.value); $("#lbl-opp").textContent = pct(state.letting.opportunityRate); rerenderLetting();
+  });
+  $("#let-self").addEventListener("change", (e) => { state.letting.selfManage = e.target.checked; rerenderLetting(); });
+}
+
+function rerenderLetting() {
+  renderLetting(runModel(DATA, currentOverrides()));
 }
 
 // ---------------------------------------------------------------------------
