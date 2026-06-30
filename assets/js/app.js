@@ -37,6 +37,7 @@ const state = {
     serviceCharge: DATA.LETTING.serviceChargeGroundRentPerYear,
     selfManage: DATA.LETTING.selfManage,
     opportunityRate: DATA.LETTING.opportunityRatePct,
+    interestOnly: DATA.LETTING.interestOnly,
   },
 };
 
@@ -67,10 +68,19 @@ function showFatal(msg) {
   if (!b) { b = document.createElement("div"); b.id = "fatal-banner"; document.body.prepend(b); }
   b.textContent = "⚠ " + msg + " — please screenshot this.";
 }
-window.addEventListener("error", (e) =>
-  showFatal((e.message || "script error") + (e.filename ? " @ " + e.filename.split("/").pop() + ":" + e.lineno : "")));
-window.addEventListener("unhandledrejection", (e) =>
-  showFatal("promise: " + (e.reason && (e.reason.message || e.reason))));
+window.addEventListener("error", (e) => {
+  // Only surface genuine errors thrown by THIS app's own scripts. Opaque
+  // cross-origin "Script error." events (Safari extensions, content blockers,
+  // injected scripts) carry no message/filename and are not actionable — ignore.
+  const msg = e && e.message ? e.message : "";
+  const ours = e && e.filename && e.filename.indexOf("/assets/js/") !== -1;
+  if (!msg || /script error/i.test(msg) || !ours) return;
+  showFatal(msg + (e.lineno ? " @ " + e.filename.split("/").pop() + ":" + e.lineno : ""));
+});
+window.addEventListener("unhandledrejection", (e) => {
+  const r = e && e.reason;
+  if (r && r.message) showFatal("promise: " + r.message); // skip opaque rejections
+});
 
 const PAGE_META = {
   dashboard: ["Dashboard", "Your at-a-glance sell-timing summary"],
@@ -498,6 +508,7 @@ function computeLetting(r) {
     serviceChargeGroundRentPerYear: L.serviceCharge,
     selfManage: L.selfManage,
     opportunityRatePct: L.opportunityRate,
+    interestOnly: L.interestOnly,
     letMortgageRatePctAfterFix: DATA.LETTING.letMortgageRatePctAfterFix,
   };
   const tax = { ...DATA.TAX, marginalBand: L.taxBand };
@@ -511,31 +522,47 @@ function computeLetting(r) {
   });
 }
 
+function letPeriodLabel(startISO, months) {
+  const d = new Date(startISO + "-01");
+  d.setMonth(d.getMonth() + months - 1);
+  const endISO = d.toISOString().slice(0, 7);
+  return monthName(startISO) + " – " + monthName(endISO) + (months < 12 ? ` · ${months} mo` : "");
+}
+
 function renderLetting(r) {
   const res = computeLetting(r);
   const host = $("#letting-summary");
   const wins = res.advantageLet >= 0;
   const horizonLabel = (LET_HORIZONS.find((h) => h.date === state.letting.horizon) || {}).label || res.saleDate;
   const bandLabel = { basic: "basic-rate (20%)", higher: "higher-rate (40→42%)", additional: "additional-rate (45→47%)" }[res.band];
+  // cash you put in that ISN'T equity (i.e. excluding principal repayments)
+  const trueCashCost = res.cumulativeNetRent + (res.interestOnly ? 0 : res.cumulativePrincipal);
 
   host.innerHTML = `
     <div class="verdict-kicker">Sell now vs. let it &amp; sell in ${horizonLabel}</div>
     <p class="letting-lead">
-      Over <strong>${res.years.toFixed(1)} years</strong>, letting it out and selling in ${horizonLabel} is projected to leave you
-      <strong class="${wins ? "delta up" : "delta down"}">${gbp(Math.abs(res.advantageLet))}</strong>
-      ${wins ? "better" : "worse"} off than selling now and investing the proceeds at ${pct(state.letting.opportunityRate)}.
-      Assumes a ${bandLabel} taxpayer; mortgage interest gets the 20% Section&nbsp;24 credit, not full relief.
+      Over <strong>${res.years.toFixed(1)} years</strong>, letting then selling in ${horizonLabel} leaves you
+      <strong class="${wins ? "delta up" : "delta down"}">${gbp(Math.abs(res.advantageLet))} ${wins ? "better" : "worse"} off</strong>
+      than selling now and investing the proceeds at ${pct(state.letting.opportunityRate)} — assuming a ${bandLabel} taxpayer
+      on ${res.interestOnly ? "an interest-only" : "a capital-repayment"} mortgage.
     </p>
     <div class="cards">
-      ${card("Cumulative net rent", gbp(res.cumulativeNetRent), res.cumulativeNetRent < 0 ? "after mortgage, costs & tax" : "after costs & tax")}
       ${card("Net sale in " + horizonLabel, gbp(res.sale.netSaleProceeds), res.sale.cgt > 0 ? "incl. " + gbp(res.sale.cgt) + " CGT" : "CGT £0 here")}
-      ${card("Let &amp; sell — total", gbp(res.letTotal), "rent cash-flow + net sale")}
+      ${card("Rental cash flow", gbp(res.cumulativeNetRent), res.interestOnly ? "out of pocket, period total" : "incl. " + gbp(res.cumulativePrincipal) + " principal you keep")}
+      ${card("Let &amp; sell — total", gbp(res.letTotal), "net sale + rental cash flow")}
       ${card("Sell now &amp; invest", gbp(res.sellNowGrown), gbp(res.sellNowNet) + " grown @ " + pct(state.letting.opportunityRate))}
     </div>
+    <div class="cgt-box" style="background:#eff6ff;border-color:#bfdbfe;color:#1e3a8a;">
+      <strong>Why letting can lose despite a bigger sale figure.</strong> Selling in ${horizonLabel} nets
+      <strong>${gbp(res.sale.netSaleProceeds)}</strong> versus <strong>${gbp(res.sellNowNet)}</strong> now — but holding
+      costs <strong>${gbp(Math.abs(res.cumulativeNetRent))}</strong> of cash over the period${res.interestOnly ? "" : `, of which
+      <strong>${gbp(res.cumulativePrincipal)}</strong> is mortgage principal that comes back to you as equity (already counted
+      in the sale figure)`}. So the real out-of-pocket cost of holding is about <strong>${gbp(Math.abs(trueCashCost))}</strong>.
+      Set against the ${pct(state.letting.opportunityRate)} you could earn on the sell-now cash, letting ends up
+      ${wins ? "ahead" : "behind"} by ${gbp(Math.abs(res.advantageLet))}.
+    </div>
     <div class="chart-wrap"><div id="letting-chart"></div>
-      <p class="chart-cap">Projected total wealth at ${horizonLabel} under each path. Letting is dragged down by
-      negative monthly cash flow (rent doesn't cover a capital-repayment mortgage of this size) but builds equity and
-      captures price recovery; selling now realises cash you can invest elsewhere.</p></div>`;
+      <p class="chart-cap">Projected total wealth at ${horizonLabel} under each path.</p></div>`;
 
   C.barChart($("#letting-chart"), {
     bars: [
@@ -550,16 +577,19 @@ function renderLetting(r) {
   const s = res.sale;
   tHost.innerHTML = `
     <div class="table-wrap"><table class="rank-table">
-      <thead><tr><th>Year from</th><th>Gross rent*</th><th>Running costs</th><th>Mortgage interest</th><th>Income tax</th><th>Net cash flow</th></tr></thead>
+      <thead><tr><th>Period</th><th>Gross rent*</th><th>Running costs</th><th>Interest</th><th>Principal†</th><th>Income tax</th><th>Net cash flow</th></tr></thead>
       <tbody>${res.yearsTable.map((y) => `<tr>
-        <td>${monthName(y.label)}</td><td>${gbp(y.grossRent)}</td><td>${gbp(y.opex)}</td>
-        <td>${gbp(y.interest)}</td><td>${gbp(y.tax)}</td>
+        <td>${letPeriodLabel(y.label, y.months)}</td><td>${gbp(y.grossRent)}</td><td>${gbp(y.opex)}</td>
+        <td>${gbp(y.interest)}</td><td>${gbp(y.principal)}</td><td>${gbp(y.tax)}</td>
         <td class="${y.netCashFlow >= 0 ? "" : "neg-cell"}"><strong>${gbp(y.netCashFlow)}</strong></td></tr>`).join("")}
       </tbody>
     </table>
-    <p class="muted small">*Effective of a ${DATA.LETTING.voidMonthsPerYear}-month/yr void allowance. Running costs =
-      letting agent ${state.letting.selfManage ? "(self-managed: £0)" : DATA.LETTING.agentFeePct + "%+VAT"} + ${DATA.LETTING.maintenancePctOfRent}% maintenance +
-      insurance + service charge/ground rent. Mortgage interest shown for the Section 24 credit; it is not a deductible expense.</p></div>
+    <p class="muted small">*Effective of a ${DATA.LETTING.voidMonthsPerYear}-month/yr void allowance; the final period may be
+      shorter than 12 months (shown). Running costs = letting agent
+      ${state.letting.selfManage ? "(self-managed: £0)" : DATA.LETTING.agentFeePct + "%+VAT"} + ${DATA.LETTING.maintenancePctOfRent}% maintenance +
+      insurance + service charge/ground rent. Mortgage interest isn't a deductible expense (it gets the 20% Section 24 credit).
+      <strong>†Principal</strong> repayments leave your cash flow but build equity — they return to you in the sale figure, so
+      they're not a true cost.</p></div>
     <div class="cgt-box">
       <strong>Capital Gains Tax on the eventual sale</strong> — letting your former home erodes Private Residence Relief.
       You lived in it for ${s.monthsAsResidence} months; with the final 9 months always exempt, about
@@ -591,6 +621,8 @@ function buildLettingControls() {
         <input id="let-opp" type="range" min="0" max="8" step="0.25" value="${state.letting.opportunityRate}"></label>
       <label class="ctrl ctrl-check"><input id="let-self" type="checkbox" ${state.letting.selfManage ? "checked" : ""}>
         <span>Self-manage (no letting agent fee)</span></label>
+      <label class="ctrl ctrl-check"><input id="let-io" type="checkbox" ${state.letting.interestOnly ? "checked" : ""}>
+        <span>Interest-only mortgage (typical buy-to-let)</span></label>
     </div>`;
 
   $("#let-horizon").addEventListener("change", (e) => { state.letting.horizon = e.target.value; rerenderLetting(); });
@@ -605,6 +637,7 @@ function buildLettingControls() {
     state.letting.opportunityRate = parseFloat(e.target.value); $("#lbl-opp").textContent = pct(state.letting.opportunityRate); scheduleLetting();
   });
   $("#let-self").addEventListener("change", (e) => { state.letting.selfManage = e.target.checked; rerenderLetting(); });
+  $("#let-io").addEventListener("change", (e) => { state.letting.interestOnly = e.target.checked; rerenderLetting(); });
 }
 
 function rerenderLetting() {

@@ -8,40 +8,17 @@
   <link rel="stylesheet" href="assets/css/styles.css" />
 </head>
 <body>
-<div class="app-shell">
 
-  <!-- SIDEBAR -->
-  <aside class="sidebar" id="sidebar">
-    <div class="brand">
-      <span class="brand-mark">⌂</span>
-      <div class="brand-text">
-        <div class="brand-title">Flat Forecaster</div>
-        <div class="brand-sub">N1 7TX · Islington</div>
+  <!-- TOP NAVIGATION -->
+  <header class="topnav">
+    <div class="wrap topnav-top">
+      <div class="brand">
+        <span class="brand-mark">⌂</span>
+        <div class="brand-text">
+          <div class="brand-title">Flat Forecaster</div>
+          <div class="brand-sub">N1 7TX · Islington</div>
+        </div>
       </div>
-    </div>
-
-    <nav class="nav" id="nav">
-      <button class="nav-item active" data-tab="dashboard">
-        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-        <span>Dashboard</span></button>
-      <button class="nav-item" data-tab="signal">
-        <svg viewBox="0 0 24 24"><polyline points="3 17 9 11 13 15 21 6"/><polyline points="15 6 21 6 21 12"/></svg>
-        <span>Timing signal</span></button>
-      <button class="nav-item" data-tab="market">
-        <svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V8l7-4 7 4v13M9 21v-6h6v6"/></svg>
-        <span>Market &amp; factors</span></button>
-      <button class="nav-item" data-tab="finances">
-        <svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 9v6M18 9v6"/></svg>
-        <span>Your finances</span></button>
-      <button class="nav-item" data-tab="selllet">
-        <svg viewBox="0 0 24 24"><path d="M12 3v18M4 7h16M7 7l-3 6h6zM17 7l-3 6h6zM7 20h10"/></svg>
-        <span>Sell vs let</span></button>
-      <button class="nav-item" data-tab="assumptions">
-        <svg viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 12h3M11 12h9M4 17h11M19 17h1"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="17" r="2"/></svg>
-        <span>Assumptions</span></button>
-    </nav>
-
-    <div class="sidebar-foot">
       <div class="user-chip">
         <div class="avatar" id="user-initial">•</div>
         <div class="user-meta">
@@ -53,12 +30,34 @@
         </a>
       </div>
     </div>
-  </aside>
+    <div class="navrow">
+      <nav class="nav wrap" id="nav">
+        <button class="nav-item active" data-tab="dashboard">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          <span>Dashboard</span></button>
+        <button class="nav-item" data-tab="signal">
+          <svg viewBox="0 0 24 24"><polyline points="3 17 9 11 13 15 21 6"/><polyline points="15 6 21 6 21 12"/></svg>
+          <span>Timing signal</span></button>
+        <button class="nav-item" data-tab="market">
+          <svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V8l7-4 7 4v13M9 21v-6h6v6"/></svg>
+          <span>Market &amp; factors</span></button>
+        <button class="nav-item" data-tab="finances">
+          <svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 9v6M18 9v6"/></svg>
+          <span>Your finances</span></button>
+        <button class="nav-item" data-tab="selllet">
+          <svg viewBox="0 0 24 24"><path d="M12 3v18M4 7h16M7 7l-3 6h6zM17 7l-3 6h6zM7 20h10"/></svg>
+          <span>Sell vs let</span></button>
+        <button class="nav-item" data-tab="assumptions">
+          <svg viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 12h3M11 12h9M4 17h11M19 17h1"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="17" r="2"/></svg>
+          <span>Assumptions</span></button>
+      </nav>
+    </div>
+  </header>
 
-  <!-- MAIN -->
-  <div class="main">
-    <header class="topbar">
-      <div class="topbar-title">
+  <!-- MAIN (centered) -->
+  <main class="wrap content">
+    <div class="page-head">
+      <div>
         <h1 class="page-title" id="page-title">Dashboard</h1>
         <div class="page-sub" id="page-sub">Your at-a-glance sell-timing summary</div>
       </div>
@@ -66,9 +65,7 @@
         <span class="badge" id="live-rate" title="Bank of England base rate">—</span>
         <span class="badge muted" id="as-of">—</span>
       </div>
-    </header>
-
-    <div class="content">
+    </div>
 
       <!-- DASHBOARD -->
       <section class="tab active" id="tab-dashboard">
@@ -254,9 +251,7 @@
       <footer class="content-foot">
         Private dashboard · zero-trust protected · static site on Cloudflare · <span id="build">build —</span>
       </footer>
-    </div>
-  </div>
-</div>
+  </main>
 
 <script type="module" src="assets/js/app.js"></script>
 </body>

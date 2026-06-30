@@ -67,7 +67,7 @@ export function rentVsSell(opts) {
   const band = TAX.marginalBand;
   const agentPct = letCfg.selfManage ? 0 : letCfg.agentFeePct * (1 + letCfg.agentVatPct / 100);
 
-  const sched = scheduleInterest({ ...mortgage, interestOnly: false, _purchaseDate: property.purchaseDate },
+  const sched = scheduleInterest({ ...mortgage, interestOnly: !!letCfg.interestOnly, _purchaseDate: property.purchaseDate },
     letCfg, presentISO, saleDate);
 
   // ---- monthly rental cash flow & tax, grouped into 12-month buckets ---------
@@ -79,7 +79,7 @@ export function rentVsSell(opts) {
   for (const m of sched.months) {
     if (monthIdx % 12 === 0) {
       if (bucket) years.push(bucket);
-      bucket = { label: m.monthISO, grossRent: 0, opex: 0, interest: 0, principal: 0,
+      bucket = { label: m.monthISO, months: 0, grossRent: 0, opex: 0, interest: 0, principal: 0,
                  mortgagePaid: 0, taxableProfit: 0, tax: 0, netCashFlow: 0 };
       // bump rent annually
       if (monthIdx > 0) rentMonthly *= 1 + letCfg.rentGrowthPct / 100;
@@ -95,6 +95,7 @@ export function rentVsSell(opts) {
     bucket.interest += m.interest;
     bucket.principal += m.principalPaid;
     bucket.mortgagePaid += m.payment;
+    bucket.months += 1;
     monthIdx++;
   }
   if (bucket) years.push(bucket);
@@ -112,6 +113,9 @@ export function rentVsSell(opts) {
     y.cumNet = cumNet;
   }
   const cumulativeNetRent = cumNet;
+  const cumulativePrincipal = years.reduce((s, y) => s + y.principal, 0); // equity built via repayments
+  const cumulativeInterest = years.reduce((s, y) => s + y.interest, 0);
+  const cumulativeTax = years.reduce((s, y) => s + y.tax, 0);
 
   // ---- sale at the horizon (with partial-PRR CGT) ---------------------------
   const saleValue = presentValue * valueMultiplier(property.purchaseDate, saleDate, growthByYear, presentISO);
@@ -140,7 +144,8 @@ export function rentVsSell(opts) {
   return {
     saleDate, years: years_f,
     yearsTable: years,
-    cumulativeNetRent,
+    cumulativeNetRent, cumulativePrincipal, cumulativeInterest, cumulativeTax,
+    interestOnly: !!letCfg.interestOnly,
     sale: { saleValue, outstanding, erc, costs, cgt, chargeableFraction, netSaleProceeds,
             monthsAsResidence, monthsOwned, exemptMonths, totalGain, chargeableGain },
     letTotal,
