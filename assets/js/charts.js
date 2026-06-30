@@ -83,11 +83,15 @@ export function lineChart(container, opts) {
     tx.textContent = yFormat(t);
   });
 
-  // x labels (thin out if many)
+  // x labels (thin out if many). First label left-aligned, last right-aligned so
+  // they can't clip at the SVG edges (matters on narrow/mobile widths).
   const stepX = Math.ceil(labels.length / 8);
   labels.forEach((lab, i) => {
-    if (i % stepX !== 0 && i !== labels.length - 1) return;
-    const tx = el("text", { x: xAt(i), y: H - 14, class: "axis-x" }, svg);
+    const isLast = i === labels.length - 1;
+    if (i % stepX !== 0 && !isLast) return;
+    const anchor = i === 0 ? "start" : isLast ? "end" : "middle";
+    const x = i === 0 ? m.l : isLast ? W - m.r : xAt(i);
+    const tx = el("text", { x, y: H - 14, class: "axis-x", style: "text-anchor:" + anchor }, svg);
     tx.textContent = lab;
   });
 

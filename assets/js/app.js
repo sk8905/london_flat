@@ -87,8 +87,10 @@ function switchTab(id) {
   const meta = PAGE_META[id] || ["", ""];
   $("#page-title").textContent = meta[0];
   $("#page-sub").textContent = meta[1];
-  document.querySelector(".content").scrollIntoView({ block: "start" });
   window.scrollTo(0, 0);
+  // keep the active tab visible in the horizontal mobile nav
+  const activeBtn = document.querySelector(`.nav-item[data-tab="${id}"]`);
+  if (activeBtn) activeBtn.scrollIntoView({ inline: "center", block: "nearest" });
 }
 
 function wireNav() {
