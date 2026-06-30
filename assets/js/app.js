@@ -2,11 +2,11 @@
 // app.js  —  Entry point: load data, run model, render the single page, wire UI
 // =============================================================================
 
-import * as DATA from "../data/dataset.js?v=19";
-import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=19";
-import * as C from "./charts.js?v=19";
-import { monthlyPayment, monthsBetween, ymIndex, ymToISO } from "./finance.js?v=19";
-import { rentVsSell } from "./letting.js?v=19";
+import * as DATA from "../data/dataset.js?v=20";
+import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=20";
+import * as C from "./charts.js?v=20";
+import { monthlyPayment, monthsBetween, ymIndex, ymToISO } from "./finance.js?v=20";
+import { rentVsSell } from "./letting.js?v=20";
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const gbp = (n) => (n < 0 ? "−" : "") + "£" + Math.abs(Math.round(n)).toLocaleString("en-GB");
@@ -153,6 +153,7 @@ const PAGE_META = {
   dashboard: ["Dashboard", "Your at-a-glance sell-timing summary"],
   signal: ["Timing signal", "The weighted score across windows and factors"],
   market: ["Market & factors", "Prices, rates, forecasts and policy — with sources"],
+  comps: ["Recent N1 sales", "Actual sold 2-bed flats — size, baths, type & £/m²"],
   finances: ["Your finances", "Your position and projected net proceeds"],
   selllet: ["Sell vs let", "Keep and rent it out, or sell now?"],
   assumptions: ["Assumptions", "Tweak the forecast and read the methodology"],
@@ -244,6 +245,7 @@ function rerender() {
   renderProceeds(result);
   renderForecastChart(result);
   renderFactorCharts(result);
+  renderComps(result);
   renderFactorScores(result);
   renderLetting(result);
 }
@@ -269,40 +271,25 @@ function renderVerdict(r) {
   const best = r.best;
   const sig = signalLabel(best.composite);
   const host = $("#verdict-body");
-
   const runnerUp = r.ranked[1];
-  const reasons = topReasons(best);
-  const deposit = r.inputs.property.purchasePrice - r.inputs.mortgage.principal;
-  const buyCosts = (r.inputs.property.sdltPaid || 0) + (r.inputs.property.otherBuyCosts || 0);
-  const cashIn = deposit + buyCosts;
+  const cashIn = cashInvested(r).total;
   const profitBest = best.net - cashIn;
 
   host.innerHTML = `
-    <div class="verdict-grid">
-      <div class="verdict-main">
+    <div class="verdict-head">
+      <div>
         <div class="verdict-kicker">Model recommendation</div>
         <h2 class="verdict-window">${best.window.label}</h2>
-        <div class="pill pill-${sig.tone}">${sig.label} · signal ${signed(best.composite)}</div>
-        <p class="verdict-lead">
-          Of the windows considered, <strong>${best.window.label}</strong> scores highest. Projected sale
-          value <strong>${gbp(best.saleValue)}</strong> → estimated net proceeds
-          <strong>${gbp(best.net)}</strong> after clearing the mortgage and all costs
-          ${best.erc > 0 ? `(includes a ${gbp(best.erc)} early-repayment charge)` : `(no early-repayment charge — outside the fixed period)`}.
-          After returning your <strong>${gbp(deposit)}</strong> deposit and the
-          <strong>${gbp(buyCosts)}</strong> you paid in SDLT/buying costs, that's a profit of
-          <strong>${gbp(profitBest)}</strong> on the cash you put in.
-        </p>
-        <ul class="verdict-reasons">${reasons.map((x) => `<li>${x}</li>`).join("")}</ul>
-        <p class="verdict-note">Next best: <strong>${runnerUp.window.label}</strong> (signal ${signed(runnerUp.composite)}).
-        This is a model, not advice — see the reasoning and sources below, and adjust the assumptions to your view.</p>
       </div>
-      <div class="verdict-gauge">
-        <div id="gauge"></div>
-        <div class="gauge-caption">Composite sell-timing signal for ${best.window.label}<br>
-          <span class="muted">score −100 (wait) to +100 (sell now), not £</span></div>
-      </div>
-    </div>`;
-  C.gauge($("#gauge"), best.composite, sig.label);
+      <div class="pill pill-${sig.tone}">${sig.label} · signal ${signed(best.composite)}</div>
+    </div>
+    <p class="verdict-lead">
+      Highest-scoring window. Sale value <strong>${gbp(best.saleValue)}</strong> → net proceeds
+      <strong>${gbp(best.net)}</strong> → <strong>${gbp(profitBest)}</strong> profit after your ${gbp(cashIn)} deposit + SDLT
+      ${best.erc > 0 ? `(after a ${gbp(best.erc)} ERC)` : `(no ERC — outside the fix)`}.
+      Next best: <strong>${runnerUp.window.label}</strong> (signal ${signed(runnerUp.composite)}).
+      <span class="muted">Model, not advice — see the reasoning and sources below.</span>
+    </p>`;
 }
 
 // ---------------------------------------------------------------------------
@@ -619,6 +606,49 @@ function nearestBase(series, dateISO) {
   let best = series[0];
   for (const s of series) if (ymIndex(s.date) <= t) best = s;
   return best.rate;
+}
+
+// ---------------------------------------------------------------------------
+// Recent N1 2-bed flat sales (comparables)
+// ---------------------------------------------------------------------------
+function renderComps(r) {
+  const host = $("#comps-body");
+  if (!host) return;
+  const p = r.inputs.property;
+  const yours = {
+    addr: p.postcode + " — your flat", date: p.purchaseDate.slice(0, 7), price: p.purchasePrice,
+    beds: p.bedrooms, baths: p.bathrooms, type: "Apartment — new build (" + p.buildYear + ")", sqm: p.floorAreaSqm, you: true,
+  };
+  const rows = DATA.COMPS.rows.map((x) => ({ ...x, perSqm: Math.round(x.price / x.sqm) }));
+  rows.push({ ...yours, perSqm: Math.round(yours.price / yours.sqm) });
+  rows.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0)); // newest first
+
+  const psmList = DATA.COMPS.rows.map((x) => x.price / x.sqm).sort((a, b) => a - b);
+  const n = psmList.length;
+  const median = Math.round(n % 2 ? psmList[(n - 1) / 2] : (psmList[n / 2 - 1] + psmList[n / 2]) / 2);
+  const yourPsm = Math.round(yours.price / yours.sqm);
+  const diffPct = (yourPsm / median - 1) * 100;
+
+  host.innerHTML = `
+    <div class="cards">
+      ${card("Sales shown", String(DATA.COMPS.rows.length), "recent N1 2-bed flats")}
+      ${card("Median £/m²", gbp(median), "across these sales")}
+      ${card("Your £/m² (paid)", gbp(yourPsm), signed(diffPct, (x) => x.toFixed(0) + "%") + " vs median")}
+      ${card("Your flat", gbp(p.purchasePrice), p.floorAreaSqm + " m² · " + p.bedrooms + "-bed/" + p.bathrooms + "-bath")}
+    </div>
+    <div class="table-wrap"><table class="rank-table comps-table">
+      <thead><tr><th>Sold</th><th>Address / area</th><th>Price</th><th>Beds</th><th>Baths</th><th>Building type</th><th>Size (m²)</th><th>£/m²</th></tr></thead>
+      <tbody>${rows.map((x) => `<tr class="${x.you ? "best-row" : ""}">
+        <td>${monthName(x.date)}</td><td>${x.you ? "★ " : ""}${x.addr}</td><td>${gbp(x.price)}</td>
+        <td>${x.beds}</td><td>${x.baths}</td><td>${x.type}</td><td>${x.sqm}</td>
+        <td><strong>${gbp(x.perSqm)}</strong></td></tr>`).join("")}</tbody>
+    </table></div>
+    <p class="muted small">${DATA.COMPS.note} Sources:
+      <a href="https://www.gov.uk/search-house-prices" target="_blank" rel="noopener">HM Land Registry sold prices</a> ·
+      <a href="https://www.zoopla.co.uk/house-prices/n1-7tx/" target="_blank" rel="noopener">Zoopla N1 7TX</a>.</p>
+    <p class="disclaimer"><strong>Representative data.</strong> Compiled from Land Registry sold prices with floor area and
+      bathrooms from EPC/listing data; bathroom counts and some areas reflect each property's typical spec where not in open
+      data. Verify individual transactions against the sources before relying on them.</p>`;
 }
 
 // ---------------------------------------------------------------------------

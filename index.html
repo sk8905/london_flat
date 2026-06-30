@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow" />
   <title>London Flat — Sell-Timing Forecaster</title>
-  <link rel="stylesheet" href="assets/css/styles.css?v=19" />
+  <link rel="stylesheet" href="assets/css/styles.css?v=20" />
 </head>
 <body>
 
@@ -41,6 +41,9 @@
         <button class="nav-item" data-tab="market">
           <svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V8l7-4 7 4v13M9 21v-6h6v6"/></svg>
           <span>Market &amp; factors</span></button>
+        <button class="nav-item" data-tab="comps">
+          <svg viewBox="0 0 24 24"><path d="M4 4h16v16H4zM8 4v16M4 9h4M4 14h4M12 8h5M12 12h5M12 16h5"/></svg>
+          <span>Recent N1 sales</span></button>
         <button class="nav-item" data-tab="finances">
           <svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 9v6M18 9v6"/></svg>
           <span>Your finances</span></button>
@@ -192,6 +195,16 @@
         </div>
       </section>
 
+      <!-- RECENT N1 SALES (comparables) -->
+      <section class="tab" id="tab-comps">
+        <div class="panel">
+          <h2>Recent completed sales — N1 2-bed flats</h2>
+          <p class="section-lead">Actual recent N1 two-bed flat sales (not asking prices), with bathrooms, building
+            type and size in m², so you can see where your flat sits on £/m². Your flat is highlighted.</p>
+          <div id="comps-body" class="loading">Loading…</div>
+        </div>
+      </section>
+
       <!-- FINANCES -->
       <section class="tab" id="tab-finances">
         <div class="panel">
@@ -278,6 +291,6 @@
       </footer>
   </main>
 
-<script type="module" src="assets/js/app.js?v=19"></script>
+<script type="module" src="assets/js/app.js?v=20"></script>
 </body>
 </html>
