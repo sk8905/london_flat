@@ -69,6 +69,21 @@ function boot() {
   refreshLiveRate();
 }
 
+// Coalesce rapid slider 'input' events into one render per animation frame, so a
+// continuous drag can never queue dozens of full recomputes and lock the main thread.
+let _rerenderQueued = false;
+function scheduleRerender() {
+  if (_rerenderQueued) return;
+  _rerenderQueued = true;
+  requestAnimationFrame(() => { _rerenderQueued = false; rerender(); });
+}
+let _lettingQueued = false;
+function scheduleLetting() {
+  if (_lettingQueued) return;
+  _lettingQueued = true;
+  requestAnimationFrame(() => { _lettingQueued = false; rerenderLetting(); });
+}
+
 function rerender() {
   const result = runModel(DATA, currentOverrides());
   window.__model = result; // handy for inspection
@@ -456,13 +471,13 @@ function buildLettingControls() {
   $("#let-horizon").addEventListener("change", (e) => { state.letting.horizon = e.target.value; rerenderLetting(); });
   $("#let-band").addEventListener("change", (e) => { state.letting.taxBand = e.target.value; rerenderLetting(); });
   $("#let-rent").addEventListener("input", (e) => {
-    state.letting.monthlyRent = parseFloat(e.target.value); $("#lbl-rent").textContent = gbp(state.letting.monthlyRent); rerenderLetting();
+    state.letting.monthlyRent = parseFloat(e.target.value); $("#lbl-rent").textContent = gbp(state.letting.monthlyRent); scheduleLetting();
   });
   $("#let-sc").addEventListener("input", (e) => {
-    state.letting.serviceCharge = parseFloat(e.target.value); $("#lbl-sc").textContent = gbp(state.letting.serviceCharge); rerenderLetting();
+    state.letting.serviceCharge = parseFloat(e.target.value); $("#lbl-sc").textContent = gbp(state.letting.serviceCharge); scheduleLetting();
   });
   $("#let-opp").addEventListener("input", (e) => {
-    state.letting.opportunityRate = parseFloat(e.target.value); $("#lbl-opp").textContent = pct(state.letting.opportunityRate); rerenderLetting();
+    state.letting.opportunityRate = parseFloat(e.target.value); $("#lbl-opp").textContent = pct(state.letting.opportunityRate); scheduleLetting();
   });
   $("#let-self").addEventListener("change", (e) => { state.letting.selfManage = e.target.checked; rerenderLetting(); });
 }
@@ -521,12 +536,12 @@ function buildControls() {
   $("#ctrl-remo").addEventListener("input", (e) => {
     state.remortgageRate = parseFloat(e.target.value);
     $("#lbl-remo").textContent = pct(state.remortgageRate);
-    rerender();
+    scheduleRerender();
   });
   pvInput.addEventListener("input", (e) => {
     state.presentValue = parseFloat(e.target.value);
     $("#lbl-pv").textContent = gbp(state.presentValue);
-    rerender();
+    scheduleRerender();
   });
   document.querySelectorAll(".ctrl-growth").forEach((inp) => {
     inp.addEventListener("input", (e) => {
@@ -534,7 +549,7 @@ function buildControls() {
       state.growthByYear[y] = parseFloat(e.target.value);
       state.custom = true;
       $("#lbl-g" + y).textContent = state.growthByYear[y].toFixed(1) + "%";
-      rerender();
+      scheduleRerender();
     });
   });
   $("#ctrl-reset").addEventListener("click", () => {

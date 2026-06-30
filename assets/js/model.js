@@ -129,7 +129,8 @@ export function runModel(data, overrides = {}) {
     const pts = [];
     const cur = new Date(presentISO.slice(0, 7) + "-01");
     const end = new Date(pathEnd);
-    while (cur <= end) {
+    let guard = 0;
+    while (cur <= end && guard++ < 1200) {
       const iso = cur.toISOString().slice(0, 7);
       const v = presentValue * valueMultiplier(PROPERTY.purchaseDate, iso, gby, presentISO);
       pts.push({ date: iso, value: v });

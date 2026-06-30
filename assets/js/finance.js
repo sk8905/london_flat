@@ -37,7 +37,8 @@ export function valueMultiplier(baseDate, targetDate, growthByYear, presentISO) 
   if (end <= start) return 1;
   let mult = 1;
   const cur = new Date(start);
-  while (cur < end) {
+  let guard = 0;
+  while (cur < end && guard++ < 1200) { // cap = 100 years of months; backstop vs bad dates
     const yr = cur.getFullYear();
     const annual = (growthByYear[yr] ?? growthByYear[Object.keys(growthByYear).slice(-1)[0]] ?? 0) / 100;
     const monthly = Math.pow(1 + annual, 1 / 12) - 1;

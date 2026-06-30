@@ -43,7 +43,8 @@ function niceTicks(min, max, count = 5) {
   const lo = Math.floor(min / step) * step;
   const hi = Math.ceil(max / step) * step;
   const ticks = [];
-  for (let v = lo; v <= hi + 1e-6; v += step) ticks.push(v);
+  if (!(step > 0) || !isFinite(lo) || !isFinite(hi)) return [min, max]; // guard bad inputs
+  for (let v = lo; v <= hi + 1e-6 && ticks.length < 1000; v += step) ticks.push(v);
   return ticks;
 }
 

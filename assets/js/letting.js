@@ -36,7 +36,8 @@ export function scheduleInterest(mortgage, letCfg, fromISO, toISO) {
     : monthlyPayment(balance, curRate, remTermYears);
   let switched = false;
 
-  while (cur < toISO.slice(0, 7)) {
+  let guard = 0;
+  while (cur < toISO.slice(0, 7) && guard++ < 1200) {
     // switch to let/BTL rate once the fix ends
     if (!switched && cur >= fixEnd) {
       curRate = letCfg.letMortgageRatePctAfterFix;
