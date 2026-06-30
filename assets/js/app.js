@@ -2,11 +2,11 @@
 // app.js  —  Entry point: load data, run model, render the single page, wire UI
 // =============================================================================
 
-import * as DATA from "../data/dataset.js?v=16";
-import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=16";
-import * as C from "./charts.js?v=16";
-import { monthlyPayment, monthsBetween, ymIndex, ymToISO } from "./finance.js?v=16";
-import { rentVsSell } from "./letting.js?v=16";
+import * as DATA from "../data/dataset.js?v=17";
+import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=17";
+import * as C from "./charts.js?v=17";
+import { monthlyPayment, monthsBetween, ymIndex, ymToISO } from "./finance.js?v=17";
+import { rentVsSell } from "./letting.js?v=17";
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const gbp = (n) => (n < 0 ? "−" : "") + "£" + Math.abs(Math.round(n)).toLocaleString("en-GB");
@@ -45,6 +45,11 @@ function defaultInputs() {
     purchaseDate: DATA.PROPERTY.purchaseDate.slice(0, 7),
     postcode: DATA.PROPERTY.postcode,
     isPrimaryResidence: DATA.PROPERTY.isPrimaryResidence,
+    floorAreaSqm: DATA.PROPERTY.floorAreaSqm,
+    bedrooms: DATA.PROPERTY.bedrooms,
+    bathrooms: DATA.PROPERTY.bathrooms,
+    buildYear: DATA.PROPERTY.buildYear,
+    perSqmMedian: DATA.COMPARABLES.perSqm.median,
     sdlt: computeSDLT(DATA.PROPERTY.purchasePrice),
     otherBuyCosts: 0,
     mortgageAmount: DATA.MORTGAGE.principal,
@@ -73,7 +78,10 @@ function effectiveData() {
   return {
     ...DATA,
     PROPERTY: { ...DATA.PROPERTY, purchasePrice, purchaseDate: i.purchaseDate, postcode: i.postcode,
-      isPrimaryResidence: !!i.isPrimaryResidence, sdltPaid: num(i.sdlt), otherBuyCosts: num(i.otherBuyCosts) },
+      isPrimaryResidence: !!i.isPrimaryResidence, sdltPaid: num(i.sdlt), otherBuyCosts: num(i.otherBuyCosts),
+      floorAreaSqm: num(i.floorAreaSqm, DATA.PROPERTY.floorAreaSqm), bedrooms: num(i.bedrooms, DATA.PROPERTY.bedrooms),
+      bathrooms: num(i.bathrooms, DATA.PROPERTY.bathrooms), buildYear: num(i.buildYear, DATA.PROPERTY.buildYear) },
+    COMPARABLES: { ...DATA.COMPARABLES, perSqm: { ...DATA.COMPARABLES.perSqm, median: num(i.perSqmMedian, DATA.COMPARABLES.perSqm.median) } },
     MORTGAGE: { ...DATA.MORTGAGE, principal, ltv: purchasePrice ? principal / purchasePrice : 0,
       ratePct: num(i.ratePct, DATA.MORTGAGE.ratePct), fixEndDate: i.fixEndDate, termYears: num(i.termYears, DATA.MORTGAGE.termYears),
       repaymentType: i.repaymentType, ercPctWhileFixed: num(i.ercPct, DATA.MORTGAGE.ercPctWhileFixed) },
@@ -394,8 +402,21 @@ function renderPosition(r) {
   const io = m.repaymentType === "interest_only";
   const payNow = io ? m.principal * (m.ratePct / 100 / 12) : monthlyPayment(m.principal, m.ratePct, m.termYears);
   const equityNow = r.presentValue - balanceNow(r);
+  const v = r.valuation;
   const host = $("#position-body");
-  host.innerHTML = `
+  const valBox = v.compVal ? `
+    <div class="val-box">
+      <div class="val-head">Estimated current value — anchored to <strong>actual sold prices</strong></div>
+      <div class="val-main">${gbp(r.presentValue)} <span class="val-sub">≈ ${gbp(v.impliedPerSqm)}/m² · ${p.floorAreaSqm} m² (${p.bedrooms}-bed/${p.bathrooms}-bath, built ${p.buildYear})</span></div>
+      <div class="val-anchors">
+        <span>① Your purchase, trended by the Islington <strong>sold-price</strong> index: <strong>${gbp(v.indexVal)}</strong></span>
+        <span>② £/m² comparable from N1 <strong>Land Registry sales</strong> (${gbp(v.perSqm.median)}/m²): <strong>${gbp(v.compVal)}</strong> <span class="muted">(range ${gbp(v.compLow)}–${gbp(v.compHigh)})</span></span>
+        <span>For reference, you paid <strong>${gbp(p.purchasePrice)}</strong> = ${gbp(v.purchasePerSqm)}/m² in ${monthName(p.purchaseDate)}</span>
+      </div>
+      <p class="muted small">The headline value is the <strong>blend of anchors ① and ②</strong> — both based on real
+        transactions, not asking prices or forecasts. Forward forecasts are used only to project this value into the future.</p>
+    </div>` : "";
+  host.innerHTML = valBox + `
     <div class="cards">
       ${card("Purchase", gbp(p.purchasePrice), monthName(p.purchaseDate) + " · " + p.postcode)}
       ${card("Est. value now", gbp(r.presentValue), valueDelta(r.presentValue - p.purchasePrice))}
@@ -754,6 +775,19 @@ function buildInputs() {
       <p class="muted small">SDLT defaults to the England standard residential estimate for your purchase price.
         <button id="in-sdlt-est" type="button" class="link-btn">Re-estimate from price</button> — or just type your actual figure.</p>
     </div>
+    <div class="input-group"><h3 class="panel-h">Property details &amp; sold-price comparable</h3>
+      <div class="controls-grid">
+        ${fld("in-area", "Internal floor area (m²)", "number", i.floorAreaSqm, 'min="10" step="0.01"')}
+        ${fld("in-permsqm", "Comparable sold price (£/m²)", "number", i.perSqmMedian, 'min="1000" step="50"')}
+        ${fld("in-beds", "Bedrooms", "number", i.bedrooms, 'min="0" step="1"')}
+        ${fld("in-baths", "Bathrooms", "number", i.bathrooms, 'min="0" step="1"')}
+        ${fld("in-built", "Year built", "number", i.buildYear, 'min="1800" max="2030" step="1"')}
+      </div>
+      <p class="muted small">Current value is anchored to <strong>actual sold prices</strong>: your purchase trended by the
+        Islington sold-price index, blended with floor area × £/m² from N1 Land Registry sales
+        (range ${gbp(DATA.COMPARABLES.perSqm.low)}–${gbp(DATA.COMPARABLES.perSqm.high)}/m²). Forecasts are used only to
+        project forward.</p>
+    </div>
     <div class="input-group"><h3 class="panel-h">Mortgage</h3>
       <div class="controls-grid">
         ${fld("in-mort", "Amount borrowed (£)", "number", i.mortgageAmount, 'min="0" step="1000"')}
@@ -795,6 +829,11 @@ function buildInputs() {
   bind("#in-primary", "isPrimaryResidence", "change", (t) => t.checked);
   bind("#in-sdlt", "sdlt", "input", valNum);
   bind("#in-buycosts", "otherBuyCosts", "input", valNum);
+  bind("#in-area", "floorAreaSqm", "input", valNum);
+  bind("#in-permsqm", "perSqmMedian", "input", valNum);
+  bind("#in-beds", "bedrooms", "input", valNum);
+  bind("#in-baths", "bathrooms", "input", valNum);
+  bind("#in-built", "buildYear", "input", valNum);
   $("#in-sdlt-est").addEventListener("click", () => {
     state.inputs.sdlt = computeSDLT(num(state.inputs.purchasePrice));
     $("#in-sdlt").value = state.inputs.sdlt; saveInputs(); scheduleRerender();

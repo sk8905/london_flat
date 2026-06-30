@@ -10,7 +10,7 @@
 
 export const META = {
   asOf: "2026-06-30",
-  build: "v16 · 2026-06-30", // bump on each change so the footer confirms the live build
+  build: "v17 · 2026-06-30", // bump on each change so the footer confirms the live build
   currency: "GBP",
   disclaimer:
     "This tool is an informational model, not financial, tax, mortgage or legal advice. " +
@@ -97,6 +97,16 @@ export const SOURCES = {
     url: "https://www.gov.uk/capital-gains-tax/rates",
     publisher: "GOV.UK / HMRC",
   },
+  soldPriceData: {
+    label: "HM Land Registry — Price Paid / sold-price search (N1, £/m²)",
+    url: "https://www.gov.uk/search-house-prices",
+    publisher: "HM Land Registry",
+  },
+  zooplaN17tx: {
+    label: "Zoopla — sold prices & estimates for N1 7TX",
+    url: "https://www.zoopla.co.uk/house-prices/n1-7tx/",
+    publisher: "Zoopla",
+  },
 };
 
 // -----------------------------------------------------------------------------
@@ -109,6 +119,29 @@ export const PROPERTY = {
   purchaseDate: "2025-03-01",
   purchasePrice: 890000,
   isPrimaryResidence: true, // -> CGT exempt via Private Residence Relief
+  floorAreaSqm: 91.45, // ~984 sq ft
+  bedrooms: 2,
+  bathrooms: 2,
+  buildYear: 2020, // new-build / modern
+};
+
+// -----------------------------------------------------------------------------
+// Comparable SOLD-price evidence (actual Land Registry transactions, NOT asking
+// prices or agent forecasts). Used to value the flat by £/m² for its 91.45 m².
+// -----------------------------------------------------------------------------
+export const COMPARABLES = {
+  sources: ["soldPriceData", "hpiMar2026", "onsIslington"],
+  asOf: "2026-04-11",
+  note:
+    "Actual SOLD prices, not asking prices or forecasts. Half of 1,923 N1 (Islington) Land " +
+    "Registry sales completed at £8,350–£11,790/m² (interquartile range); the median is ~£10,000/m². " +
+    "N1 flats were broadly flat in value over the year to March 2026, and the N1 7TX postcode " +
+    "12-month average sold price was ~£1.07m. Your flat is a 2020-built 2-bed/2-bath of 91.45 m², " +
+    "which typically sits in the upper half of the range (new-build premium, maturing with age).",
+  // N1 sold price per square metre (Land Registry-derived).
+  perSqm: { low: 8350, median: 9900, high: 11790 },
+  n1FlatAvg12m: 665438, // all N1 flats, all sizes — skewed small/older
+  n1_7txAvg12m: 1070000, // your postcode, last 12 months
 };
 
 export const MORTGAGE = {

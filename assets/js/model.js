@@ -9,7 +9,7 @@
 import {
   economicsForWindow, holdingCostDelta, monthsBetween,
   currentValueFromIndex, valueMultiplier, ymIndex, ymToISO, yearOfISO,
-} from "./finance.js?v=16";
+} from "./finance.js?v=17";
 
 const clamp = (x, lo, hi) => Math.max(lo, Math.min(hi, x));
 
@@ -29,7 +29,7 @@ function growthAtDate(dateISO, growthByYear) {
 export function runModel(data, overrides = {}) {
   const {
     PROPERTY, MORTGAGE, SELLING_COSTS, PRICE_HISTORY, RATES,
-    FORECAST, POLICY_FACTORS, SEASONALITY, WINDOWS, FACTOR_WEIGHTS, META,
+    FORECAST, POLICY_FACTORS, SEASONALITY, WINDOWS, FACTOR_WEIGHTS, META, COMPARABLES,
   } = data;
 
   // ---- merge editable overrides (from UI controls) -------------------------
@@ -45,10 +45,28 @@ export function runModel(data, overrides = {}) {
   const sellingCfg = { ...SELLING_COSTS, ...(overrides.sellingCosts || {}) };
   const presentISO = META.asOf;
 
-  // ---- present value from the observed index (override-able) ---------------
-  const presentValue = overrides.presentValue ?? currentValueFromIndex(
-    PROPERTY.purchasePrice, PRICE_HISTORY.series, "islington"
-  );
+  // ---- current value: anchor to ACTUAL SOLD prices, not forecasts ----------
+  // (a) the flat's own purchase price trended by the Islington sold-price index,
+  // (b) a £/m² comparable from N1 Land Registry sales × the flat's floor area.
+  // Default present value blends the two; the forecast is used ONLY to project
+  // FORWARD from here.
+  const indexVal = currentValueFromIndex(PROPERTY.purchasePrice, PRICE_HISTORY.series, "islington");
+  const area = PROPERTY.floorAreaSqm || 0;
+  const perSqm = COMPARABLES && COMPARABLES.perSqm ? COMPARABLES.perSqm : null;
+  const compVal = area && perSqm ? area * perSqm.median : null;
+  const blendedVal = compVal ? Math.round((indexVal + compVal) / 2) : Math.round(indexVal);
+  const presentValue = overrides.presentValue ?? blendedVal;
+  const valuation = {
+    indexVal: Math.round(indexVal),
+    compVal: compVal ? Math.round(compVal) : null,
+    compLow: area && perSqm ? Math.round(area * perSqm.low) : null,
+    compHigh: area && perSqm ? Math.round(area * perSqm.high) : null,
+    blendedVal,
+    area,
+    perSqm,
+    purchasePerSqm: area ? Math.round(PROPERTY.purchasePrice / area) : null,
+    impliedPerSqm: area ? Math.round(presentValue / area) : null,
+  };
 
   const hcd = holdingCostDelta(mortgage);
 
@@ -145,6 +163,7 @@ export function runModel(data, overrides = {}) {
   return {
     meta: META,
     presentValue,
+    valuation,
     holdingCost: hcd,
     scenarioName,
     growthByYear,

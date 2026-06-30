@@ -162,6 +162,14 @@ h1, h2, h3 { letter-spacing: -0.015em; }
 .qlink:hover { border-color: var(--brand); box-shadow: var(--shadow); }
 .qlink::after { content: "→"; }
 
+/* ---------- valuation box ---------- */
+.val-box { background: linear-gradient(135deg, #f0fdf4, #ecfdf5); border: 1px solid #bbf7d0; border-radius: var(--radius-sm); padding: 18px 20px; margin-bottom: 18px; }
+.val-head { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: #166534; font-weight: 700; }
+.val-main { font-size: 30px; font-weight: 800; letter-spacing: -0.02em; margin: 4px 0 12px; }
+.val-main .val-sub { font-size: 14px; font-weight: 600; color: var(--muted); letter-spacing: 0; }
+.val-anchors { display: flex; flex-direction: column; gap: 5px; font-size: 13.5px; color: var(--ink-soft); }
+.val-anchors strong { color: var(--ink); }
+
 /* ---------- cards (position / letting) ---------- */
 .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
 .card { background: #fafbff; border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 15px; }
