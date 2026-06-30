@@ -2,11 +2,11 @@
 // app.js  —  Entry point: load data, run model, render the single page, wire UI
 // =============================================================================
 
-import * as DATA from "../data/dataset.js?v=18";
-import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=18";
-import * as C from "./charts.js?v=18";
-import { monthlyPayment, monthsBetween, ymIndex, ymToISO } from "./finance.js?v=18";
-import { rentVsSell } from "./letting.js?v=18";
+import * as DATA from "../data/dataset.js?v=19";
+import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=19";
+import * as C from "./charts.js?v=19";
+import { monthlyPayment, monthsBetween, ymIndex, ymToISO } from "./finance.js?v=19";
+import { rentVsSell } from "./letting.js?v=19";
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const gbp = (n) => (n < 0 ? "−" : "") + "£" + Math.abs(Math.round(n)).toLocaleString("en-GB");
@@ -435,6 +435,13 @@ function renderPosition(r) {
     <p class="muted small">Edit any of these on the <strong>Inputs</strong> tab — your figures are saved in this browser.</p>`;
 }
 
+// Total cash you sank in at purchase: deposit + SDLT + other buying costs.
+function cashInvested(r) {
+  const deposit = r.inputs.property.purchasePrice - r.inputs.mortgage.principal;
+  const buyCosts = (r.inputs.property.sdltPaid || 0) + (r.inputs.property.otherBuyCosts || 0);
+  return { deposit, buyCosts, total: deposit + buyCosts };
+}
+
 function balanceNow(r) {
   // outstanding today = the "now" window economics minus its (small) projection
   const nowWin = r.windows.find((w) => w.window.id === "now");
@@ -456,13 +463,16 @@ function card(label, big, sub) {
 // ---------------------------------------------------------------------------
 function renderSignal(r) {
   const host = $("#signal-body");
+  const cashIn = cashInvested(r).total;
   const rows = r.ranked.map((w, i) => {
     const sig = signalLabel(w.composite);
+    const profit = w.net - cashIn;
     return `<tr class="${i === 0 ? "best-row" : ""}">
       <td>${i === 0 ? "★ " : ""}${w.window.label}</td>
       <td><span class="pill pill-${sig.tone} mini">${signed(w.composite)}</span></td>
       <td>${gbp(w.saleValue)}</td>
       <td>${gbp(w.net)}</td>
+      <td class="${profit >= 0 ? "" : "neg-cell"}">${signed(profit, gbp)}</td>
       <td>${w.erc > 0 ? gbp(w.erc) : "—"}</td>
       <td class="muted">${sig.label}</td>
     </tr>`;
@@ -476,9 +486,10 @@ function renderSignal(r) {
       ${Object.entries(r.weights).map(([k, v]) => `${FACTOR_LABELS[k]} ${(v * 100).toFixed(0)}%`).join(" · ")}.</p>
     </div>
     <div class="table-wrap"><table class="rank-table">
-      <thead><tr><th>Window</th><th>Signal</th><th>Est. sale value</th><th>Net proceeds</th><th>ERC</th><th>Read</th></tr></thead>
+      <thead><tr><th>Window</th><th>Signal</th><th>Est. sale value</th><th>Net proceeds</th><th>Net profit*</th><th>ERC</th><th>Read</th></tr></thead>
       <tbody>${rows}</tbody>
-    </table></div>`;
+    </table>
+    <p class="muted small">*Net profit = net proceeds − your ${gbp(cashIn)} cash in (deposit + SDLT + buying costs).</p></div>`;
 
   const factors = Object.keys(FACTOR_LABELS).map((k) => ({ key: k, label: FACTOR_LABELS[k], color: FACTOR_COLORS[k] }));
   C.stackedContrib($("#contrib-chart"), r.windows, factors, 320, "signal score (pts)");
@@ -489,23 +500,22 @@ function renderSignal(r) {
 // ---------------------------------------------------------------------------
 function renderProceeds(r) {
   const host = $("#proceeds-body");
-  const deposit = r.inputs.property.purchasePrice - r.inputs.mortgage.principal; // your original cash in
-  const buyCosts = (r.inputs.property.sdltPaid || 0) + (r.inputs.property.otherBuyCosts || 0);
-  const cashIn = deposit + buyCosts;
+  const { deposit, buyCosts, total: cashIn } = cashInvested(r);
   const bars = r.windows.map((w) => ({
     label: w.window.label,
-    value: w.net - cashIn, // profit above all the cash you put in
-    color: w === r.best ? "#16a34a" : "#0891b2",
-    valueLabel: gbp(w.net - cashIn),
-    sub: "net " + gbp(w.net),
+    value: w.net, // net proceeds (cash in hand)
+    color: w === r.best ? "#15803d" : "#86efac",
+    valueLabel: gbp(w.net),
+    sub: (w.net - cashIn >= 0 ? "+" + gbp(w.net - cashIn) + " profit" : gbp(w.net - cashIn) + " short"),
   }));
   host.innerHTML = `
     <div class="chart-wrap"><div id="proceeds-chart"></div>
-      <p class="chart-cap"><strong>Bars = your profit above the ${gbp(cashIn)} you put in</strong>
-      (deposit ${gbp(deposit)} + ${gbp(buyCosts)} SDLT/buying costs). The grey "net" figure is the total cash you'd
-      receive. Scenario: <strong>${state.custom ? "Custom" : r.scenarioName}</strong>.</p></div>
+      <p class="chart-cap">Bars = <strong>net proceeds (cash in hand)</strong>. The dashed line is the
+      <strong>${gbp(cashIn)} you put in</strong> (${gbp(deposit)} deposit + ${gbp(buyCosts)} SDLT/buying costs); the bar
+      above it is your <strong>net profit</strong> (shown under each bar). Scenario:
+      <strong>${state.custom ? "Custom" : r.scenarioName}</strong>.</p></div>
     <div class="table-wrap"><table class="rank-table">
-      <thead><tr><th>Window</th><th>Sale value</th><th>Outstanding</th><th>ERC</th><th>Selling costs</th><th>CGT</th><th>Net proceeds</th><th>Less deposit + SDLT</th><th>Your profit</th></tr></thead>
+      <thead><tr><th>Window</th><th>Sale value</th><th>Outstanding</th><th>ERC</th><th>Selling costs</th><th>CGT</th><th>Net proceeds</th><th>Less deposit + SDLT</th><th>Net profit</th></tr></thead>
       <tbody>${r.windows.map((w) => `<tr class="${w === r.best ? "best-row" : ""}">
         <td>${w.window.label}</td><td>${gbp(w.saleValue)}</td><td>${gbp(w.outstanding)}</td>
         <td>${w.erc > 0 ? gbp(w.erc) : "—"}</td><td>${gbp(w.costs.total)}</td><td>£0</td>
@@ -513,10 +523,13 @@ function renderProceeds(r) {
         <td class="${w.net - cashIn >= 0 ? "" : "neg-cell"}"><strong>${gbp(w.net - cashIn)}</strong></td></tr>`).join("")}</tbody>
     </table>
     <p class="muted small"><strong>Net proceeds</strong> = sale value − outstanding mortgage − ERC − selling costs − CGT:
-      the total cash you'd receive. <strong>Your profit</strong> returns the <strong>${gbp(cashIn)}</strong> you originally
+      the total cash you'd receive. <strong>Net profit</strong> then returns the <strong>${gbp(cashIn)}</strong> you originally
       put in (${gbp(deposit)} deposit + ${gbp(buyCosts)} SDLT/buying costs), leaving the true gain on your cash —
-      your repaid mortgage principal and price growth, net of costs.</p></div>`;
-  C.barChart($("#proceeds-chart"), { bars, yFormat: (v) => "£" + Math.round(v / 1000) + "k", height: 300, yUnit: "£ profit" });
+      your repaid mortgage principal and price growth, net of all costs.</p></div>`;
+  C.barChart($("#proceeds-chart"), {
+    bars, yFormat: (v) => "£" + Math.round(v / 1000) + "k", height: 300, yUnit: "£ proceeds",
+    yRef: cashIn, yRefLabel: "you put in " + gbp(cashIn) + " (deposit + SDLT)",
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -646,6 +659,8 @@ function renderLetting(r) {
   const bandLabel = { basic: "basic-rate (20%)", higher: "higher-rate (40→42%)", additional: "additional-rate (45→47%)" }[res.band];
   // cash you put in that ISN'T equity (i.e. excluding principal repayments)
   const trueCashCost = res.cumulativeNetRent + (res.interestOnly ? 0 : res.cumulativePrincipal);
+  const cashIn = cashInvested(r).total;
+  const saleProfit = res.sale.netSaleProceeds - cashIn;
 
   host.innerHTML = `
     <div class="verdict-kicker">Sell now vs. let it &amp; sell in ${horizonLabel}</div>
@@ -656,7 +671,7 @@ function renderLetting(r) {
       on ${res.interestOnly ? "an interest-only" : "a capital-repayment"} mortgage.
     </p>
     <div class="cards">
-      ${card("Net sale in " + horizonLabel, gbp(res.sale.netSaleProceeds), res.sale.cgt > 0 ? "incl. " + gbp(res.sale.cgt) + " CGT" : "CGT £0 here")}
+      ${card("Net sale in " + horizonLabel, gbp(res.sale.netSaleProceeds), signed(saleProfit, gbp) + " net profit" + (res.sale.cgt > 0 ? " · " + gbp(res.sale.cgt) + " CGT" : ""))}
       ${card("Rental cash flow", gbp(res.cumulativeNetRent), res.interestOnly ? "out of pocket, period total" : "incl. " + gbp(res.cumulativePrincipal) + " principal you keep")}
       ${card("Let &amp; sell — total", gbp(res.letTotal), "net sale + rental cash flow")}
       ${card("Sell now &amp; invest", gbp(res.sellNowGrown), gbp(res.sellNowNet) + " grown @ " + pct(state.letting.opportunityRate))}
