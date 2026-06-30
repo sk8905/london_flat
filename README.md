@@ -126,6 +126,17 @@ Restrict the whole site so **only `kenneds7@tcd.ie`** can open it.
 > To add more people later, edit the **Only me** policy and add their emails, or switch the
 > Include rule to an **Emails ending in** `@tcd.ie` rule.
 
+### Signed-in identity & sign-out
+
+The sidebar shows who you're signed in as and a **sign-out** button. These use Cloudflare
+Access endpoints that exist automatically once the app is behind Access:
+
+- Identity is read from `GET /cdn-cgi/access/get-identity` (returns your email/name). Outside
+  Access — e.g. local preview — it simply shows "Local preview".
+- The sign-out button links to `/cdn-cgi/access/logout`, which clears your Access session.
+
+No configuration is required; it works as soon as the Access application is in place.
+
 ## Keeping data fresh
 
 Edit `assets/data/dataset.js` and commit. Everything (charts, signal, proceeds) recomputes

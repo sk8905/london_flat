@@ -72,6 +72,30 @@ window.addEventListener("error", (e) =>
 window.addEventListener("unhandledrejection", (e) =>
   showFatal("promise: " + (e.reason && (e.reason.message || e.reason))));
 
+const PAGE_META = {
+  dashboard: ["Dashboard", "Your at-a-glance sell-timing summary"],
+  signal: ["Timing signal", "The weighted score across windows and factors"],
+  market: ["Market & factors", "Prices, rates, forecasts and policy — with sources"],
+  finances: ["Your finances", "Your position and projected net proceeds"],
+  selllet: ["Sell vs let", "Keep and rent it out, or sell now?"],
+  assumptions: ["Assumptions", "Tweak the inputs and read the methodology"],
+};
+
+function switchTab(id) {
+  document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("active", t.id === "tab-" + id));
+  document.querySelectorAll(".nav-item").forEach((b) => b.classList.toggle("active", b.dataset.tab === id));
+  const meta = PAGE_META[id] || ["", ""];
+  $("#page-title").textContent = meta[0];
+  $("#page-sub").textContent = meta[1];
+  document.querySelector(".content").scrollIntoView({ block: "start" });
+  window.scrollTo(0, 0);
+}
+
+function wireNav() {
+  document.querySelectorAll(".nav-item").forEach((b) =>
+    b.addEventListener("click", () => switchTab(b.dataset.tab)));
+}
+
 function boot() {
   try {
     renderHeader();
@@ -79,9 +103,39 @@ function boot() {
     buildControls();
     buildLettingControls();
     renderStaticFactorChartsOnce();
+    wireNav();
+    loadIdentity();
   } catch (err) {
     showFatal(err && err.message ? err.message : String(err));
     throw err;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Cloudflare Access identity (sign-in status + sign-out)
+// ---------------------------------------------------------------------------
+async function loadIdentity() {
+  const text = $("#user-status-text"), email = $("#user-email"), initial = $("#user-initial");
+  const chip = document.querySelector(".user-chip");
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 2500);
+  try {
+    const res = await fetch("/cdn-cgi/access/get-identity", { headers: { accept: "application/json" }, signal: ctrl.signal });
+    if (!res.ok) throw new Error("no access");
+    if (!(res.headers.get("content-type") || "").includes("json")) throw new Error("not json");
+    const id = await res.json();
+    const who = id.email || id.name || "Signed in";
+    text.textContent = "Signed in";
+    email.textContent = who;
+    initial.textContent = (who[0] || "•").toUpperCase();
+    if (chip) chip.querySelector(".user-status").classList.add("online");
+  } catch (_) {
+    // Local/dev or no Access session: show a neutral state, keep sign-out available.
+    text.textContent = "Local preview";
+    email.textContent = "not behind Access";
+    initial.textContent = "•";
+  } finally {
+    clearTimeout(timer);
   }
 }
 
@@ -104,6 +158,7 @@ function rerender() {
   const result = runModel(DATA, currentOverrides());
   window.__model = result; // handy for inspection
   renderVerdict(result);
+  renderDashboard(result);
   renderPosition(result);
   renderSignal(result);
   renderProceeds(result);
@@ -159,6 +214,78 @@ function renderVerdict(r) {
       </div>
     </div>`;
   C.gauge($("#gauge"), best.composite, sig.label);
+}
+
+// ---------------------------------------------------------------------------
+// Dashboard summary
+// ---------------------------------------------------------------------------
+function renderDashboard(r) {
+  const best = r.best;
+  const equityNow = r.presentValue - balanceNow(r);
+  const let2 = computeLetting(r);
+  const horizonLabel = (LET_HORIZONS.find((h) => h.date === state.letting.horizon) || {}).label || "horizon";
+  const letWins = let2.advantageLet >= 0;
+
+  // KPIs
+  $("#dash-kpis").innerHTML = [
+    kpi("Est. value now", gbp(r.presentValue), `${signed(r.presentValue - DATA.PROPERTY.purchasePrice, gbp)} vs purchase`, r.presentValue >= DATA.PROPERTY.purchasePrice ? "pos" : "neg"),
+    kpi("Est. equity now", gbp(equityNow), "value − mortgage balance", "gold"),
+    kpi("Best-window net", gbp(best.net), "in " + best.window.label, "pos"),
+    kpi(`Let vs sell (to ${horizonLabel})`, signed(let2.advantageLet, gbp), letWins ? "letting ahead" : "selling ahead", letWins ? "pos" : "neg"),
+  ].join("");
+
+  // mini charts
+  C.barChart($("#dash-signal-chart"), {
+    bars: r.windows.map((w) => ({
+      label: w.window.label.replace(/ \(.*\)/, ""), value: Math.round(w.composite),
+      color: w === best ? "#4f46e5" : (w.composite >= 0 ? "#a5b4fc" : "#fca5a5"),
+      valueLabel: signed(w.composite),
+    })),
+    yFormat: (v) => v.toFixed(0), height: 240, baseline: 0,
+  });
+  C.barChart($("#dash-proceeds-chart"), {
+    bars: r.windows.map((w) => ({
+      label: w.window.label.replace(/ \(.*\)/, ""), value: w.net,
+      color: w === best ? "#15803d" : "#86efac", valueLabel: gbp(w.net),
+    })),
+    yFormat: (v) => "£" + Math.round(v / 1000) + "k", height: 240,
+  });
+
+  // drivers
+  const entries = Object.entries(best.contributions).sort((a, b) => Math.abs(b[1]) - Math.abs(a[1])).slice(0, 3);
+  $("#dash-drivers").innerHTML = `<div class="drivers">${entries.map(([k, v]) => `
+    <div class="driver">
+      <div class="driver-top"><span class="driver-name">${FACTOR_LABELS[k]}</span>
+        <span class="driver-score ${v >= 0 ? "pos" : "neg"}">${signed(v, (x) => x.toFixed(0))}</span></div>
+      <div class="driver-text">${driverText(k, best)}</div>
+    </div>`).join("")}</div>`;
+
+  // quick links
+  $("#dash-links").innerHTML = [
+    qlink("signal", "Full timing signal"),
+    qlink("market", "Explore market & factors"),
+    qlink("finances", "See your finances"),
+    qlink("selllet", "Sell vs let analysis"),
+  ].join("");
+  document.querySelectorAll("#dash-links .qlink").forEach((b) =>
+    b.addEventListener("click", () => switchTab(b.dataset.go)));
+}
+
+function kpi(label, value, sub, tone) {
+  return `<div class="kpi ${tone || ""}"><div class="kpi-label">${label}</div>
+    <div class="kpi-value">${value}</div><div class="kpi-sub">${sub}</div></div>`;
+}
+function qlink(go, label) { return `<button class="qlink" data-go="${go}">${label}</button>`; }
+
+function driverText(k, w) {
+  switch (k) {
+    case "priceTrajectory": return `Projected value ${gbp(w.saleValue)} with ${w.momentum >= 0 ? "positive" : "negative"} momentum (${w.momentum.toFixed(1)}%/yr).`;
+    case "financingCost": return w.erc > 0 ? `Inside the fix — a ${gbp(w.erc)} early-repayment charge applies.` : `Outside the fix — no early-repayment charge.`;
+    case "netProceeds": return `Cash in hand of ${gbp(w.net)} after all costs.`;
+    case "seasonality": return `Demand strength index ${w.season.toFixed(2)} for this window's month.`;
+    case "policyMacro": return `Net of CGT exemption, the mansion-tax threshold and macro risk at this date.`;
+    default: return "";
+  }
 }
 
 function topReasons(w) {

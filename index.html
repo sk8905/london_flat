@@ -4,232 +4,260 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow" />
-  <title>London Flat — Sell-Timing Forecaster (N1 7TX)</title>
+  <title>London Flat — Sell-Timing Forecaster</title>
   <link rel="stylesheet" href="assets/css/styles.css" />
 </head>
 <body>
-  <header class="site-header">
-    <div class="wrap header-inner">
-      <div class="brand">
-        <span class="brand-mark">⌂</span>
-        <div>
-          <div class="brand-title">Flat Sell-Timing Forecaster</div>
-          <div class="brand-sub">N1 7TX · Islington · purchased Mar 2025</div>
-        </div>
+<div class="app-shell">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <span class="brand-mark">⌂</span>
+      <div class="brand-text">
+        <div class="brand-title">Flat Forecaster</div>
+        <div class="brand-sub">N1 7TX · Islington</div>
       </div>
-      <div class="header-badges">
+    </div>
+
+    <nav class="nav" id="nav">
+      <button class="nav-item active" data-tab="dashboard">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        <span>Dashboard</span></button>
+      <button class="nav-item" data-tab="signal">
+        <svg viewBox="0 0 24 24"><polyline points="3 17 9 11 13 15 21 6"/><polyline points="15 6 21 6 21 12"/></svg>
+        <span>Timing signal</span></button>
+      <button class="nav-item" data-tab="market">
+        <svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V8l7-4 7 4v13M9 21v-6h6v6"/></svg>
+        <span>Market &amp; factors</span></button>
+      <button class="nav-item" data-tab="finances">
+        <svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 9v6M18 9v6"/></svg>
+        <span>Your finances</span></button>
+      <button class="nav-item" data-tab="selllet">
+        <svg viewBox="0 0 24 24"><path d="M12 3v18M4 7h16M7 7l-3 6h6zM17 7l-3 6h6zM7 20h10"/></svg>
+        <span>Sell vs let</span></button>
+      <button class="nav-item" data-tab="assumptions">
+        <svg viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 12h3M11 12h9M4 17h11M19 17h1"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="17" r="2"/></svg>
+        <span>Assumptions</span></button>
+    </nav>
+
+    <div class="sidebar-foot">
+      <div class="user-chip">
+        <div class="avatar" id="user-initial">•</div>
+        <div class="user-meta">
+          <span class="user-status"><span class="dot"></span><span id="user-status-text">Checking…</span></span>
+          <span class="user-email" id="user-email">—</span>
+        </div>
+        <a class="signout-btn" id="signout" href="/cdn-cgi/access/logout" title="Sign out" aria-label="Sign out">
+          <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+        </a>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-title">
+        <h1 class="page-title" id="page-title">Dashboard</h1>
+        <div class="page-sub" id="page-sub">Your at-a-glance sell-timing summary</div>
+      </div>
+      <div class="topbar-right">
         <span class="badge" id="live-rate" title="Bank of England base rate">—</span>
         <span class="badge muted" id="as-of">—</span>
       </div>
+    </header>
+
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <section class="tab active" id="tab-dashboard">
+        <div id="verdict" class="panel hero"><div id="verdict-body" class="loading">Calculating…</div></div>
+        <div id="dash-kpis" class="kpi-row"></div>
+        <div class="dash-grid">
+          <div class="panel">
+            <h3 class="panel-h">Sell-timing signal by window</h3>
+            <div id="dash-signal-chart"></div>
+          </div>
+          <div class="panel">
+            <h3 class="panel-h">Net proceeds by window</h3>
+            <div id="dash-proceeds-chart"></div>
+          </div>
+        </div>
+        <div class="panel">
+          <h3 class="panel-h">What's driving the recommendation</h3>
+          <div id="dash-drivers"></div>
+        </div>
+        <div id="dash-links" class="quick-links"></div>
+      </section>
+
+      <!-- SIGNAL -->
+      <section class="tab" id="tab-signal">
+        <div class="panel">
+          <h2>The sell-timing signal</h2>
+          <p class="section-lead">A transparent weighted score across five factors, for four candidate windows —
+            a single headline signal <em>and</em> the full factor-by-factor breakdown.</p>
+          <div id="signal-body" class="loading">Loading…</div>
+        </div>
+        <div class="panel">
+          <h3 class="panel-h">Factor scores for the recommended window</h3>
+          <div id="factor-scores" class="loading">Loading…</div>
+        </div>
+      </section>
+
+      <!-- MARKET & FACTORS -->
+      <section class="tab" id="tab-market">
+        <div class="panel">
+          <h2>The factors, explained</h2>
+          <p class="section-lead">The data, the reasoning, and links to source material so you can check the working.</p>
+
+          <article class="factor">
+            <div class="factor-head"><h3>① Price trajectory</h3><span class="factor-weight">weight 30%</span></div>
+            <p>Islington's average price was <strong>£673k (Mar 2025)</strong> and <strong>£679k (Mar 2026)</strong>
+              (<strong>+0.9%</strong>), but <strong>flats were broadly flat</strong> over the year while London-wide
+              fell <strong>2.1%</strong> — six straight months of annual decline. Indices anchored to your purchase
+              (100 = £890,000).</p>
+            <div class="chart-wrap"><div id="price-chart"></div></div>
+            <p class="muted small">Sources:
+              <a href="https://www.gov.uk/government/news/uk-house-price-index-for-march-2026" target="_blank" rel="noopener">UK HPI Mar 2026</a> ·
+              <a href="https://landregistry.data.gov.uk/app/ukhpi/browse" target="_blank" rel="noopener">HM Land Registry</a> ·
+              <a href="https://www.ons.gov.uk/visualisations/housingpriceslocal/E09000019/" target="_blank" rel="noopener">ONS Islington</a></p>
+          </article>
+
+          <article class="factor">
+            <div class="factor-head"><h3>② Forecast trajectory &amp; scenarios</h3><span class="factor-weight">feeds price + proceeds</span></div>
+            <p>Consensus: a soft 2026 then recovery. <strong>Savills</strong> revised 2026 to <strong>−2%</strong>, with
+              <strong>+4%</strong> (2027) and <strong>+5%</strong> (2028); <strong>Knight Frank</strong> sees
+              <strong>+3%</strong> then <strong>+4%</strong> and ~<strong>13.6% cumulative London growth 2026–2030</strong>.
+              The band shows the optimistic–pessimistic range; the solid line is your active scenario.</p>
+            <div class="chart-wrap"><div id="forecast-chart"></div>
+              <p class="chart-cap">Projected value of your flat from today. The "fix ends" marker is March 2027.</p></div>
+            <p class="muted small">Sources:
+              <a href="https://www.savills.co.uk/insight-and-opinion/savills-news/391268/savills-revises-uk-house-price-forecast-as-higher-mortgage-costs-weigh-on-demand" target="_blank" rel="noopener">Savills</a> ·
+              <a href="https://www.knightfrank.co.uk/research/article/2026/4/uk-housing-market-forecast-q2-2026" target="_blank" rel="noopener">Knight Frank</a> ·
+              <a href="https://www.zoopla.co.uk/discover/property-news/house-price-index/" target="_blank" rel="noopener">Zoopla</a></p>
+          </article>
+
+          <article class="factor">
+            <div class="factor-head"><h3>③ Financing, rates &amp; your ERC</h3><span class="factor-weight">weight 25%</span></div>
+            <p>Your <strong>4.38% fix is now below market</strong> — average 2-year fix ~<strong>5.55%</strong>, base rate
+              <strong>3.75%</strong>. It <strong>ends March 2027</strong>: selling before then triggers your
+              <strong>1% early-repayment charge</strong>; holding past it means remortgaging higher. The window just
+              after the fix minimises both.</p>
+            <div class="chart-wrap"><div id="rates-chart"></div>
+              <p class="chart-cap">Average 2-year fix vs base rate vs your fixed rate.</p></div>
+            <p class="muted small">Sources:
+              <a href="https://www.bankofengland.co.uk/monetary-policy-summary-and-minutes/2026/june-2026" target="_blank" rel="noopener">BoE Jun 2026</a> ·
+              <a href="https://www.rightmove.co.uk/news/articles/property-news/current-uk-mortgage-rates/" target="_blank" rel="noopener">Rightmove rates</a> ·
+              <a href="https://hoa.org.uk/advice/guides-for-homeowners/for-owners/mortgage-rate-forecast/" target="_blank" rel="noopener">HOA forecast</a></p>
+          </article>
+
+          <article class="factor">
+            <div class="factor-head"><h3>④ Seasonality</h3><span class="factor-weight">weight 10%</span></div>
+            <p><strong>Feb–May</strong> are the strongest months to list (~66% of Feb/Mar listings complete), and
+              <strong>flats sell especially well in late spring</strong> — handily, your fix also ends in spring 2027.</p>
+            <p class="muted small">Source:
+              <a href="https://www.rightmove.co.uk/guides/seller/preparing-to-sell/is-now-the-right-time-to-sell/" target="_blank" rel="noopener">Rightmove — best time to sell</a></p>
+          </article>
+
+          <article class="factor">
+            <div class="factor-head"><h3>⑤ Political &amp; macro factors</h3><span class="factor-weight">weight 15%</span></div>
+            <ul class="policy-list">
+              <li><span class="tag pos">Neutral / mild +</span><strong>‘Mansion tax’</strong> from April 2028 on homes
+                over £2m — your flat is well below, but it cools the top of the London market.</li>
+              <li><span class="tag neu">Indirect</span><strong>Landlord income tax +2% (April 2027)</strong> — doesn't
+                touch owner-occupiers, but discourages buy-to-let investors.</li>
+              <li><span class="tag neu">Neutral</span><strong>Stamp duty unchanged; nil-rate band back to £125k</strong>
+                — a mild demand dampener.</li>
+              <li><span class="tag pos">Strong +</span><strong>Primary residence — CGT exempt</strong> via Private
+                Residence Relief, at any sale date.</li>
+              <li><span class="tag neg">Risk −</span><strong>Middle East conflict</strong> — the BoE's flagged dominant
+                inflation risk; pushed swap rates up in spring 2026.</li>
+            </ul>
+            <p class="muted small">Sources:
+              <a href="https://hoa.org.uk/news/new-property-tax/" target="_blank" rel="noopener">HOA mansion tax</a> ·
+              <a href="https://www.zoopla.co.uk/discover/property-news/autumn-budget-impact-on-uk-housing-market/" target="_blank" rel="noopener">Zoopla Budget</a> ·
+              <a href="https://www.gov.uk/tax-sell-home" target="_blank" rel="noopener">Private Residence Relief</a></p>
+          </article>
+        </div>
+      </section>
+
+      <!-- FINANCES -->
+      <section class="tab" id="tab-finances">
+        <div class="panel">
+          <h2>Your position</h2>
+          <p class="section-lead">Everything the model starts from. The estimated current value is derived from the
+            Land Registry Islington index and is adjustable on the Assumptions tab.</p>
+          <div id="position-body" class="loading">Loading…</div>
+        </div>
+        <div class="panel">
+          <h2>What you'd walk away with</h2>
+          <p class="section-lead">Projected sale value minus the outstanding mortgage, any early-repayment charge,
+            agent + VAT, legal and EPC costs. CGT is £0 (main residence).</p>
+          <div id="proceeds-body" class="loading">Loading…</div>
+        </div>
+      </section>
+
+      <!-- SELL VS LET -->
+      <section class="tab" id="tab-selllet">
+        <div class="panel">
+          <h2>Sell now, or rent it out and sell later?</h2>
+          <p class="section-lead">A like-for-like wealth comparison to your chosen horizon, with full UK income-tax
+            treatment: <strong>Section 24</strong> (mortgage interest gets a 20% credit, not full relief), the
+            <strong>April-2027 +2% landlord rate rise</strong>, and the <strong>partial loss of CGT relief</strong>
+            from moving out.</p>
+          <div id="letting-summary" class="loading">Loading…</div>
+          <h3 class="panel-h">Year-by-year rental cash flow</h3>
+          <div id="letting-table" class="loading">Loading…</div>
+          <h3 class="panel-h">Adjust the letting assumptions</h3>
+          <div id="letting-controls" class="loading">Loading…</div>
+          <p class="muted small">Sources:
+            <a href="https://www.gov.uk/government/news/uk-house-price-index-for-march-2026" target="_blank" rel="noopener">Islington rents</a> ·
+            <a href="https://www.zoopla.co.uk/discover/property-news/autumn-budget-impact-on-uk-housing-market/" target="_blank" rel="noopener">landlord tax rise</a> ·
+            <a href="https://www.gov.uk/capital-gains-tax/rates" target="_blank" rel="noopener">CGT rates</a> ·
+            <a href="https://www.gov.uk/tax-sell-home" target="_blank" rel="noopener">Private Residence Relief</a></p>
+          <p class="disclaimer"><strong>Tax is simplified.</strong> Real liabilities depend on your total income, other
+            gains, allowable costs and reliefs. Confirm with an accountant before letting.</p>
+        </div>
+      </section>
+
+      <!-- ASSUMPTIONS -->
+      <section class="tab" id="tab-assumptions">
+        <div class="panel">
+          <h2>Test your own assumptions</h2>
+          <p class="section-lead">Move the sliders — the recommendation, signal and every chart update live.</p>
+          <div id="controls-body" class="loading">Loading…</div>
+        </div>
+        <div class="panel">
+          <h2>Methodology &amp; sources</h2>
+          <p>The signal is a weighted blend of five factor scores, each in −100 (wait) … +100 (sell here), computed for
+            four windows (now, spring 2027, H2 2027, spring 2028):</p>
+          <ul>
+            <li><strong>Price trajectory (30%)</strong> — projected sale value plus momentum.</li>
+            <li><strong>Financing &amp; ERC (25%)</strong> — early-repayment charge while fixed, plus extra interest
+              from holding past March 2027 at a higher remortgage rate.</li>
+            <li><strong>Net proceeds (20%)</strong> — your personal cash-in-hand after all costs.</li>
+            <li><strong>Seasonality (10%)</strong> — buyer-demand strength in the window's month.</li>
+            <li><strong>Policy &amp; macro (15%)</strong> — time-aware tally of the political factors.</li>
+          </ul>
+          <p>The <strong>sell-vs-let</strong> comparison models monthly rental cash flow, income tax under
+            <strong>Section 24</strong> with the April-2027 landlord rate rise, and CGT with partial Private Residence
+            Relief, then compares against selling now and investing the proceeds.</p>
+          <p class="muted small">All figures are curated snapshots gathered 30 June 2026 and forward-looking estimates;
+            they will go stale. Full sources are linked on the Market &amp; factors tab.</p>
+          <p class="disclaimer"><strong>Not advice.</strong> An informational model, not financial, tax, mortgage or
+            legal advice. Forecasts are uncertain and often wrong. Verify against the linked sources and a qualified
+            adviser before acting.</p>
+        </div>
+      </section>
+
+      <footer class="content-foot">
+        Private dashboard · zero-trust protected · static site on Cloudflare · <span id="build">build —</span>
+      </footer>
     </div>
-  </header>
+  </div>
+</div>
 
-  <main class="wrap">
-
-    <!-- VERDICT -->
-    <section class="panel hero" id="verdict">
-      <div id="verdict-body" class="loading">Calculating recommendation…</div>
-    </section>
-
-    <!-- POSITION -->
-    <section class="panel" id="position">
-      <h2>1 · Your position</h2>
-      <p class="section-lead">Everything the model starts from. These reflect the figures you provided; the
-        estimated current value is derived from the Land Registry Islington index and is adjustable below.</p>
-      <div id="position-body" class="loading">Loading…</div>
-    </section>
-
-    <!-- SIGNAL -->
-    <section class="panel" id="signal">
-      <h2>2 · The sell-timing signal</h2>
-      <p class="section-lead">A transparent weighted score across five factors, computed for four candidate
-        windows. It is a combination of a single headline signal <em>and</em> the full factor-by-factor
-        breakdown — nothing is hidden.</p>
-      <div id="signal-body" class="loading">Loading…</div>
-    </section>
-
-    <!-- FACTORS -->
-    <section class="panel" id="factors">
-      <h2>3 · The factors, explained</h2>
-      <p class="section-lead">Each factor below shows the data, the reasoning, and links to the source
-        material so you can check the working.</p>
-
-      <!-- Factor: price trajectory -->
-      <article class="factor">
-        <div class="factor-head">
-          <h3>① Price trajectory</h3>
-          <span class="factor-weight">weight 30%</span>
-        </div>
-        <p>Islington's average price was <strong>£673k in March 2025</strong> and <strong>£679k in March 2026</strong>
-          (<strong>+0.9%</strong>), but <strong>flats specifically were broadly flat</strong> over the year, while
-          London-wide prices fell <strong>2.1%</strong>. London has now seen six consecutive months of annual
-          decline. The chart anchors both indices to your purchase month (100 = £890,000).</p>
-        <div class="chart-wrap"><div id="price-chart"></div></div>
-        <p class="muted small">Sources:
-          <a href="https://www.gov.uk/government/news/uk-house-price-index-for-march-2026" target="_blank" rel="noopener">UK HPI, March 2026 (GOV.UK)</a> ·
-          <a href="https://landregistry.data.gov.uk/app/ukhpi/browse" target="_blank" rel="noopener">HM Land Registry UK HPI</a> ·
-          <a href="https://www.ons.gov.uk/visualisations/housingpriceslocal/E09000019/" target="_blank" rel="noopener">ONS Islington prices</a></p>
-      </article>
-
-      <!-- Factor: forecast -->
-      <article class="factor">
-        <div class="factor-head">
-          <h3>② Forecast trajectory &amp; scenarios</h3>
-          <span class="factor-weight">feeds price + net proceeds</span>
-        </div>
-        <p>The consensus is a soft 2026 then recovery: <strong>Savills</strong> revised 2026 to <strong>−2%</strong>
-          (higher mortgage costs after the Middle-East-driven swap-rate spike), with <strong>+4%</strong> in 2027 and
-          <strong>+5%</strong> in 2028. <strong>Knight Frank</strong> models <strong>+3%</strong> (2027) and
-          <strong>+4%</strong> (2028), and ~<strong>13.6% cumulative London growth 2026–2030</strong>. London lags
-          the UK near-term. The band shows the optimistic–pessimistic range; the solid line is your active scenario.</p>
-        <div class="chart-wrap"><div id="forecast-chart"></div>
-          <p class="chart-cap">Projected value of your flat from today. The "fix ends" marker is March 2027.</p></div>
-        <p class="muted small">Sources:
-          <a href="https://www.savills.co.uk/insight-and-opinion/savills-news/391268/savills-revises-uk-house-price-forecast-as-higher-mortgage-costs-weigh-on-demand" target="_blank" rel="noopener">Savills forecast</a> ·
-          <a href="https://www.knightfrank.co.uk/research/article/2026/4/uk-housing-market-forecast-q2-2026" target="_blank" rel="noopener">Knight Frank Q2 2026</a> ·
-          <a href="https://www.zoopla.co.uk/discover/property-news/house-price-index/" target="_blank" rel="noopener">Zoopla HPI</a></p>
-      </article>
-
-      <!-- Factor: financing -->
-      <article class="factor">
-        <div class="factor-head">
-          <h3>③ Financing, rates &amp; your ERC</h3>
-          <span class="factor-weight">weight 25%</span>
-        </div>
-        <p>Your <strong>4.38% fix is now below market</strong> — the average 2-year fix is ~<strong>5.55%</strong> and
-          the 5-year ~<strong>5.54%</strong> (June 2026), with the Bank of England base rate held at
-          <strong>3.75%</strong>. That cheap fix is valuable while it lasts, but it <strong>ends in March 2027</strong>.
-          Two timing levers follow: (a) selling <em>before</em> March 2027 triggers your <strong>1% early-repayment
-          charge</strong>; (b) holding <em>past</em> March 2027 means remortgaging at a higher rate, raising your
-          monthly cost. The window just after the fix ends minimises both.</p>
-        <div class="chart-wrap"><div id="rates-chart"></div>
-          <p class="chart-cap">Average 2-year fix vs base rate vs your fixed rate. Fixes spiked on the spring-2026
-            Middle East shock and are now easing as swap rates fall.</p></div>
-        <p class="muted small">Sources:
-          <a href="https://www.bankofengland.co.uk/monetary-policy-summary-and-minutes/2026/june-2026" target="_blank" rel="noopener">BoE June 2026 decision</a> ·
-          <a href="https://www.rightmove.co.uk/news/articles/property-news/current-uk-mortgage-rates/" target="_blank" rel="noopener">Rightmove current rates</a> ·
-          <a href="https://hoa.org.uk/advice/guides-for-homeowners/for-owners/mortgage-rate-forecast/" target="_blank" rel="noopener">HOA rate forecast</a></p>
-      </article>
-
-      <!-- Factor: seasonality -->
-      <article class="factor">
-        <div class="factor-head">
-          <h3>④ Seasonality</h3>
-          <span class="factor-weight">weight 10%</span>
-        </div>
-        <p><strong>February–May</strong> are the strongest months to list (Rightmove: ~66% of Feb/Mar listings go on
-          to complete), and <strong>flats sell especially well in late spring / early summer</strong> as graduates and
-          young professionals enter the market. This gives spring windows a modest timing tilt — handily, your fix also
-          ends in spring 2027.</p>
-        <p class="muted small">Source:
-          <a href="https://www.rightmove.co.uk/guides/seller/preparing-to-sell/is-now-the-right-time-to-sell/" target="_blank" rel="noopener">Rightmove — best time to sell</a></p>
-      </article>
-
-      <!-- Factor: policy/macro -->
-      <article class="factor">
-        <div class="factor-head">
-          <h3>⑤ Political &amp; macro factors</h3>
-          <span class="factor-weight">weight 15%</span>
-        </div>
-        <ul class="policy-list">
-          <li><span class="tag pos">Neutral / mild +</span><strong>‘Mansion tax’ (High-Value Council Tax Surcharge)</strong>
-            — from April 2028 on homes over £2m. Your flat is well below the threshold, so it is unaffected, though it
-            cools the very top of the London market.</li>
-          <li><span class="tag neu">Indirect</span><strong>Landlord income tax +2% from April 2027</strong> — doesn't
-            touch you as an owner-occupier, but it discourages buy-to-let investors, softening investor demand for
-            flats while tightening rental supply.</li>
-          <li><span class="tag neu">Neutral</span><strong>Stamp duty unchanged; nil-rate band back to £125k</strong>
-            — raises buyers' upfront costs vs 2024, a mild demand dampener.</li>
-          <li><span class="tag pos">Strong +</span><strong>Primary residence — CGT exempt</strong> — Private Residence
-            Relief means normally no Capital Gains Tax on your sale, at any date.</li>
-          <li><span class="tag neg">Risk −</span><strong>Middle East conflict</strong> — the BoE's flagged dominant
-            risk to inflation; it pushed swap (and mortgage) rates up in spring 2026 and clouds the rate-cut path. This
-            risk weighs more on near-term windows and is assumed to ease over time.</li>
-        </ul>
-        <p class="muted small">Sources:
-          <a href="https://hoa.org.uk/news/new-property-tax/" target="_blank" rel="noopener">HOA — new property tax</a> ·
-          <a href="https://www.zoopla.co.uk/discover/property-news/autumn-budget-impact-on-uk-housing-market/" target="_blank" rel="noopener">Zoopla — Budget impact</a> ·
-          <a href="https://www.gov.uk/tax-sell-home" target="_blank" rel="noopener">GOV.UK — Private Residence Relief</a></p>
-      </article>
-
-      <h3 class="sub">Factor scores for the recommended window</h3>
-      <div id="factor-scores" class="loading">Loading…</div>
-    </section>
-
-    <!-- PROCEEDS -->
-    <section class="panel" id="proceeds">
-      <h2>4 · What you'd actually walk away with</h2>
-      <p class="section-lead">The personal model: projected sale value minus the outstanding mortgage, any
-        early-repayment charge, agent fee + VAT, legal and EPC costs. CGT is £0 (main residence).</p>
-      <div id="proceeds-body" class="loading">Loading…</div>
-    </section>
-
-    <!-- LETTING -->
-    <section class="panel" id="letting">
-      <h2>5 · Sell now, or rent it out and sell later?</h2>
-      <p class="section-lead">Keeping the flat and letting it is an alternative to selling. This compares the two
-        on a like-for-like wealth basis to your chosen horizon, with full UK income-tax treatment:
-        <strong>Section 24</strong> (mortgage interest gets a 20% tax credit, not full relief), the
-        <strong>April-2027 +2% landlord rate rise</strong>, and the <strong>partial loss of CGT relief</strong> from
-        moving out.</p>
-      <div id="letting-summary" class="loading">Loading…</div>
-      <h3 class="sub">Year-by-year rental cash flow</h3>
-      <div id="letting-table" class="loading">Loading…</div>
-      <h3 class="sub">Adjust the letting assumptions</h3>
-      <div id="letting-controls" class="loading">Loading…</div>
-      <p class="muted small">Sources:
-        <a href="https://www.gov.uk/government/news/uk-house-price-index-for-march-2026" target="_blank" rel="noopener">Islington rents (UK HPI / ONS)</a> ·
-        <a href="https://www.zoopla.co.uk/discover/property-news/autumn-budget-impact-on-uk-housing-market/" target="_blank" rel="noopener">landlord tax rise (Autumn Budget)</a> ·
-        <a href="https://www.gov.uk/capital-gains-tax/rates" target="_blank" rel="noopener">CGT rates &amp; allowances</a> ·
-        <a href="https://www.gov.uk/tax-sell-home" target="_blank" rel="noopener">Private Residence Relief</a></p>
-      <p class="disclaimer"><strong>Tax is simplified.</strong> Real liabilities depend on your total income, other
-        gains, allowable costs and reliefs. Section 24 and CGT-on-a-former-home are modelled approximately — confirm
-        with an accountant before letting.</p>
-    </section>
-
-    <!-- CONTROLS -->
-    <section class="panel" id="controls">
-      <h2>6 · Test your own assumptions</h2>
-      <p class="section-lead">Don't agree with the consensus? Move the sliders — the recommendation, signal and every
-        chart update live.</p>
-      <div id="controls-body" class="loading">Loading…</div>
-    </section>
-
-    <!-- METHODOLOGY -->
-    <section class="panel" id="methodology">
-      <h2>7 · Methodology &amp; sources</h2>
-      <p>The signal is a weighted blend of five factor scores, each in the range −100 (wait) to +100 (sell here),
-        computed for four windows (now, spring 2027, H2 2027, spring 2028):</p>
-      <ul>
-        <li><strong>Price trajectory (30%)</strong> — projected sale value across windows plus price momentum.</li>
-        <li><strong>Financing &amp; ERC (25%)</strong> — early-repayment charge while in the fix, plus the extra
-          interest cost of holding past March 2027 at a higher remortgage rate.</li>
-        <li><strong>Net proceeds (20%)</strong> — your personal cash-in-hand after all costs.</li>
-        <li><strong>Seasonality (10%)</strong> — buyer-demand strength in the window's month.</li>
-        <li><strong>Policy &amp; macro (15%)</strong> — time-aware tally of the political factors above.</li>
-      </ul>
-      <p>The <strong>sell-vs-let</strong> comparison (section 5) is separate from the signal: it models monthly rental
-        cash flow (rent less voids, agent, maintenance, insurance, service charge and the full mortgage payment),
-        income tax under <strong>Section 24</strong> (interest gets a 20% credit) with the <strong>April-2027</strong>
-        landlord rate rise, and Capital Gains Tax on eventual sale with <strong>partial Private Residence Relief</strong>,
-        then compares the total against selling now and investing the proceeds at your chosen opportunity rate.</p>
-      <p class="muted small">All figures are curated snapshots gathered on 30 June 2026 and forward-looking
-        estimates; they will go stale. The Bank of England base-rate badge shows the latest published value
-        (3.75%, 17 Jun 2026) and can optionally be wired to a live feed. Full source list is linked inline in each
-        factor above.</p>
-      <p class="disclaimer"><strong>Not advice.</strong> This is an informational model, not financial, tax, mortgage
-        or legal advice. House-price and rate forecasts are uncertain and frequently wrong. Verify against the linked
-        sources and a qualified adviser before making any decision.</p>
-    </section>
-
-  </main>
-
-  <footer class="site-footer">
-    <div class="wrap">
-      <span>Private dashboard · zero-trust protected · static site on Cloudflare · <span id="build">build —</span></span>
-    </div>
-  </footer>
-
-  <script type="module" src="assets/js/app.js"></script>
+<script type="module" src="assets/js/app.js"></script>
 </body>
 </html>
