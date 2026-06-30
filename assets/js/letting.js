@@ -11,21 +11,19 @@
 // All approximate and clearly flagged in the UI — not a substitute for an adviser.
 // =============================================================================
 
-import { monthlyPayment, balanceAfter, monthsBetween, valueMultiplier, sellingCosts } from "./finance.js?v=13";
-
-const addMonthsISO = (iso, n) => {
-  const d = new Date((iso.length === 7 ? iso + "-01" : iso));
-  d.setMonth(d.getMonth() + n);
-  return d.toISOString().slice(0, 7);
-};
+import {
+  monthlyPayment, balanceAfter, monthsBetween, valueMultiplier, sellingCosts,
+  ymIndex, ymToISO,
+} from "./finance.js?v=14";
 
 // Build a month-by-month mortgage schedule from `fromISO` to `toISO`, handling the
 // switch from the residential fix to the post-fix (let/BTL) rate at fixEndDate.
+// Uses integer month indices (timezone-safe — no Date.setMonth).
 export function scheduleInterest(mortgage, letCfg, fromISO, toISO) {
   const monthsPaidAtStart = monthsBetween(mortgage._purchaseDate, fromISO);
   let balance = balanceAfter(mortgage.principal, mortgage.ratePct, mortgage.termYears, monthsPaidAtStart);
-  let cur = fromISO.slice(0, 7);
-  const fixEnd = mortgage.fixEndDate.slice(0, 7);
+  const startIdx = ymIndex(fromISO), endIdx = ymIndex(toISO), fixIdx = ymIndex(mortgage.fixEndDate);
+  const purchaseIdx = ymIndex(mortgage._purchaseDate);
   const months = [];
 
   // payment under the current (fixed) rate, on remaining term
@@ -36,12 +34,11 @@ export function scheduleInterest(mortgage, letCfg, fromISO, toISO) {
     : monthlyPayment(balance, curRate, remTermYears);
   let switched = false;
 
-  let guard = 0;
-  while (cur < toISO.slice(0, 7) && guard++ < 1200) {
+  for (let idx = startIdx; idx < endIdx; idx++) {
     // switch to let/BTL rate once the fix ends
-    if (!switched && cur >= fixEnd) {
+    if (!switched && idx >= fixIdx) {
       curRate = letCfg.letMortgageRatePctAfterFix;
-      const remYears = mortgage.termYears - monthsBetween(mortgage._purchaseDate, cur) / 12;
+      const remYears = mortgage.termYears - (idx - purchaseIdx) / 12;
       payment = letCfg.interestOnly
         ? balance * (curRate / 100 / 12)
         : monthlyPayment(balance, curRate, Math.max(1, remYears));
@@ -50,8 +47,7 @@ export function scheduleInterest(mortgage, letCfg, fromISO, toISO) {
     const interest = balance * (curRate / 100 / 12);
     const principalPaid = letCfg.interestOnly ? 0 : Math.max(0, payment - interest);
     balance = Math.max(0, balance - principalPaid);
-    months.push({ monthISO: cur, interest, principalPaid, payment: interest + principalPaid, balance, rate: curRate });
-    cur = addMonthsISO(cur, 1);
+    months.push({ monthISO: ymToISO(idx), interest, principalPaid, payment: interest + principalPaid, balance, rate: curRate });
   }
   return { months, endBalance: balance };
 }
@@ -122,7 +118,7 @@ export function rentVsSell(opts) {
   const costs = sellingCosts(saleValue, sellingCfg);
   const outstanding = sched.endBalance;
   // ERC: only if the horizon is still inside the fix (unlikely) — reuse 1% rule.
-  const insideFix = new Date(saleDate) < new Date(mortgage.fixEndDate);
+  const insideFix = ymIndex(saleDate) < ymIndex(mortgage.fixEndDate);
   const erc = insideFix ? outstanding * (mortgage.ercPctWhileFixed / 100) : 0;
 
   // CGT — partial Private Residence Relief.

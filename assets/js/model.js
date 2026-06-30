@@ -8,8 +8,8 @@
 
 import {
   economicsForWindow, holdingCostDelta, monthsBetween,
-  currentValueFromIndex, valueMultiplier,
-} from "./finance.js?v=13";
+  currentValueFromIndex, valueMultiplier, ymIndex, ymToISO, yearOfISO,
+} from "./finance.js?v=14";
 
 const clamp = (x, lo, hi) => Math.max(lo, Math.min(hi, x));
 
@@ -21,7 +21,7 @@ function spread(v, min, max) {
 
 // Annual growth (%) for the calendar year of a window's date, from a scenario.
 function growthAtDate(dateISO, growthByYear) {
-  const yr = new Date(dateISO).getFullYear();
+  const yr = yearOfISO(dateISO);
   const keys = Object.keys(growthByYear);
   return growthByYear[yr] ?? growthByYear[keys[keys.length - 1]] ?? 0;
 }
@@ -80,13 +80,13 @@ export function runModel(data, overrides = {}) {
   // ---- policy/macro score (time-aware) -------------------------------------
   const wHint = { high: 3, medium: 2, low: 1 };
   function policyScore(windowDate) {
-    const wDate = new Date(windowDate);
+    const wIdx = ymIndex(windowDate);
     const yearsOut = monthsBetween(presentISO, windowDate) / 12;
     let sum = 0, maxAbs = 0;
     for (const f of POLICY_FACTORS) {
       const w = wHint[f.weightHint] || 1;
       maxAbs += w;
-      if (new Date(f.effective) > wDate) continue; // not yet in force
+      if (ymIndex(f.effective) > wIdx) continue; // not yet in force
       let contrib = f.direction * w;
       // Macro/uncertainty risk resolves over time -> decays for later windows.
       if (f.id === "macroRisk") contrib *= clamp(1 - yearsOut * 0.4, 0.2, 1);
@@ -127,14 +127,11 @@ export function runModel(data, overrides = {}) {
   const pathEnd = WINDOWS[WINDOWS.length - 1].date;
   function buildPath(gby) {
     const pts = [];
-    const cur = new Date(presentISO.slice(0, 7) + "-01");
-    const end = new Date(pathEnd);
-    let guard = 0;
-    while (cur <= end && guard++ < 1200) {
-      const iso = cur.toISOString().slice(0, 7);
+    const startIdx = ymIndex(presentISO), endIdx = ymIndex(pathEnd);
+    for (let idx = startIdx; idx <= endIdx; idx++) {
+      const iso = ymToISO(idx);
       const v = presentValue * valueMultiplier(PROPERTY.purchaseDate, iso, gby, presentISO);
       pts.push({ date: iso, value: v });
-      cur.setMonth(cur.getMonth() + 1);
     }
     return pts;
   }

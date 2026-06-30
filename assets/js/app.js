@@ -2,18 +2,18 @@
 // app.js  —  Entry point: load data, run model, render the single page, wire UI
 // =============================================================================
 
-import * as DATA from "../data/dataset.js?v=13";
-import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=13";
-import * as C from "./charts.js?v=13";
-import { monthlyPayment, monthsBetween } from "./finance.js?v=13";
-import { rentVsSell } from "./letting.js?v=13";
+import * as DATA from "../data/dataset.js?v=14";
+import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=14";
+import * as C from "./charts.js?v=14";
+import { monthlyPayment, monthsBetween, ymIndex, ymToISO } from "./finance.js?v=14";
+import { rentVsSell } from "./letting.js?v=14";
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const gbp = (n) => (n < 0 ? "−" : "") + "£" + Math.abs(Math.round(n)).toLocaleString("en-GB");
 const signed = (n, f = (x) => x.toFixed(0)) => (n >= 0 ? "+" : "") + f(n);
 const pct = (n) => n.toFixed(2) + "%";
-const monthName = (iso) =>
-  new Date(iso.length === 7 ? iso + "-01" : iso).toLocaleDateString("en-GB", { month: "short", year: "numeric" });
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const monthName = (iso) => MONTHS[parseInt(iso.slice(5, 7), 10) - 1] + " " + iso.slice(0, 4);
 
 const FACTOR_COLORS = {
   priceTrajectory: "#2563eb",
@@ -510,9 +510,9 @@ function renderStaticFactorChartsOnce() {
 }
 
 function nearestBase(series, dateISO) {
-  const t = new Date(dateISO + "-01");
+  const t = ymIndex(dateISO);
   let best = series[0];
-  for (const s of series) if (new Date(s.date + "-01") <= t) best = s;
+  for (const s of series) if (ymIndex(s.date) <= t) best = s;
   return best.rate;
 }
 
@@ -542,9 +542,7 @@ function computeLetting(r) {
 }
 
 function letPeriodLabel(startISO, months) {
-  const d = new Date(startISO + "-01");
-  d.setMonth(d.getMonth() + months - 1);
-  const endISO = d.toISOString().slice(0, 7);
+  const endISO = ymToISO(ymIndex(startISO) + months - 1);
   return monthName(startISO) + " – " + monthName(endISO) + (months < 12 ? ` · ${months} mo` : "");
 }
 

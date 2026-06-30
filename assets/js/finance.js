@@ -1,12 +1,29 @@
 // =============================================================================
 // finance.js  —  Personal mortgage & sale economics (pure functions, no DOM)
+// -----------------------------------------------------------------------------
+// IMPORTANT: all month arithmetic is done on plain integers parsed from the ISO
+// strings — never via the Date object's setMonth/getMonth, which mix UTC parsing
+// with local-time mutation and break (loop forever) in timezones behind UTC.
 // =============================================================================
 
-// Months between two YYYY-MM-DD (or YYYY-MM) dates.
+// Absolute month index from a "YYYY-MM" or "YYYY-MM-DD" string (year*12 + month0).
+export function ymIndex(iso) {
+  const y = parseInt(iso.slice(0, 4), 10);
+  const m = parseInt(iso.slice(5, 7), 10);
+  return y * 12 + (m - 1);
+}
+// Inverse: month index -> "YYYY-MM".
+export function ymToISO(index) {
+  const y = Math.floor(index / 12);
+  const m = (index % 12) + 1;
+  return y + "-" + String(m).padStart(2, "0");
+}
+// Calendar year from an ISO date string.
+export function yearOfISO(iso) { return parseInt(iso.slice(0, 4), 10); }
+
+// Months between two YYYY-MM-DD (or YYYY-MM) dates (integer, timezone-safe).
 export function monthsBetween(fromISO, toISO) {
-  const a = new Date(fromISO.length === 7 ? fromISO + "-01" : fromISO);
-  const b = new Date(toISO.length === 7 ? toISO + "-01" : toISO);
-  return (b.getFullYear() - a.getFullYear()) * 12 + (b.getMonth() - a.getMonth());
+  return ymIndex(toISO) - ymIndex(fromISO);
 }
 
 // Standard amortised monthly payment.
@@ -29,21 +46,18 @@ export function balanceAfter(principal, annualRatePct, termYears, monthsPaid) {
 // Build a year-by-year growth path and return a value multiplier at a target date,
 // relative to a base value at baseDate. growthByYear: { 2026: -2.0, 2027: 3.0, ... }.
 export function valueMultiplier(baseDate, targetDate, growthByYear, presentISO) {
-  // Apply monthly-compounded annual growth from the *present* forward; before the
-  // present we trust the observed index (handled by caller). Here we project from
-  // `presentISO` to `targetDate`.
-  const start = new Date((presentISO.length === 7 ? presentISO + "-01" : presentISO));
-  const end = new Date((targetDate.length === 7 ? targetDate + "-01" : targetDate));
-  if (end <= start) return 1;
+  // Apply monthly-compounded annual growth from the *present* forward (integer
+  // month math — timezone-safe). Before the present we trust the observed index.
+  const startIdx = ymIndex(presentISO);
+  const endIdx = ymIndex(targetDate);
+  if (endIdx <= startIdx) return 1;
+  const lastYearKey = Object.keys(growthByYear).slice(-1)[0];
   let mult = 1;
-  const cur = new Date(start);
-  let guard = 0;
-  while (cur < end && guard++ < 1200) { // cap = 100 years of months; backstop vs bad dates
-    const yr = cur.getFullYear();
-    const annual = (growthByYear[yr] ?? growthByYear[Object.keys(growthByYear).slice(-1)[0]] ?? 0) / 100;
+  for (let idx = startIdx; idx < endIdx; idx++) {
+    const yr = Math.floor(idx / 12);
+    const annual = (growthByYear[yr] ?? growthByYear[lastYearKey] ?? 0) / 100;
     const monthly = Math.pow(1 + annual, 1 / 12) - 1;
     mult *= 1 + monthly;
-    cur.setMonth(cur.getMonth() + 1);
   }
   return mult;
 }
@@ -80,7 +94,7 @@ export function economicsForWindow(opts) {
   // 2) Outstanding mortgage balance at the window date.
   const monthsPaidAtFix = monthsBetween(property.purchaseDate, mortgage.fixEndDate);
   const monthsPaidAtWindow = monthsBetween(property.purchaseDate, windowDate);
-  const insideFix = new Date(windowDate) < new Date(mortgage.fixEndDate);
+  const insideFix = ymIndex(windowDate) < ymIndex(mortgage.fixEndDate);
 
   let outstanding;
   if (insideFix) {
