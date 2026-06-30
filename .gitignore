@@ -1,0 +1,11 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# Local tooling (none required — this is a zero-build static site)
+node_modules/
+.wrangler/
+.dev.vars
