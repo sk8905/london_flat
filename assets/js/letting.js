@@ -137,21 +137,27 @@ export function rentVsSell(opts) {
   const netSaleProceeds = saleValue - outstanding - erc - costs.total - cgt;
 
   // ---- totals & comparison --------------------------------------------------
-  const years_f = monthsOwned > startMonths ? (monthsBetween(presentISO, saleDate) / 12) : 0;
+  // Guard the horizon length so a bad date can't blow up the opportunity-cost
+  // exponent (clamped to a sane 0–10 years).
+  const years_f = monthsOwned > startMonths
+    ? Math.max(0, Math.min(10, monthsBetween(presentISO, saleDate) / 12)) : 0;
   const letTotal = cumulativeNetRent + netSaleProceeds;
   const sellNowGrown = sellNowNet * Math.pow(1 + letCfg.opportunityRatePct / 100, years_f);
 
+  const fin = (x) => (Number.isFinite(x) ? x : 0); // belt-and-braces against NaN/Infinity
   return {
     saleDate, years: years_f,
     yearsTable: years,
-    cumulativeNetRent, cumulativePrincipal, cumulativeInterest, cumulativeTax,
+    cumulativeNetRent: fin(cumulativeNetRent), cumulativePrincipal: fin(cumulativePrincipal),
+    cumulativeInterest: fin(cumulativeInterest), cumulativeTax: fin(cumulativeTax),
     interestOnly: !!letCfg.interestOnly,
-    sale: { saleValue, outstanding, erc, costs, cgt, chargeableFraction, netSaleProceeds,
-            monthsAsResidence, monthsOwned, exemptMonths, totalGain, chargeableGain },
-    letTotal,
-    sellNowNet,
-    sellNowGrown,
-    advantageLet: letTotal - sellNowGrown,
+    sale: { saleValue: fin(saleValue), outstanding: fin(outstanding), erc: fin(erc), costs, cgt: fin(cgt),
+            chargeableFraction, netSaleProceeds: fin(netSaleProceeds),
+            monthsAsResidence, monthsOwned, exemptMonths, totalGain: fin(totalGain), chargeableGain: fin(chargeableGain) },
+    letTotal: fin(letTotal),
+    sellNowNet: fin(sellNowNet),
+    sellNowGrown: fin(sellNowGrown),
+    advantageLet: fin(letTotal - sellNowGrown),
     band,
   };
 }

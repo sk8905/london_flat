@@ -222,7 +222,8 @@ function renderVerdict(r) {
       </div>
       <div class="verdict-gauge">
         <div id="gauge"></div>
-        <div class="gauge-caption">Composite sell-timing signal<br>for ${best.window.label}</div>
+        <div class="gauge-caption">Composite sell-timing signal for ${best.window.label}<br>
+          <span class="muted">score −100 (wait) to +100 (sell now), not £</span></div>
       </div>
     </div>`;
   C.gauge($("#gauge"), best.composite, sig.label);
@@ -253,14 +254,14 @@ function renderDashboard(r) {
       color: w === best ? "#4f46e5" : (w.composite >= 0 ? "#a5b4fc" : "#fca5a5"),
       valueLabel: signed(w.composite),
     })),
-    yFormat: (v) => v.toFixed(0), height: 240, baseline: 0,
+    yFormat: (v) => v.toFixed(0), height: 240, baseline: 0, yUnit: "signal score",
   });
   C.barChart($("#dash-proceeds-chart"), {
     bars: r.windows.map((w) => ({
       label: w.window.label.replace(/ \(.*\)/, ""), value: w.net,
       color: w === best ? "#15803d" : "#86efac", valueLabel: gbp(w.net),
     })),
-    yFormat: (v) => "£" + Math.round(v / 1000) + "k", height: 240,
+    yFormat: (v) => "£" + Math.round(v / 1000) + "k", height: 240, yUnit: "£ proceeds",
   });
 
   // drivers
@@ -371,8 +372,9 @@ function renderSignal(r) {
 
   host.innerHTML = `
     <div class="chart-wrap"><div id="contrib-chart"></div>
-      <p class="chart-cap">How each factor contributes to the signal for every window. Bars above zero push
-      "sell here"; below zero push "wait". The black tick is the net signal. Weights:
+      <p class="chart-cap">Vertical axis is the <strong>signal score in points (−100 to +100), not £</strong>. Each
+      coloured segment is a factor's weighted contribution; bars above zero push "sell here", below zero push "wait".
+      The black tick marks the net signal for that window. Weights:
       ${Object.entries(r.weights).map(([k, v]) => `${FACTOR_LABELS[k]} ${(v * 100).toFixed(0)}%`).join(" · ")}.</p>
     </div>
     <div class="table-wrap"><table class="rank-table">
@@ -381,7 +383,7 @@ function renderSignal(r) {
     </table></div>`;
 
   const factors = Object.keys(FACTOR_LABELS).map((k) => ({ key: k, label: FACTOR_LABELS[k], color: FACTOR_COLORS[k] }));
-  C.stackedContrib($("#contrib-chart"), r.windows, factors);
+  C.stackedContrib($("#contrib-chart"), r.windows, factors, 320, "signal score (pts)");
 }
 
 // ---------------------------------------------------------------------------
@@ -407,7 +409,7 @@ function renderProceeds(r) {
         <td>${w.erc > 0 ? gbp(w.erc) : "—"}</td><td>${gbp(w.costs.total)}</td><td>£0</td>
         <td><strong>${gbp(w.net)}</strong></td></tr>`).join("")}</tbody>
     </table></div>`;
-  C.barChart($("#proceeds-chart"), { bars, yFormat: (v) => "£" + Math.round(v / 1000) + "k", height: 300 });
+  C.barChart($("#proceeds-chart"), { bars, yFormat: (v) => "£" + Math.round(v / 1000) + "k", height: 300, yUnit: "£ proceeds" });
 }
 
 // ---------------------------------------------------------------------------
@@ -432,6 +434,7 @@ function renderForecastChart(r) {
     ],
     band: { lower: pes.map((p) => p.value), upper: opt.map((p) => p.value), color: "#2563eb" },
     yFormat: (v) => "£" + Math.round(v / 1000) + "k",
+    yUnit: "£ value",
     yRef: DATA.PROPERTY.purchasePrice,
     yRefLabel: "purchase " + gbp(DATA.PROPERTY.purchasePrice),
     markers,
@@ -448,7 +451,8 @@ function renderFactorScores(r) {
     label: FACTOR_LABELS[k], value: w.factors[k], color: FACTOR_COLORS[k],
   }));
   host.innerHTML = `<p class="chart-cap">Raw factor scores for the recommended window
-    (<strong>${w.window.label}</strong>), before weighting. Range −100 to +100.</p><div id="factor-div"></div>`;
+    (<strong>${w.window.label}</strong>) before weighting — each in <strong>signal points from −100 to +100</strong>
+    (not £). Positive favours selling in this window.</p><div id="factor-div"></div>`;
   C.divergingBars($("#factor-div"), { items });
 }
 
@@ -468,6 +472,7 @@ function renderStaticFactorChartsOnce() {
         points: ph.series.map((s) => ({ x: monthName(s.date), y: toGBP(s.london) })) },
     ],
     yFormat: (v) => "£" + Math.round(v / 1000) + "k",
+    yUnit: "£ value",
     yRef: DATA.PROPERTY.purchasePrice, yRefLabel: "purchase",
   });
 
@@ -487,6 +492,7 @@ function renderStaticFactorChartsOnce() {
         points: rr.fix2yrSeries.map((s) => ({ x: monthName(s.date), y: rr.yourRate })) },
     ],
     yFormat: (v) => v.toFixed(1) + "%",
+    yUnit: "interest rate",
   });
 }
 
@@ -569,7 +575,7 @@ function renderLetting(r) {
       { label: "Let & sell later", value: res.letTotal, color: wins ? "#16a34a" : "#0891b2", valueLabel: gbp(res.letTotal) },
       { label: "Sell now & invest", value: res.sellNowGrown, color: wins ? "#0891b2" : "#16a34a", valueLabel: gbp(res.sellNowGrown) },
     ],
-    yFormat: (v) => "£" + Math.round(v / 1000) + "k", height: 280,
+    yFormat: (v) => "£" + Math.round(v / 1000) + "k", height: 280, yUnit: "£ total wealth",
   });
 
   // year-by-year table + CGT/relief breakdown

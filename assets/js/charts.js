@@ -33,6 +33,13 @@ function svgRoot(container, w, h) {
   return svg;
 }
 
+// Small unit label at the top-left of the y-axis (e.g. "£ THOUSANDS", "SIGNAL PTS").
+function yUnitLabel(svg, text) {
+  if (!text) return;
+  const t = el("text", { x: 4, y: 11, class: "axis-unit" }, svg);
+  t.textContent = text;
+}
+
 // niceTicks: returns ~count round numbers spanning [min,max].
 function niceTicks(min, max, count = 5) {
   const span = max - min || 1;
@@ -59,6 +66,7 @@ export function lineChart(container, opts) {
   const m = { t: 16, r: 16, b: 42, l: 64 };
   const iw = W - m.l - m.r, ih = H - m.t - m.b;
   const svg = svgRoot(container, W, H);
+  yUnitLabel(svg, opts.yUnit);
 
   const labels = opts.series[0].points.map((p) => p.x);
   const allY = [];
@@ -144,6 +152,7 @@ export function barChart(container, opts) {
   const m = { t: 24, r: 16, b: 56, l: 70 };
   const iw = W - m.l - m.r, ih = H - m.t - m.b;
   const svg = svgRoot(container, W, H);
+  yUnitLabel(svg, opts.yUnit);
 
   const vals = opts.bars.map((b) => b.value);
   const base = opts.baseline ?? 0;
@@ -260,11 +269,12 @@ export function gauge(container, value, label) {
 // Stacked contribution bars (per window): each factor's signed contribution.
 // opts: { windows:[{label}], factors:[{key,label,color}], data: { winId: {key:val} } }
 // ---------------------------------------------------------------------------
-export function stackedContrib(container, windows, factors, height = 320) {
+export function stackedContrib(container, windows, factors, height = 320, yUnit) {
   const W = 720, H = height;
   const m = { t: 20, r: 16, b: 70, l: 60 };
   const iw = W - m.l - m.r, ih = H - m.t - m.b;
   const svg = svgRoot(container, W, H);
+  yUnitLabel(svg, yUnit);
 
   // y range from min negative stack to max positive stack
   let lo = 0, hi = 0;
