@@ -51,6 +51,8 @@ Weights and factor logic live in `assets/data/dataset.js` and `assets/js/model.j
 london_flat/
 ├── index.html                 # single page
 ├── _headers                   # security + caching headers (Cloudflare Pages)
+├── worker.js                  # Cloudflare Worker entry — serves assets + /api/rates
+├── wrangler.jsonc             # Worker + static-assets deploy config
 ├── assets/
 │   ├── css/styles.css
 │   ├── data/dataset.js        # curated, sourced data + your figures (edit here)
@@ -62,8 +64,10 @@ london_flat/
 ```
 
 **Zero build.** No bundler, no npm install, no framework — native ES modules and inline SVG.
-**Pure static** — no server code, so it deploys cleanly as a Cloudflare **Worker** (static
-assets) or as Cloudflare **Pages**, and Zero Trust Access works on either.
+The app itself is **pure static** and renders entirely from the curated snapshot, so it works
+on any static host. A tiny optional **Worker** (`worker.js`) adds a single `/api/rates` route
+for live Bank-of-England data; if it isn't deployed the page silently keeps the snapshot. Zero
+Trust Access works either way.
 
 ## Run locally
 
@@ -91,14 +95,28 @@ Every push to the connected branch redeploys automatically.
 > **Cloudflare Pages** is an equally good target (`Workers & Pages → Create → Pages`) if your
 > dashboard offers it. Either works — the site is the same static files.
 
-### Live Bank of England rate (optional)
+### Live Bank of England rate (Worker-native)
 
 The base-rate badge shows the **curated snapshot** (3.75%, 17 Jun 2026) by default — accurate
-and editable in `assets/data/dataset.js`. The app will *optionally* upgrade it to a live value
-if a `GET /api/boe-rate` endpoint returns `{ "rate": <number>, "date": "..." }`. The client
-call is time-boxed (2.5s) and content-type-guarded, so on a plain static host it fails fast and
-silently — it can never hang the page. Wiring a live feed needs a small Worker route or a Pages
-Function; ask if you want it added back in a Worker-native form.
+and editable in `assets/data/dataset.js`. When deployed as a Worker, the badge also upgrades
+itself to the **live Bank Rate**:
+
+- `worker.js` exposes `GET /api/rates`, which fetches the Bank of England's Interactive
+  Database (series `IUDBEDR`) server-side, parses the latest value, and returns JSON. It's
+  time-boxed to 4s with a snapshot fallback and edge-cached for 6 hours.
+- After first paint, `app.js` calls `/api/rates` **non-blocking** and only swaps in a value
+  flagged `live: true`, appending a small `live` marker to the badge. If the route 404s (plain
+  static hosting) or the upstream is unreachable, the snapshot stays and nothing hangs.
+
+To deploy with the Worker route, either connect the repo in the dashboard (Cloudflare
+auto-detects `wrangler.jsonc`) or run:
+
+```bash
+npx wrangler deploy
+```
+
+`wrangler.jsonc` binds the repo root as static assets (`ASSETS`) and routes everything except
+`/api/*` straight to those assets — so the Worker only runs for the one dynamic route.
 
 ## Lock it down with Cloudflare Zero Trust (Access)
 

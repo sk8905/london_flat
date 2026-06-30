@@ -157,6 +157,7 @@ export function barChart(container, opts) {
   const vals = opts.bars.map((b) => b.value);
   const base = opts.baseline ?? 0;
   const extra = opts.yRef != null ? [opts.yRef] : [];
+  if (opts.overlay && Array.isArray(opts.overlay.values)) extra.push(...opts.overlay.values.filter((v) => Number.isFinite(v)));
   let yMin = Math.min(base, ...vals, ...extra), yMax = Math.max(base, ...vals, ...extra);
   const ticks = niceTicks(yMin, yMax, 5);
   yMin = ticks[0]; yMax = ticks[ticks.length - 1];
@@ -197,6 +198,21 @@ export function barChart(container, opts) {
       st.textContent = b.sub;
     }
   });
+
+  // optional overlay line across the bars (e.g. break-even vs selling now & investing)
+  if (opts.overlay && Array.isArray(opts.overlay.values) && opts.overlay.values.length === n) {
+    const ov = opts.overlay, col = ov.color || "#a06a3c";
+    const cxAt = (i) => m.l + slot * i + slot / 2;
+    const pts = ov.values.map((v, i) => `${cxAt(i)},${yAt(v)}`).join(" ");
+    el("polyline", { points: pts, fill: "none", stroke: col, "stroke-width": 2,
+      "stroke-dasharray": "5 4", "stroke-linejoin": "round" }, svg);
+    ov.values.forEach((v, i) => el("circle", { cx: cxAt(i), cy: yAt(v), r: 3, fill: col }, svg));
+    if (ov.label) {
+      const t = el("text", { x: cxAt(n - 1), y: yAt(ov.values[n - 1]) - 9, class: "overlay-label" }, svg);
+      t.setAttribute("text-anchor", "end");
+      t.textContent = ov.label;
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------

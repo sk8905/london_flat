@@ -10,7 +10,7 @@
 
 export const META = {
   asOf: "2026-06-30",
-  build: "v22 · 2026-06-30", // bump on each change so the footer confirms the live build
+  build: "v23 · 2026-06-30", // bump on each change so the footer confirms the live build
   currency: "GBP",
   disclaimer:
     "This tool is an informational model, not financial, tax, mortgage or legal advice. " +
@@ -155,19 +155,15 @@ export const COMPS = {
   sources: ["soldPriceData", "zooplaN17tx", "onsIslington"],
   asOf: "2026-06-30",
   note:
-    "Recent N1 two-bedroom flat sales (representative). Prices from HM Land Registry; floor area and " +
-    "bathrooms from EPC/listing data where available. N1's median sold price is ~£9,910/m². Your flat is " +
-    "highlighted for comparison.",
+    "Recent N1 two-bedroom flat sales — restricted to new-build and purpose-built apartments, the like-for-like " +
+    "set for your 2020-built flat (period/warehouse conversions and maisonettes are excluded). Prices from HM Land " +
+    "Registry; floor area and bathrooms from EPC/listing data where available. Your flat is highlighted for comparison.",
   rows: [
     { addr: "Wenlock Road (Wharf), N1 7", date: "2026-03", price: 840000, beds: 2, baths: 2, type: "Apartment — new build", sqm: 80 },
     { addr: "Prebend Street, N1 8", date: "2026-02", price: 660000, beds: 2, baths: 1, type: "Apartment — purpose-built", sqm: 70 },
     { addr: "City Wharf, Wharf Road, N1 7", date: "2026-01", price: 870000, beds: 2, baths: 2, type: "Apartment — new build", sqm: 83 },
-    { addr: "Britton Street (Clerkenwell edge), N1", date: "2025-11", price: 985000, beds: 2, baths: 2, type: "Apartment — warehouse conversion", sqm: 88 },
-    { addr: "Thornhill Road, N1 1", date: "2025-10", price: 900000, beds: 2, baths: 1, type: "Maisonette — converted house", sqm: 84 },
     { addr: "Jefferson Court, Cynthia Street, N1 9", date: "2025-09", price: 950000, beds: 2, baths: 2, type: "Apartment — new build", sqm: 90 },
-    { addr: "Shepperton Road, N1", date: "2025-07", price: 720000, beds: 2, baths: 1, type: "Apartment — Victorian conversion", sqm: 75 },
     { addr: "250 City Road, N1 7", date: "2025-05", price: 820000, beds: 2, baths: 2, type: "Apartment — new build", sqm: 77 },
-    { addr: "Cross Street (Angel), N1 2", date: "2025-02", price: 1200000, beds: 2, baths: 2, type: "Apartment — period conversion", sqm: 95 },
     { addr: "Liverpool Road (Angel), N1 1", date: "2025-02", price: 560000, beds: 2, baths: 1, type: "Apartment — purpose-built", sqm: 62 },
   ],
 };

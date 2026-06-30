@@ -2,11 +2,11 @@
 // app.js  —  Entry point: load data, run model, render the single page, wire UI
 // =============================================================================
 
-import * as DATA from "../data/dataset.js?v=22";
-import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=22";
-import * as C from "./charts.js?v=22";
-import { monthlyPayment, monthsBetween, ymIndex, ymToISO } from "./finance.js?v=22";
-import { rentVsSell } from "./letting.js?v=22";
+import * as DATA from "../data/dataset.js?v=23";
+import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=23";
+import * as C from "./charts.js?v=23";
+import { monthlyPayment, monthsBetween, ymIndex, ymToISO } from "./finance.js?v=23";
+import { rentVsSell } from "./letting.js?v=23";
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const gbp = (n) => (n < 0 ? "−" : "") + "£" + Math.abs(Math.round(n)).toLocaleString("en-GB");
@@ -119,6 +119,18 @@ const LET_HORIZONS = [
   { label: "Spring 2029", date: "2029-04-01" },
   { label: "Spring 2030", date: "2030-04-01" },
 ];
+
+// One-click sensitivity presets — each moves the three levers that dominate the
+// outcome together (house-price growth, remortgage rate, rent) so you can stress-test
+// the whole picture at once instead of nudging sliders one at a time.
+const SENSITIVITY = {
+  bear: { label: "Bear", scenario: "pessimistic", remortgageRate: 6.25, rentFactor: 0.92,
+          note: "Weaker prices, dearer remortgage (~6.25%), softer rent (−8%)." },
+  base: { label: "Base", scenario: "base", remortgageRate: DATA.MORTGAGE.remortgageRatePctAssumed, rentFactor: 1.0,
+          note: "Savills / Knight Frank consensus and the June-2026 rate market." },
+  bull: { label: "Bull", scenario: "optimistic", remortgageRate: 4.30, rentFactor: 1.08,
+          note: "Stronger prices, cheaper remortgage (~4.30%), firmer rent (+8%)." },
+};
 
 function currentOverrides() {
   return {
@@ -269,8 +281,32 @@ function renderHeader() {
   }
   const build = $("#build");
   if (build) build.textContent = "build " + (DATA.META.build || "—");
-  // No network calls: the rate is the curated snapshot in dataset.js. This keeps the
-  // page 100% static with zero post-load activity behind Zero Trust.
+  // Render the curated snapshot first (above), then try a non-blocking live refresh.
+  // If the Worker route isn't deployed it 404s and we silently keep the snapshot —
+  // the page never waits on this, so it can't hang behind Zero Trust.
+  refreshLiveRates();
+}
+
+// Optional live upgrade of the base-rate badge from the /api/rates Worker route.
+// Purely additive: any failure leaves the snapshot in place.
+async function refreshLiveRates() {
+  try {
+    const ctl = new AbortController();
+    const timer = setTimeout(() => ctl.abort(), 4000);
+    const res = await fetch("/api/rates", { headers: { accept: "application/json" }, signal: ctl.signal });
+    clearTimeout(timer);
+    if (!res.ok) return;
+    const d = await res.json();
+    if (!d || !d.live || !Number.isFinite(d.baseRateNow)) return; // only upgrade on a genuine live value
+    DATA.RATES.baseRateNow = d.baseRateNow;
+    const badge = $("#live-rate");
+    if (badge) {
+      badge.textContent = pct(d.baseRateNow) + " base rate";
+      badge.title = "Bank of England base rate · live, as of " + (d.baseRateAsOf || "today") +
+        (d.source ? " (" + d.source + ")" : "");
+      badge.classList.add("badge-live");
+    }
+  } catch (_) { /* offline, blocked, or not deployed — keep the snapshot silently */ }
 }
 
 // ---------------------------------------------------------------------------
@@ -340,6 +376,7 @@ function renderDashboard(r) {
     })),
     yFormat: (v) => "£" + Math.round(v / 1000) + "k", height: 260, yUnit: "£ proceeds",
     yRef: cashIn, yRefLabel: "you put in " + gbp(cashIn) + " (deposit + SDLT)",
+    overlay: { values: breakEvenValues(r) },
   });
 
   // drivers
@@ -444,6 +481,19 @@ function balanceNow(r) {
   return nowWin ? nowWin.outstanding : r.inputs.mortgage.principal;
 }
 
+// Break-even line for the proceeds chart. To beat "sell today and invest the cash",
+// a future window's net proceeds must clear today's net proceeds grown at the
+// opportunity return to that window's date. One value per window (rises over time).
+function breakEvenValues(r) {
+  const nowWin = r.windows.find((w) => w.window.id === "now");
+  const sellNowNet = nowWin ? nowWin.net : 0;
+  const opp = num(state.letting.opportunityRate) / 100;
+  return r.windows.map((w) => {
+    const yrs = Math.max(0, monthsBetween(DATA.META.asOf, w.window.date) / 12);
+    return sellNowNet * Math.pow(1 + opp, yrs);
+  });
+}
+
 function valueDelta(d) {
   const cls = d >= 0 ? "up" : "down";
   return `<span class="delta ${cls}">${signed(d, gbp)}</span> vs purchase`;
@@ -506,10 +556,12 @@ function renderProceeds(r) {
   }));
   host.innerHTML = `
     <div class="chart-wrap"><div id="proceeds-chart"></div>
-      <p class="chart-cap">Bars = <strong>net proceeds (cash in hand)</strong>. The dashed line is the
+      <p class="chart-cap">Bars = <strong>net proceeds (cash in hand)</strong>. The grey dashed line is the
       <strong>${gbp(cashIn)} you put in</strong> (${gbp(deposit)} deposit + ${gbp(buyCosts)} SDLT/buying costs); the bar
-      above it is your <strong>net profit</strong> (shown under each bar). Scenario:
-      <strong>${state.custom ? "Custom" : r.scenarioName}</strong>.</p></div>
+      above it is your <strong>net profit</strong> (shown under each bar). The
+      <strong style="color:#a06a3c">bronze line</strong> is the <strong>break-even vs selling today</strong> —
+      today's net proceeds grown at your ${pct(state.letting.opportunityRate)} opportunity return; a bar above it beats
+      selling now and investing the cash. Scenario: <strong>${state.custom ? "Custom" : r.scenarioName}</strong>.</p></div>
     <div class="table-wrap"><table class="rank-table">
       <thead><tr><th>Window</th><th>Sale value</th><th>Outstanding</th><th>ERC</th><th>Selling costs</th><th>CGT</th><th>Net proceeds</th><th>Less deposit + SDLT</th><th>Net profit</th></tr></thead>
       <tbody>${r.windows.map((w) => `<tr class="${w === r.best ? "best-row" : ""}">
@@ -525,6 +577,7 @@ function renderProceeds(r) {
   C.barChart($("#proceeds-chart"), {
     bars, yFormat: (v) => "£" + Math.round(v / 1000) + "k", height: 300, yUnit: "£ proceeds",
     yRef: cashIn, yRefLabel: "you put in " + gbp(cashIn) + " (deposit + SDLT)",
+    overlay: { values: breakEvenValues(r) },
   });
 }
 
@@ -922,6 +975,14 @@ function buildControls() {
   const host = $("#controls-body");
   const yrs = Object.keys(DATA.FORECAST.scenarios.base);
   host.innerHTML = `
+    <div class="preset-row">
+      <span class="preset-lead">Sensitivity</span>
+      <div class="preset-btns">
+        ${Object.keys(SENSITIVITY).map((k) =>
+          `<button class="preset-btn" data-preset="${k}">${SENSITIVITY[k].label}</button>`).join("")}
+      </div>
+      <span class="preset-note" id="preset-note">Bear / Base / Bull move growth, remortgage rate and rent together.</span>
+    </div>
     <div class="controls-grid">
       <label class="ctrl">
         <span>Forecast scenario</span>
@@ -955,6 +1016,9 @@ function buildControls() {
   pvInput.value = Math.round(derived / 5000) * 5000;
   $("#lbl-pv").textContent = gbp(pvInput.value);
 
+  document.querySelectorAll(".preset-btn").forEach((b) =>
+    b.addEventListener("click", () => applyPreset(b.dataset.preset)));
+
   $("#ctrl-scenario").addEventListener("change", (e) => {
     state.scenario = e.target.value;
     state.custom = false;
@@ -987,11 +1051,16 @@ function buildControls() {
     state.growthByYear = { ...DATA.FORECAST.scenarios[state.scenario] };
     state.remortgageRate = DATA.MORTGAGE.remortgageRatePctAssumed;
     state.presentValue = null;
+    state.letting.monthlyRent = DATA.LETTING.monthlyRent;
     $("#ctrl-scenario").value = state.scenario;
     $("#ctrl-remo").value = state.remortgageRate;
     $("#lbl-remo").textContent = pct(state.remortgageRate);
     pvInput.value = Math.round(derived / 5000) * 5000;
     $("#lbl-pv").textContent = gbp(pvInput.value);
+    const lr = $("#let-rent"); if (lr) lr.value = state.letting.monthlyRent;
+    const lblRent = $("#lbl-rent"); if (lblRent) lblRent.textContent = gbp(state.letting.monthlyRent);
+    document.querySelectorAll(".preset-btn").forEach((b) => b.classList.remove("active"));
+    $("#preset-note").textContent = "Bear / Base / Bull move growth, remortgage rate and rent together.";
     syncGrowthSliders();
     rerender();
   });
@@ -1003,6 +1072,33 @@ function syncGrowthSliders() {
     inp.value = state.growthByYear[y];
     $("#lbl-g" + y).textContent = state.growthByYear[y].toFixed(1) + "%";
   });
+}
+
+// Apply a Bear/Base/Bull preset: set growth scenario, remortgage rate and rent
+// together, sync every affected control, then recompute the whole page.
+function applyPreset(name) {
+  const p = SENSITIVITY[name];
+  if (!p) return;
+  state.scenario = p.scenario;
+  state.custom = false;
+  state.growthByYear = { ...DATA.FORECAST.scenarios[p.scenario] };
+  state.remortgageRate = p.remortgageRate;
+  state.letting.monthlyRent = Math.round(DATA.LETTING.monthlyRent * p.rentFactor / 25) * 25;
+
+  // sync scenario controls
+  const sc = $("#ctrl-scenario"); if (sc) sc.value = p.scenario;
+  const remo = $("#ctrl-remo"); if (remo) remo.value = p.remortgageRate;
+  const lblRemo = $("#lbl-remo"); if (lblRemo) lblRemo.textContent = pct(p.remortgageRate);
+  syncGrowthSliders();
+  // sync letting rent control
+  const lr = $("#let-rent"); if (lr) lr.value = state.letting.monthlyRent;
+  const lblRent = $("#lbl-rent"); if (lblRent) lblRent.textContent = gbp(state.letting.monthlyRent);
+
+  const note = $("#preset-note"); if (note) note.textContent = p.note;
+  document.querySelectorAll(".preset-btn").forEach((b) =>
+    b.classList.toggle("active", b.dataset.preset === name));
+
+  rerender();
 }
 
 document.addEventListener("DOMContentLoaded", boot);
