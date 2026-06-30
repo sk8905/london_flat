@@ -90,9 +90,17 @@ function renderHeader() {
 }
 
 async function refreshLiveRate() {
+  // The badge shows the curated snapshot by default. If an optional /api/boe-rate
+  // endpoint happens to exist (a Cloudflare function or Worker route), light it up
+  // with the live value. On a pure static host this fails fast — and it is strictly
+  // time-boxed and content-type-guarded so it can NEVER hang the page or the tab.
+  $("#live-rate").title = "Snapshot value — " + DATA.RATES.baseRateAsOf;
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 2500);
   try {
-    const res = await fetch("/api/boe-rate", { headers: { accept: "application/json" } });
-    if (!res.ok) throw new Error("no fn");
+    const res = await fetch("/api/boe-rate", { headers: { accept: "application/json" }, signal: ctrl.signal });
+    if (!res.ok) return;
+    if (!(res.headers.get("content-type") || "").includes("application/json")) return; // static host returned HTML
     const data = await res.json();
     if (data && typeof data.rate === "number") {
       const badge = $("#live-rate");
@@ -101,8 +109,9 @@ async function refreshLiveRate() {
       badge.title = "Live from Bank of England" + (data.date ? " (" + data.date + ")" : "");
     }
   } catch (_) {
-    // Static hosting / offline: keep the curated value. Mark as snapshot.
-    $("#live-rate").title = "Snapshot value (live feed unavailable)";
+    // offline / static / aborted: keep the curated snapshot value
+  } finally {
+    clearTimeout(timer);
   }
 }
 

@@ -59,11 +59,11 @@ london_flat/
 │       ├── model.js           # weighted sell-timing signal (pure)
 │       ├── charts.js          # dependency-free SVG charts
 │       └── app.js             # rendering + interactivity
-└── functions/
-    └── api/boe-rate.js        # Cloudflare Pages Function: live BoE base rate
 ```
 
 **Zero build.** No bundler, no npm install, no framework — native ES modules and inline SVG.
+**Pure static** — no server code, so it deploys cleanly as a Cloudflare **Worker** (static
+assets) or as Cloudflare **Pages**, and Zero Trust Access works on either.
 
 ## Run locally
 
@@ -75,37 +75,30 @@ python3 -m http.server 8099
 # visit http://localhost:8099
 ```
 
-The `/api/boe-rate` call will 404 locally (that's fine — the app falls back to the snapshot
-rate). To exercise the Function locally, use Wrangler:
+## Deploy to Cloudflare (Workers — static assets)
 
-```bash
-npx wrangler pages dev .
-```
+This is a pure static site, so it deploys exactly like any other zero-build static app:
 
-## Deploy to Cloudflare Pages
+1. Push this repo to GitHub.
+2. Cloudflare dashboard → **Workers & Pages → Create → Import a repository**.
+3. Select `sk8905/london_flat` and the branch to deploy.
+4. Build settings: **Framework preset `None`**, **Build command empty**, **Deploy/output
+   directory `/`** (the repo root). No build step is needed.
+5. **Deploy.** You get a `https://<name>.<account>.workers.dev` URL.
 
-This repo is already wired for Cloudflare Pages (static assets + the `functions/` directory
-are detected automatically — **no build command needed**).
+Every push to the connected branch redeploys automatically.
 
-### Option A — Git integration (recommended)
+> **Cloudflare Pages** is an equally good target (`Workers & Pages → Create → Pages`) if your
+> dashboard offers it. Either works — the site is the same static files.
 
-1. Push this repo to GitHub (see below).
-2. Cloudflare dashboard → **Workers & Pages → Create → Pages → Connect to Git**.
-3. Select the `sk8905/london_flat` repo and the branch you want to deploy.
-4. Build settings:
-   - **Framework preset:** `None`
-   - **Build command:** *(leave empty)*
-   - **Build output directory:** `/`  (the repo root)
-5. **Save and Deploy.** You get a `https://london-flat.pages.dev` URL (name may vary).
+### Live Bank of England rate (optional)
 
-Every push to the connected branch redeploys automatically. The
-`functions/api/boe-rate.js` endpoint is live at `https://<your-project>.pages.dev/api/boe-rate`.
-
-### Option B — Direct upload via Wrangler
-
-```bash
-npx wrangler pages deploy . --project-name london-flat
-```
+The base-rate badge shows the **curated snapshot** (3.75%, 17 Jun 2026) by default — accurate
+and editable in `assets/data/dataset.js`. The app will *optionally* upgrade it to a live value
+if a `GET /api/boe-rate` endpoint returns `{ "rate": <number>, "date": "..." }`. The client
+call is time-boxed (2.5s) and content-type-guarded, so on a plain static host it fails fast and
+silently — it can never hang the page. Wiring a live feed needs a small Worker route or a Pages
+Function; ask if you want it added back in a Worker-native form.
 
 ## Lock it down with Cloudflare Zero Trust (Access)
 
@@ -116,31 +109,22 @@ Restrict the whole site so **only `kenneds7@tcd.ie`** can open it.
    up to 50 users.
 2. **Add a login method:** Zero Trust → **Settings → Authentication**. The built-in
    **One-time PIN** works immediately (emails a code to verify the address) — no IdP needed.
-   You can add Google/GitHub later if you prefer.
 3. **Create the Access application:** Zero Trust → **Access → Applications → Add an
    application → Self-hosted.**
    - **Application name:** `London Flat`
    - **Session duration:** e.g. 24 hours
-   - **Application domain:** your Pages hostname, e.g. `london-flat.pages.dev`
+   - **Application domain:** your deployed hostname, e.g. `londonflat.<account>.workers.dev`
      (add a second row for any custom domain later).
 4. **Add a policy:**
    - **Policy name:** `Only me`
    - **Action:** `Allow`
    - **Include → Emails →** `kenneds7@tcd.ie`
    - (Leave everything else as deny-by-default.)
-5. **Save.** Now any visit to the site redirects to a Cloudflare Access login; only that
-   email receives a working one-time PIN. Everyone else is blocked before the app loads —
-   including the `/api/boe-rate` Function.
+5. **Save.** Any visit now redirects to a Cloudflare Access login; only that email receives a
+   working one-time PIN. Everyone else is blocked before the app loads.
 
 > To add more people later, edit the **Only me** policy and add their emails, or switch the
 > Include rule to an **Emails ending in** `@tcd.ie` rule.
-
-### Note on `*.pages.dev` and Access
-
-Cloudflare Access protects custom domains and the project's `*.pages.dev` domain. If you find
-the policy doesn't intercept the raw `pages.dev` preview URLs in your account, attach a free
-custom subdomain (e.g. via a domain already on Cloudflare) to the Pages project and put the
-Access application on that hostname — that always enforces.
 
 ## Keeping data fresh
 
