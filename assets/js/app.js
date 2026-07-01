@@ -2,11 +2,11 @@
 // app.js  —  Entry point: load data, run model, render the single page, wire UI
 // =============================================================================
 
-import * as DATA from "../data/dataset.js?v=29";
-import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=29";
-import * as C from "./charts.js?v=29";
-import { monthlyPayment, monthsBetween, ymIndex, ymToISO } from "./finance.js?v=29";
-import { rentVsSell } from "./letting.js?v=29";
+import * as DATA from "../data/dataset.js?v=30";
+import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=30";
+import * as C from "./charts.js?v=30";
+import { monthlyPayment, monthsBetween, ymIndex, ymToISO } from "./finance.js?v=30";
+import { rentVsSell } from "./letting.js?v=30";
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const gbp = (n) => (n < 0 ? "−" : "") + "£" + Math.abs(Math.round(n)).toLocaleString("en-GB");
@@ -201,11 +201,126 @@ function boot() {
     buildLettingControls();
     buildInputs();
     wireNav();
+    initNotifications();
     loadIdentity();
   } catch (err) {
     showFatal(err && err.message ? err.message : String(err));
     throw err;
   }
+}
+
+// ---------------------------------------------------------------------------
+// Notifications — detect changes since the last visit (client-side diff against
+// localStorage): new recent sales, a change in the BoE base rate, or a ≥10bps
+// move in the 2-year swap. Data changes when the dataset is refreshed & redeployed.
+// ---------------------------------------------------------------------------
+const NOTIF_SNAP_KEY = "flatForecaster.notifySnapshot.v1";
+const NOTIF_LOG_KEY = "flatForecaster.notifications.v1";
+const SWAP_BPS_THRESHOLD = 0.10; // 10 basis points, expressed in % points
+
+function notifySignature() {
+  const r = DATA.RATES;
+  return {
+    baseRate: r.baseRateNow, baseRateAsOf: r.baseRateAsOf,
+    swap: r.swap2yrNow, swapAsOf: r.swap2yrAsOf,
+    comps: DATA.COMPS.rows.map((x) => ({ key: x.addr + "|" + x.date + "|" + x.price, addr: x.addr, price: x.price, date: x.date })),
+  };
+}
+function loadNotifLog() { try { return JSON.parse(localStorage.getItem(NOTIF_LOG_KEY)) || []; } catch (_) { return []; } }
+function saveNotifLog(log) { try { localStorage.setItem(NOTIF_LOG_KEY, JSON.stringify(log)); } catch (_) {} }
+
+function detectNotifications() {
+  const cur = notifySignature();
+  let prev = null;
+  try { prev = JSON.parse(localStorage.getItem(NOTIF_SNAP_KEY)); } catch (_) {}
+  let log = loadNotifLog();
+  const have = new Set(log.map((n) => n.id));
+  const fresh = [];
+  const add = (id, type, text) => { if (!have.has(id)) { fresh.push({ id, type, text, read: false }); have.add(id); } };
+
+  if (prev) { // first-ever load just seeds the snapshot silently (no spam)
+    if (cur.baseRate != null && prev.baseRate != null && cur.baseRate !== prev.baseRate) {
+      add("base:" + cur.baseRateAsOf + ":" + cur.baseRate, "rate",
+        "BoE base rate " + (cur.baseRate > prev.baseRate ? "rose" : "fell") + " " + pct(prev.baseRate) + " → " + pct(cur.baseRate) + " (as of " + cur.baseRateAsOf + ").");
+    }
+    if (cur.swap != null && prev.swap != null && Math.abs(cur.swap - prev.swap) >= SWAP_BPS_THRESHOLD - 1e-9) {
+      const bps = Math.round((cur.swap - prev.swap) * 100);
+      add("swap:" + cur.swapAsOf + ":" + cur.swap, "swap",
+        "2-year GBP swap moved " + (bps >= 0 ? "+" : "") + bps + "bps: " + pct(prev.swap) + " → " + pct(cur.swap) + ".");
+    }
+    const prevKeys = new Set((prev.comps || []).map((c) => c.key));
+    cur.comps.filter((c) => !prevKeys.has(c.key)).forEach((c) =>
+      add("sale:" + c.key, "sale", "New N1 sale: " + c.addr + " — " + gbp(c.price) + " (" + monthName(c.date) + ")."));
+  }
+
+  try { localStorage.setItem(NOTIF_SNAP_KEY, JSON.stringify(cur)); } catch (_) {}
+
+  if (fresh.length) {
+    const stamp = new Date().toISOString();
+    fresh.forEach((n) => (n.ts = stamp));
+    log = fresh.concat(log).slice(0, 50);
+    saveNotifLog(log);
+    nativeNotify(fresh);
+  }
+  return log;
+}
+
+function fmtNotifDate(iso) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (isNaN(d)) return "";
+  return MONTHS[d.getMonth()] + " " + d.getDate() + ", " + d.getFullYear();
+}
+
+function nativeNotify(fresh) {
+  if (!("Notification" in window) || Notification.permission !== "granted") return;
+  try {
+    new Notification(fresh.length === 1 ? "Flat Forecaster" : "Flat Forecaster — " + fresh.length + " updates",
+      { body: fresh.slice(0, 3).map((n) => n.text).join("\n") });
+  } catch (_) {}
+}
+
+function renderNotifications() {
+  const log = loadNotifLog();
+  const unread = log.filter((n) => !n.read).length;
+  const badge = $("#notif-badge");
+  if (badge) { badge.textContent = unread; badge.hidden = unread === 0; }
+  const bell = $("#notif-bell"); if (bell) bell.classList.toggle("has-unread", unread > 0);
+  const list = $("#notif-list");
+  if (list) {
+    list.innerHTML = log.length
+      ? log.map((n) => `<div class="notif-item ${n.read ? "" : "unread"}"><span class="notif-dot notif-${n.type}"></span>
+          <div><div class="notif-text">${n.text}</div><div class="notif-time">${fmtNotifDate(n.ts)}</div></div></div>`).join("")
+      : `<div class="notif-empty">You're all caught up. You'll be alerted here whenever a new N1 sale is added, the BoE base rate changes, or the 2-year swap moves by 10bps or more.</div>`;
+  }
+  const foot = $("#notif-foot");
+  if (foot) {
+    foot.innerHTML = ("Notification" in window && Notification.permission === "granted")
+      ? "Desktop alerts on."
+      : `Alerts appear here on each visit. <button type="button" class="link-btn" id="notif-enable">Enable desktop alerts</button>`;
+    const en = $("#notif-enable");
+    if (en) en.addEventListener("click", () => { try { Notification.requestPermission().then(renderNotifications); } catch (_) {} });
+  }
+}
+
+function initNotifications() {
+  detectNotifications();
+  renderNotifications();
+  const bell = $("#notif-bell"), panel = $("#notif-panel");
+  if (!bell || !panel) return;
+  bell.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const opening = panel.hidden;
+    panel.hidden = !opening;
+    if (opening) {
+      const log = loadNotifLog();
+      if (log.some((n) => !n.read)) { saveNotifLog(log.map((n) => ({ ...n, read: true }))); }
+      renderNotifications();
+    }
+  });
+  document.addEventListener("click", (e) => { if (!panel.hidden && !panel.contains(e.target) && !bell.contains(e.target)) panel.hidden = true; });
+  const clear = $("#notif-clear");
+  if (clear) clear.addEventListener("click", () => { saveNotifLog([]); renderNotifications(); });
 }
 
 // ---------------------------------------------------------------------------

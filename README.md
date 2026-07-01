@@ -159,15 +159,58 @@ Access endpoints that exist automatically once the app is behind Access:
 
 No configuration is required; it works as soon as the Access application is in place.
 
-## Keeping data fresh
+## Notifications
 
-Edit `assets/data/dataset.js` and commit. Everything (charts, signal, proceeds) recomputes
-from that file. The most perishable values:
+The header has a **notifications bell**. On each visit it diffs the live dataset against a
+snapshot saved in the browser and flags, as unread alerts:
 
-- `RATES.baseRateNow` / fix averages — refreshed live for the base rate via the Function;
-  update the fix averages manually from the linked Rightmove/Moneyfacts pages.
-- `PRICE_HISTORY.series` — extend with each new Land Registry UK HPI release.
-- `FORECAST.scenarios` — update when Savills / Knight Frank / Zoopla revise.
+- **New N1 sales** added to `COMPS.rows`,
+- a **change in the BoE base rate** (`RATES.baseRateNow`),
+- a **≥10bps move in the 2-year swap** (`RATES.swap2yrNow`).
+
+The first visit just seeds the snapshot silently (no spam). Opening the bell marks alerts read;
+"Clear all" empties the log. Optionally, "Enable desktop alerts" requests the browser
+Notification permission so new items also raise a native notification when the page loads.
+(Because the site is static, alerts surface when you open it after a data refresh — they aren't
+pushed in the background.)
+
+## Keeping data fresh — weekly routine
+
+Everything (charts, signal, proceeds, notifications) recomputes from `assets/data/dataset.js`.
+Paste the block below into a weekly Claude Code session (or run it yourself) to refresh it:
+
+```text
+Refresh assets/data/dataset.js in the london_flat repo with the latest figures, then bump the
+build and open a PR. Work through each item, keeping every value sourced:
+
+1. BoE base rate — set RATES.baseRateNow + baseRateAsOf to the latest Bank Rate and its
+   decision date; append the point to RATES.baseSeries. Note the next MPC date.
+2. 2-year GBP swap — set RATES.swap2yrNow + swap2yrAsOf to the current 2-year SONIA swap.
+   (A move of 10bps or more from the current value will alert me in the app.)
+3. Market mortgage fixes — update RATES.avg2yrFix / avg5yrFix and append to fix2yrSeries from
+   Rightmove/Moneyfacts averages.
+4. Recent N1 sales — search HM Land Registry + Zoopla for newly-registered sold 2-bed
+   new-build or purpose-built apartments in N1. Add each as a COMPS.rows entry
+   {addr, date "YYYY-MM", price, beds, baths, type, sqm, lat, lng}, geocoding lat/lng from the
+   street's postcode (checkmypostcode / postcodes.io). Keep only new-build/purpose-built.
+   Update COMPS.asOf. (Each new row alerts me in the app.)
+5. £/m² comparables — refresh COMPARABLES.perSqm (low/median/high) and n1_7txAvg12m from the
+   latest N1 Land Registry £/m² distribution.
+6. Islington HPI / price history — extend PRICE_HISTORY.series with the newest UK HPI release
+   and update the headline Islington figures in the Market tab copy if they changed.
+7. Forecasts — if Savills / Knight Frank / Zoopla have revised, update FORECAST.scenarios
+   (base/optimistic/pessimistic by year).
+8. Policy & macro — reflect any Budget/tax changes in POLICY_FACTORS (mansion tax, Section 24
+   landlord rates, SDLT, CGT) with correct effective dates; update the Market tab text.
+9. Mortgage assumption — align MORTGAGE.remortgageRatePctAssumed with the current 2yr swap
+   plus a typical lender margin.
+10. Sources — fix any SOURCES URLs/labels that have moved on (e.g. the latest HPI month page).
+11. Stamp & ship — set META.asOf to today and bump META.build (e.g. "v31 · <today>"); also bump
+    the ?v= query on every module import in index.html and the JS files so caches refresh.
+    Commit, push, and confirm the deployed footer shows the new build.
+
+Flag anything you couldn't verify from a primary source rather than guessing.
+```
 
 ## Your inputs (as configured)
 
