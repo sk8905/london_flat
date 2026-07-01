@@ -29,8 +29,18 @@ function svgRoot(container, w, h) {
     role: "img",
     class: "chart-svg",
   });
+  // Cap the on-screen width to the viewBox width so 1 SVG unit ≈ 1 CSS pixel —
+  // this keeps label/object sizes consistent regardless of the panel width.
+  svg.style.maxWidth = w + "px";
   container.appendChild(svg);
   return svg;
+}
+
+// Chart width = the container's actual rendered width (so text renders ~1:1),
+// clamped to a sensible band. Falls back when the container is hidden (width 0).
+function chartW(container) {
+  const c = container && container.clientWidth;
+  return Math.min(Math.max(c && c > 60 ? c : 680, 300), 900);
 }
 
 // Small unit label at the top-left of the y-axis (e.g. "£ THOUSANDS", "SIGNAL PTS").
@@ -62,7 +72,7 @@ function niceTicks(min, max, count = 5) {
 // x is taken from the first series' point labels (categorical, evenly spaced).
 // ---------------------------------------------------------------------------
 export function lineChart(container, opts) {
-  const W = 720, H = opts.height || 300;
+  const W = chartW(container), H = opts.height || 300;
   const m = { t: 16, r: 16, b: 42, l: 64 };
   const iw = W - m.l - m.r, ih = H - m.t - m.b;
   const svg = svgRoot(container, W, H);
@@ -148,7 +158,7 @@ export function lineChart(container, opts) {
 //                             baseline (default 0) }
 // ---------------------------------------------------------------------------
 export function barChart(container, opts) {
-  const W = 720, H = opts.height || 300;
+  const W = chartW(container), H = opts.height || 300;
   const m = { t: 24, r: 16, b: 56, l: 70 };
   const iw = W - m.l - m.r, ih = H - m.t - m.b;
   const svg = svgRoot(container, W, H);
@@ -181,7 +191,7 @@ export function barChart(container, opts) {
 
   const n = opts.bars.length;
   const slot = iw / n;
-  const bw = Math.min(80, slot * 0.6);
+  const bw = Math.min(116, slot * 0.62);
   opts.bars.forEach((b, i) => {
     const cx = m.l + slot * i + slot / 2;
     const y0 = yAt(base), y1 = yAt(b.value);
@@ -220,7 +230,7 @@ export function barChart(container, opts) {
 // opts: { items:[{label,value,color}], height }
 // ---------------------------------------------------------------------------
 export function divergingBars(container, opts) {
-  const W = 720, rowH = 34;
+  const W = chartW(container), rowH = 34;
   const H = opts.items.length * rowH + 30;
   const m = { t: 10, r: 60, b: 20, l: 150 };
   const iw = W - m.l - m.r;
@@ -245,8 +255,12 @@ export function divergingBars(container, opts) {
     const lt = el("text", { x: m.l - 10, y: cy + 4, class: "row-label" }, svg);
     lt.setAttribute("text-anchor", "end");
     lt.textContent = it.label;
-    const vt = el("text", { x: x1 + (it.value >= 0 ? 6 : -6), y: cy + 4, class: "row-value" }, svg);
-    vt.setAttribute("text-anchor", it.value >= 0 ? "start" : "end");
+    // value label: outside the bar tip; but if a negative bar reaches near the
+    // left label gutter, put it just inside the bar (white) so it can't collide.
+    const insideNeg = it.value < 0 && (x1 - 40) < m.l;
+    const vt = el("text", { x: x1 + (it.value >= 0 || insideNeg ? 6 : -6), y: cy + 4, class: "row-value" }, svg);
+    vt.setAttribute("text-anchor", it.value >= 0 || insideNeg ? "start" : "end");
+    if (insideNeg) vt.setAttribute("fill", "#fff");
     vt.textContent = (it.value >= 0 ? "+" : "") + it.value.toFixed(0);
   });
 }
@@ -296,7 +310,7 @@ export function gauge(container, value, label) {
 // opts: { windows:[{label}], factors:[{key,label,color}], data: { winId: {key:val} } }
 // ---------------------------------------------------------------------------
 export function stackedContrib(container, windows, factors, height = 320, yUnit) {
-  const W = 720, H = height;
+  const W = chartW(container), H = height;
   const m = { t: 20, r: 16, b: 70, l: 60 };
   const iw = W - m.l - m.r, ih = H - m.t - m.b;
   const svg = svgRoot(container, W, H);
@@ -324,7 +338,7 @@ export function stackedContrib(container, windows, factors, height = 320, yUnit)
   el("line", { x1: m.l, y1: yAt(0), x2: W - m.r, y2: yAt(0), class: "axis-mid" }, svg);
 
   const slot = iw / windows.length;
-  const bw = Math.min(90, slot * 0.55);
+  const bw = Math.min(116, slot * 0.6);
   windows.forEach((w, i) => {
     const cx = m.l + slot * i + slot / 2;
     let posY = 0, negY = 0;

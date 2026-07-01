@@ -2,11 +2,11 @@
 // app.js  —  Entry point: load data, run model, render the single page, wire UI
 // =============================================================================
 
-import * as DATA from "../data/dataset.js?v=30";
-import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=30";
-import * as C from "./charts.js?v=30";
-import { monthlyPayment, monthsBetween, ymIndex, ymToISO } from "./finance.js?v=30";
-import { rentVsSell } from "./letting.js?v=30";
+import * as DATA from "../data/dataset.js?v=31";
+import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=31";
+import * as C from "./charts.js?v=31";
+import { monthlyPayment, monthsBetween, ymIndex, ymToISO } from "./finance.js?v=31";
+import { rentVsSell } from "./letting.js?v=31";
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const gbp = (n) => (n < 0 ? "−" : "") + "£" + Math.abs(Math.round(n)).toLocaleString("en-GB");
@@ -186,11 +186,17 @@ function switchTab(id) {
   // keep the active tab visible in the horizontal mobile nav
   const activeBtn = document.querySelector(`.nav-item[data-tab="${id}"]`);
   if (activeBtn) activeBtn.scrollIntoView({ inline: "center", block: "nearest" });
+  // charts size themselves to their container's width; a chart in a previously
+  // hidden tab measured 0 at boot, so re-render now that this tab is visible.
+  scheduleRerender();
 }
 
 function wireNav() {
   document.querySelectorAll(".nav-item").forEach((b) =>
     b.addEventListener("click", () => switchTab(b.dataset.tab)));
+  // re-fit charts to the new width when the window resizes (debounced)
+  let rz;
+  window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(scheduleRerender, 200); });
 }
 
 function boot() {
