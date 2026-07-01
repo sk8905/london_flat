@@ -232,16 +232,19 @@ export function barChart(container, opts) {
 export function divergingBars(container, opts) {
   const W = chartW(container), rowH = 34;
   const H = opts.items.length * rowH + 30;
-  const m = { t: 10, r: 60, b: 20, l: 150 };
+  // reserve a fixed value column on the right (valW) so numbers never collide
+  // with bars or row labels at any width.
+  const valW = 46;
+  const m = { t: 10, r: 16 + valW, b: 20, l: 148 };
   const iw = W - m.l - m.r;
   const svg = svgRoot(container, W, H);
   const mid = m.l + iw / 2;
   const xAt = (v) => mid + (v / 100) * (iw / 2);
+  const valX = W - valW + 2; // left edge of the value column
 
   el("line", { x1: mid, y1: m.t, x2: mid, y2: H - m.b, class: "axis-mid" }, svg);
-  ["-100", "0", "+100"].forEach((lab, i) => {
-    const x = [m.l, mid, W - m.r][i];
-    const t = el("text", { x, y: H - 6, class: "axis-x" }, svg);
+  [["-100", m.l, "middle"], ["0", mid, "middle"], ["+100", m.l + iw, "middle"]].forEach(([lab, x, anc]) => {
+    const t = el("text", { x, y: H - 6, class: "axis-x", style: "text-anchor:" + anc }, svg);
     t.textContent = lab;
   });
 
@@ -252,15 +255,12 @@ export function divergingBars(container, opts) {
       x: Math.min(x0, x1), y: cy - 9, width: Math.max(2, Math.abs(x1 - x0)), height: 18,
       rx: 3, fill: it.color || (it.value >= 0 ? "#3a6b54" : "#9c4040"),
     }, svg);
-    const lt = el("text", { x: m.l - 10, y: cy + 4, class: "row-label" }, svg);
+    const lt = el("text", { x: m.l - 12, y: cy + 4, class: "row-label" }, svg);
     lt.setAttribute("text-anchor", "end");
     lt.textContent = it.label;
-    // value label: outside the bar tip; but if a negative bar reaches near the
-    // left label gutter, put it just inside the bar (white) so it can't collide.
-    const insideNeg = it.value < 0 && (x1 - 40) < m.l;
-    const vt = el("text", { x: x1 + (it.value >= 0 || insideNeg ? 6 : -6), y: cy + 4, class: "row-value" }, svg);
-    vt.setAttribute("text-anchor", it.value >= 0 || insideNeg ? "start" : "end");
-    if (insideNeg) vt.setAttribute("fill", "#fff");
+    // value in the fixed right-hand column (never overlaps a bar or the labels)
+    const vt = el("text", { x: valX, y: cy + 4, class: "row-value" }, svg);
+    vt.setAttribute("text-anchor", "start");
     vt.textContent = (it.value >= 0 ? "+" : "") + it.value.toFixed(0);
   });
 }
