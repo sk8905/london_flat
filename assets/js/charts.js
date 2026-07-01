@@ -422,10 +422,10 @@ export function scatterMap(container, opts) {
   tip.className = "map-tip";
   container.appendChild(tip);
 
-  // marker positions in intrinsic px, with light collision-separation so the
-  // tightly-clustered wharf sales stay legible
+  // marker positions in intrinsic px. Only a small separation (just over one pin
+  // diameter) so pins stay at their true geographic spot but never fully overlap.
   const placed = pts.map((p) => ({ ...p, x: lon2px(p.lng, z) - xMin, y: lat2px(p.lat, z) - yMin }));
-  const minD = Math.max(30, Wpx * 0.05);
+  const minD = 30;
   for (let iter = 0; iter < 80; iter++) {
     for (let i = 0; i < placed.length; i++) {
       for (let j = i + 1; j < placed.length; j++) {

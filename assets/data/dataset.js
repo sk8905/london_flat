@@ -10,7 +10,7 @@
 
 export const META = {
   asOf: "2026-06-30",
-  build: "v27 · 2026-07-01", // bump on each change so the footer confirms the live build
+  build: "v28 · 2026-07-01", // bump on each change so the footer confirms the live build
   currency: "GBP",
   disclaimer:
     "This tool is an informational model, not financial, tax, mortgage or legal advice. " +
@@ -123,8 +123,8 @@ export const PROPERTY = {
   bedrooms: 2,
   bathrooms: 2,
   buildYear: 2020, // new-build / modern
-  lat: 51.5322, // approximate — City Road Basin / Wenlock area (for the map)
-  lng: -0.0921,
+  lat: 51.5346, // N1 7TX postcode centroid (City Road Basin / Wenlock area)
+  lng: -0.0899,
 };
 
 // -----------------------------------------------------------------------------
@@ -160,14 +160,15 @@ export const COMPS = {
     "Recent N1 two-bedroom flat sales — restricted to new-build and purpose-built apartments, the like-for-like " +
     "set for your 2020-built flat (period/warehouse conversions and maisonettes are excluded). Prices from HM Land " +
     "Registry; floor area and bathrooms from EPC/listing data where available. Your flat is highlighted for comparison.",
-  // lat/lng are approximate street-level positions for the map (not exact door numbers).
+  // lat/lng geocoded from each street's postcode (checkmypostcode / streetcheck /
+  // doogal) — street-level, not exact door numbers.
   rows: [
-    { addr: "Wenlock Road (Wharf), N1 7", date: "2026-03", price: 840000, beds: 2, baths: 2, type: "Apartment — new build", sqm: 80, lat: 51.5338, lng: -0.0902 },
-    { addr: "Prebend Street, N1 8", date: "2026-02", price: 660000, beds: 2, baths: 1, type: "Apartment — purpose-built", sqm: 70, lat: 51.5402, lng: -0.0948 },
-    { addr: "City Wharf, Wharf Road, N1 7", date: "2026-01", price: 870000, beds: 2, baths: 2, type: "Apartment — new build", sqm: 83, lat: 51.5330, lng: -0.0910 },
-    { addr: "Jefferson Court, Cynthia Street, N1 9", date: "2025-09", price: 950000, beds: 2, baths: 2, type: "Apartment — new build", sqm: 90, lat: 51.5320, lng: -0.1125 },
-    { addr: "250 City Road, N1 7", date: "2025-05", price: 820000, beds: 2, baths: 2, type: "Apartment — new build", sqm: 77, lat: 51.5286, lng: -0.0902 },
-    { addr: "Liverpool Road (Angel), N1 1", date: "2025-02", price: 560000, beds: 2, baths: 1, type: "Apartment — purpose-built", sqm: 62, lat: 51.5372, lng: -0.1082 },
+    { addr: "Wenlock Road (Wharf), N1 7", date: "2026-03", price: 840000, beds: 2, baths: 2, type: "Apartment — new build", sqm: 80, lat: 51.5330, lng: -0.0896 },
+    { addr: "Prebend Street, N1 8", date: "2026-02", price: 660000, beds: 2, baths: 1, type: "Apartment — purpose-built", sqm: 70, lat: 51.5365, lng: -0.0961 },
+    { addr: "City Wharf, Wharf Road, N1 7", date: "2026-01", price: 870000, beds: 2, baths: 2, type: "Apartment — new build", sqm: 83, lat: 51.5313, lng: -0.0906 },
+    { addr: "Jefferson Court, Cynthia Street, N1 9", date: "2025-09", price: 950000, beds: 2, baths: 2, type: "Apartment — new build", sqm: 90, lat: 51.5317, lng: -0.1132 },
+    { addr: "250 City Road, N1 7", date: "2025-05", price: 820000, beds: 2, baths: 2, type: "Apartment — new build", sqm: 77, lat: 51.5289, lng: -0.0953 },
+    { addr: "Liverpool Road (Angel), N1 1", date: "2025-02", price: 560000, beds: 2, baths: 1, type: "Apartment — purpose-built", sqm: 62, lat: 51.5349, lng: -0.1070 },
   ],
 };
 
