@@ -2,11 +2,11 @@
 // app.js  —  Entry point: load data, run model, render the single page, wire UI
 // =============================================================================
 
-import * as DATA from "../data/dataset.js?v=25";
-import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=25";
-import * as C from "./charts.js?v=25";
-import { monthlyPayment, monthsBetween, ymIndex, ymToISO } from "./finance.js?v=25";
-import { rentVsSell } from "./letting.js?v=25";
+import * as DATA from "../data/dataset.js?v=26";
+import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=26";
+import * as C from "./charts.js?v=26";
+import { monthlyPayment, monthsBetween, ymIndex, ymToISO } from "./finance.js?v=26";
+import { rentVsSell } from "./letting.js?v=26";
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const gbp = (n) => (n < 0 ? "−" : "") + "£" + Math.abs(Math.round(n)).toLocaleString("en-GB");
@@ -693,8 +693,19 @@ function renderComps(r) {
 
   // Map: number the comps newest-first (matching the dataset order), plus your flat.
   const mapComps = DATA.COMPS.rows.map((x, i) => ({ ...x, n: i + 1, perSqm: Math.round(x.price / x.sqm) }));
-  const mapPoints = mapComps.map((x) => ({ lat: x.lat, lng: x.lng, n: x.n }))
-    .concat(Number.isFinite(p.lat) && Number.isFinite(p.lng) ? [{ lat: p.lat, lng: p.lng, you: true }] : []);
+  const tipHtml = (addr, price, psm, date, verb) =>
+    `<strong>${addr}</strong><span>${gbp(price)} · ${gbp(psm)}/m²</span><span>${verb} ${monthName(date)}</span>`;
+  const tipPlain = (addr, price, psm, date, verb) =>
+    `${addr} — ${gbp(price)} · ${gbp(psm)}/m² · ${verb} ${monthName(date)}`;
+  const mapPoints = mapComps.map((x) => ({
+    lat: x.lat, lng: x.lng, n: x.n,
+    tip: tipHtml(x.addr, x.price, x.perSqm, x.date, "sold"),
+    plain: tipPlain(x.addr, x.price, x.perSqm, x.date, "sold"),
+  })).concat(Number.isFinite(p.lat) && Number.isFinite(p.lng) ? [{
+    lat: p.lat, lng: p.lng, you: true,
+    tip: tipHtml("Your flat — " + p.postcode, p.purchasePrice, yourPsm, p.purchaseDate, "bought"),
+    plain: tipPlain("Your flat — " + p.postcode, p.purchasePrice, yourPsm, p.purchaseDate, "bought"),
+  }] : []);
   const mapLegend = `<div class="map-legend">
       <div class="map-legend-item"><span class="map-num you"></span><span><strong>Your flat</strong> — ${p.postcode} · ${gbp(p.purchasePrice)}</span></div>
       ${mapComps.map((x) => `<div class="map-legend-item"><span class="map-num">${x.n}</span><span><strong>${x.addr}</strong> · ${gbp(x.price)} · ${gbp(x.perSqm)}/m²</span></div>`).join("")}

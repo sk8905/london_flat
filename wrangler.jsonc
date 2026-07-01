@@ -10,9 +10,10 @@
     // assets binding serves everything else.
     "directory": "./",
     "binding": "ASSETS",
-    // Unknown paths fall back to index.html (single-page app behaviour)...
+    // Unknown paths fall back to index.html (single-page app behaviour).
     "not_found_handling": "single-page-application",
-    // ...except /api/*, which must always reach the Worker (not the SPA fallback).
-    "run_worker_first": ["/api/*"]
+    // Run the Worker on every request so it can (a) serve /api/rates and
+    // (b) stamp no-cache on HTML responses to prevent stale deploys.
+    "run_worker_first": true
   }
 }

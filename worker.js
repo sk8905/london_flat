@@ -33,9 +33,19 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     if (url.pathname === "/api/rates") return handleRates(request, ctx);
-    // everything else → static assets
-    if (env && env.ASSETS) return env.ASSETS.fetch(request);
-    return new Response("Not found", { status: 404 });
+    if (!env || !env.ASSETS) return new Response("Not found", { status: 404 });
+
+    const res = await env.ASSETS.fetch(request);
+    // HTML must revalidate every load so a new deploy's ?v= module references are
+    // picked up immediately. (Cloudflare's [assets] binding ignores the Pages-only
+    // _headers file, so we set this here.) Versioned JS/CSS/SVG can cache normally.
+    const ct = res.headers.get("content-type") || "";
+    if (ct.includes("text/html")) {
+      const h = new Headers(res.headers);
+      h.set("Cache-Control", "no-cache, must-revalidate");
+      return new Response(res.body, { status: res.status, statusText: res.statusText, headers: h });
+    }
+    return res;
   },
 };
 

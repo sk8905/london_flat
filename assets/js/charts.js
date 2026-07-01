@@ -404,18 +404,44 @@ export function scatterMap(container, opts) {
     p.y = Math.max(m.t + 22, Math.min(m.t + ih - 20, p.y));
   });
 
+  // Tooltip layer (custom, positioned relative to the container). Native <title>
+  // is also added per marker as a touch/accessibility fallback.
+  container.style.position = "relative";
+  const tip = document.createElement("div");
+  tip.className = "map-tip";
+  container.appendChild(tip);
+  const showTip = (p, cx, cy) => {
+    const cr = container.getBoundingClientRect();
+    tip.innerHTML = p.tip || p.plain || "";
+    tip.style.left = (cx - cr.left) + "px";
+    tip.style.top = (cy - cr.top) + "px";
+    tip.classList.add("show");
+  };
+  const hideTip = () => tip.classList.remove("show");
+
   // draw comps first, the "you" marker last so it sits on top
   [...placed].sort((a, b) => (a.you === b.you ? 0 : a.you ? 1 : -1)).forEach((p) => {
+    const g = el("g", { class: "map-marker" }, svg);
     if (p.you) {
-      el("circle", { cx: p.x, cy: p.y, r: 13, fill: "none", stroke: "#2f7d57", "stroke-width": 2, opacity: 0.45 }, svg);
-      el("circle", { cx: p.x, cy: p.y, r: 8, fill: "#2f7d57", stroke: "#fff", "stroke-width": 2 }, svg);
-      const t = el("text", { x: p.x, y: p.y + 24, class: "map-you", "paint-order": "stroke", stroke: "#eaf0f2", "stroke-width": 3 }, svg);
+      el("circle", { cx: p.x, cy: p.y, r: 13, fill: "none", stroke: "#2f7d57", "stroke-width": 2, opacity: 0.45 }, g);
+      el("circle", { cx: p.x, cy: p.y, r: 8, fill: "#2f7d57", stroke: "#fff", "stroke-width": 2 }, g);
+      const t = el("text", { x: p.x, y: p.y + 24, class: "map-you", "paint-order": "stroke", stroke: "#eaf0f2", "stroke-width": 3 }, g);
       t.setAttribute("text-anchor", "middle"); t.textContent = "Your flat";
     } else {
-      el("circle", { cx: p.x, cy: p.y, r: 13, fill: "#1f5a73", stroke: "#fff", "stroke-width": 1.5 }, svg);
-      const t = el("text", { x: p.x, y: p.y + 5, class: "map-pin" }, svg);
+      el("circle", { cx: p.x, cy: p.y, r: 13, fill: "#1f5a73", stroke: "#fff", "stroke-width": 1.5 }, g);
+      const t = el("text", { x: p.x, y: p.y + 5, class: "map-pin" }, g);
       t.setAttribute("text-anchor", "middle"); t.textContent = String(p.n);
     }
+    // hit target (transparent, generous) so hover is easy
+    const hit = el("circle", { cx: p.x, cy: p.y, r: 16, fill: "transparent" }, g);
+    el("title", {}, g).textContent = p.plain || "";
+    const enter = () => {
+      const rc = hit.getBoundingClientRect();
+      showTip(p, rc.left + rc.width / 2, rc.top);
+    };
+    g.addEventListener("mouseenter", enter);
+    g.addEventListener("mousemove", enter);
+    g.addEventListener("mouseleave", hideTip);
   });
 }
 

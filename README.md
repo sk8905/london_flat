@@ -115,8 +115,12 @@ auto-detects `wrangler.jsonc`) or run:
 npx wrangler deploy
 ```
 
-`wrangler.jsonc` binds the repo root as static assets (`ASSETS`) and routes everything except
-`/api/*` straight to those assets — so the Worker only runs for the one dynamic route.
+`wrangler.jsonc` binds the repo root as static assets (`ASSETS`) with `run_worker_first: true`,
+so the Worker handles every request: it serves `/api/rates` and stamps `Cache-Control: no-cache`
+on HTML responses. That last part matters — the `[assets]` binding ignores the Pages-only
+`_headers` file, so without it a cached `index.html` could keep pointing at old `?v=` module
+files after a deploy. With it, the HTML always revalidates and picks up new builds immediately;
+the versioned JS/CSS cache normally. If you ever see a stale build, hard-refresh once.
 
 ## Lock it down with Cloudflare Zero Trust (Access)
 
