@@ -210,16 +210,20 @@ h1, h2, h3 { letter-spacing: -0.005em; }
 .bar-sub { fill: #94a3b8; font-size: 13px; text-anchor: middle; }
 .row-label { fill: #334155; font-size: 14.5px; }
 .row-value { fill: #0f172a; font-size: 14px; font-weight: 700; }
-.map-pin { fill: #fff; font-size: 14px; font-weight: 700; }
-.map-you { fill: #2f7d57; font-size: 13.5px; font-weight: 700; }
-.map-compass { fill: #94a3b8; font-size: 13px; font-weight: 700; }
+.map-tilewrap { position: relative; width: 100%; border-radius: 12px; overflow: hidden; border: 1px solid var(--line); background: #e9eef1; }
+.map-tile { position: absolute; display: block; }
+.map-attr { position: absolute; right: 0; bottom: 0; z-index: 3; background: rgba(255,255,255,.78); color: #556; font-size: 10px; padding: 1px 6px; border-top-left-radius: 6px; }
+.map-attr a { color: #334; }
+.map-compass2 { position: absolute; top: 8px; right: 10px; z-index: 3; font-size: 13px; font-weight: 700; color: #5a6b7b; background: rgba(255,255,255,.72); padding: 1px 7px; border-radius: 6px; }
+.map-marker2 { position: absolute; transform: translate(-50%, -50%); z-index: 4; }
+.map-dot { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--brand); color: #fff; font-size: 13px; font-weight: 700; border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.35); cursor: pointer; }
+.map-dot.you { width: 16px; height: 16px; background: var(--pos); box-shadow: 0 0 0 5px rgba(47,125,87,.25), 0 1px 4px rgba(0,0,0,.35); }
+.map-youlbl { position: absolute; top: 15px; left: 50%; transform: translateX(-50%); white-space: nowrap; color: var(--pos); font-weight: 700; font-size: 13px; text-shadow: 0 1px 2px #fff, 0 -1px 2px #fff, 1px 0 2px #fff, -1px 0 2px #fff; pointer-events: none; }
 .map-legend { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 20px; margin: 14px 2px 2px; }
 .map-legend-item { display: flex; align-items: baseline; gap: 10px; font-size: 13px; color: var(--ink-soft); }
 .map-num { flex: 0 0 auto; display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--brand); color: #fff; font-size: 11.5px; font-weight: 700; }
 .map-num.you { background: var(--pos); }
 .map-legend-item strong { color: var(--ink); }
-.map-marker { cursor: pointer; }
-.map-marker circle[fill="#1f5a73"] { transition: r .1s; }
 .map-tip {
   position: absolute; z-index: 6; pointer-events: none; opacity: 0; transition: opacity .12s;
   transform: translate(-50%, calc(-100% - 14px)); background: var(--ink); color: #fff;

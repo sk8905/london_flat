@@ -350,48 +350,87 @@ export function stackedContrib(container, windows, factors, height = 320, yUnit)
 }
 
 // ---------------------------------------------------------------------------
-// Schematic location map — plots each sale by lat/lng on an abstract N1 canvas.
-// Dependency-free (no tiles, no network), so it works offline and behind Access.
-// opts.points: [{lat,lng,label,priceLabel,n,you}]
+// Location map — real OpenStreetMap basemap (CARTO light raster tiles) with the
+// sales overlaid as pins. No mapping library: tiles are plain <img> elements
+// positioned in a responsive % grid, markers are absolutely-positioned divs.
+// Needs network for the tile images; if they fail, the pins still show on the
+// map's background fill. opts.points: [{lat,lng,n,you,tip,plain}]
 // ---------------------------------------------------------------------------
+const lon2px = (lon, z) => ((lon + 180) / 360) * Math.pow(2, z) * 256;
+const lat2px = (lat, z) => {
+  const s = Math.sin((lat * Math.PI) / 180);
+  return (0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI)) * Math.pow(2, z) * 256;
+};
+
 export function scatterMap(container, opts) {
   const pts = (opts.points || []).filter((p) => Number.isFinite(p.lat) && Number.isFinite(p.lng));
-  if (!pts.length) { container.innerHTML = ""; return; }
-  const W = 720;
+  container.innerHTML = "";
+  if (!pts.length) return;
+
   const lats = pts.map((p) => p.lat), lngs = pts.map((p) => p.lng);
   let latMin = Math.min(...lats), latMax = Math.max(...lats);
   let lngMin = Math.min(...lngs), lngMax = Math.max(...lngs);
-  const padLat = (latMax - latMin) * 0.22 || 0.003, padLng = (lngMax - lngMin) * 0.22 || 0.003;
+  const padLat = (latMax - latMin) * 0.35 || 0.004, padLng = (lngMax - lngMin) * 0.35 || 0.004;
   latMin -= padLat; latMax += padLat; lngMin -= padLng; lngMax += padLng;
-  const latMid = (latMin + latMax) / 2, cosl = Math.cos((latMid * Math.PI) / 180);
-  const latSpan = latMax - latMin, lngSpan = (lngMax - lngMin) * cosl || 1;
-  const m = { t: 14, r: 14, b: 14, l: 14 };
-  const iw = W - m.l - m.r;
-  let ih = iw * (latSpan / lngSpan);
-  ih = Math.max(320, Math.min(500, ih));
-  const H = ih + m.t + m.b;
-  const svg = svgRoot(container, W, H);
 
-  // canvas + faint grid for orientation
-  el("rect", { x: m.l, y: m.t, width: iw, height: ih, rx: 12, fill: "#eaf0f2", stroke: "#dbe3e7", "stroke-width": 1 }, svg);
-  for (let i = 1; i < 4; i++) el("line", { x1: m.l + (iw * i) / 4, y1: m.t, x2: m.l + (iw * i) / 4, y2: m.t + ih, stroke: "#dde6ea", "stroke-width": 1 }, svg);
-  for (let i = 1; i < 3; i++) el("line", { x1: m.l, y1: m.t + (ih * i) / 3, x2: m.l + iw, y2: m.t + (ih * i) / 3, stroke: "#dde6ea", "stroke-width": 1 }, svg);
-  const comp = el("text", { x: m.l + iw - 12, y: m.t + 22, class: "map-compass" }, svg);
-  comp.setAttribute("text-anchor", "end"); comp.textContent = "N ↑";
+  // pick the highest zoom that keeps the whole area within ~1024px
+  let z = 17;
+  for (; z > 10; z--) {
+    const w = Math.abs(lon2px(lngMax, z) - lon2px(lngMin, z));
+    const h = Math.abs(lat2px(latMin, z) - lat2px(latMax, z));
+    if (Math.max(w, h) <= 1024) break;
+  }
+  const xMin = lon2px(lngMin, z), xMax = lon2px(lngMax, z);
+  const yMin = lat2px(latMax, z), yMax = lat2px(latMin, z); // y grows southward
+  const Wpx = xMax - xMin, Hpx = yMax - yMin;
 
-  const px = (lng) => m.l + (((lng - lngMin) * cosl) / lngSpan) * iw;
-  const py = (lat) => m.t + ((latMax - lat) / latSpan) * ih;
+  const wrap = document.createElement("div");
+  wrap.className = "map-tilewrap";
+  wrap.style.aspectRatio = Wpx + " / " + Hpx;
+  container.appendChild(wrap);
 
-  // Some N1 sales cluster tightly (the wharf area). Nudge markers apart so the
-  // pins stay legible while keeping each roughly in its true position.
-  const placed = pts.map((p) => ({ ...p, x: px(p.lng), y: py(p.lat) }));
-  const minD = 34;
+  // tile layer
+  const nTiles = Math.pow(2, z);
+  const pct = (v, span) => (v / span) * 100 + "%";
+  for (let tx = Math.floor(xMin / 256); tx <= Math.floor(xMax / 256); tx++) {
+    for (let ty = Math.floor(yMin / 256); ty <= Math.floor(yMax / 256); ty++) {
+      if (ty < 0 || ty >= nTiles) continue;
+      const wx = ((tx % nTiles) + nTiles) % nTiles;
+      const img = document.createElement("img");
+      img.className = "map-tile"; img.alt = ""; img.loading = "lazy";
+      img.src = `https://a.basemaps.cartocdn.com/light_all/${z}/${wx}/${ty}@2x.png`;
+      img.style.left = pct(tx * 256 - xMin, Wpx);
+      img.style.top = pct(ty * 256 - yMin, Hpx);
+      img.style.width = pct(256, Wpx);
+      img.style.height = pct(256, Hpx);
+      wrap.appendChild(img);
+    }
+  }
+
+  const attr = document.createElement("div");
+  attr.className = "map-attr";
+  attr.innerHTML = '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> · <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>';
+  wrap.appendChild(attr);
+  const compass = document.createElement("div");
+  compass.className = "map-compass2"; compass.textContent = "N ↑";
+  wrap.appendChild(compass);
+
+  // Tooltip lives on the outer container (not the clipped tile wrap) so it can
+  // extend above pins near the map's top edge.
+  container.style.position = "relative";
+  const tip = document.createElement("div");
+  tip.className = "map-tip";
+  container.appendChild(tip);
+
+  // marker positions in intrinsic px, with light collision-separation so the
+  // tightly-clustered wharf sales stay legible
+  const placed = pts.map((p) => ({ ...p, x: lon2px(p.lng, z) - xMin, y: lat2px(p.lat, z) - yMin }));
+  const minD = Math.max(30, Wpx * 0.05);
   for (let iter = 0; iter < 80; iter++) {
     for (let i = 0; i < placed.length; i++) {
       for (let j = i + 1; j < placed.length; j++) {
         const a = placed[i], b = placed[j];
-        let dx = b.x - a.x, dy = b.y - a.y;
-        let d = Math.hypot(dx, dy) || 0.01;
+        let dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy) || 0.01;
         if (d < minD) {
           const push = (minD - d) / 2, ux = dx / d, uy = dy / d;
           a.x -= ux * push; a.y -= uy * push; b.x += ux * push; b.y += uy * push;
@@ -399,49 +438,27 @@ export function scatterMap(container, opts) {
       }
     }
   }
-  placed.forEach((p) => {
-    p.x = Math.max(m.l + 16, Math.min(m.l + iw - 16, p.x));
-    p.y = Math.max(m.t + 22, Math.min(m.t + ih - 20, p.y));
-  });
+  placed.forEach((p) => { p.x = Math.max(14, Math.min(Wpx - 14, p.x)); p.y = Math.max(14, Math.min(Hpx - 16, p.y)); });
 
-  // Tooltip layer (custom, positioned relative to the container). Native <title>
-  // is also added per marker as a touch/accessibility fallback.
-  container.style.position = "relative";
-  const tip = document.createElement("div");
-  tip.className = "map-tip";
-  container.appendChild(tip);
-  const showTip = (p, cx, cy) => {
-    const cr = container.getBoundingClientRect();
-    tip.innerHTML = p.tip || p.plain || "";
-    tip.style.left = (cx - cr.left) + "px";
-    tip.style.top = (cy - cr.top) + "px";
-    tip.classList.add("show");
-  };
-  const hideTip = () => tip.classList.remove("show");
-
-  // draw comps first, the "you" marker last so it sits on top
   [...placed].sort((a, b) => (a.you === b.you ? 0 : a.you ? 1 : -1)).forEach((p) => {
-    const g = el("g", { class: "map-marker" }, svg);
-    if (p.you) {
-      el("circle", { cx: p.x, cy: p.y, r: 13, fill: "none", stroke: "#2f7d57", "stroke-width": 2, opacity: 0.45 }, g);
-      el("circle", { cx: p.x, cy: p.y, r: 8, fill: "#2f7d57", stroke: "#fff", "stroke-width": 2 }, g);
-      const t = el("text", { x: p.x, y: p.y + 24, class: "map-you", "paint-order": "stroke", stroke: "#eaf0f2", "stroke-width": 3 }, g);
-      t.setAttribute("text-anchor", "middle"); t.textContent = "Your flat";
-    } else {
-      el("circle", { cx: p.x, cy: p.y, r: 13, fill: "#1f5a73", stroke: "#fff", "stroke-width": 1.5 }, g);
-      const t = el("text", { x: p.x, y: p.y + 5, class: "map-pin" }, g);
-      t.setAttribute("text-anchor", "middle"); t.textContent = String(p.n);
-    }
-    // hit target (transparent, generous) so hover is easy
-    const hit = el("circle", { cx: p.x, cy: p.y, r: 16, fill: "transparent" }, g);
-    el("title", {}, g).textContent = p.plain || "";
-    const enter = () => {
-      const rc = hit.getBoundingClientRect();
-      showTip(p, rc.left + rc.width / 2, rc.top);
+    const mk = document.createElement("div");
+    mk.className = "map-marker2" + (p.you ? " you" : "");
+    mk.style.left = pct(p.x, Wpx); mk.style.top = pct(p.y, Hpx);
+    mk.innerHTML = p.you
+      ? '<span class="map-dot you"></span><span class="map-youlbl">Your flat</span>'
+      : `<span class="map-dot">${p.n}</span>`;
+    mk.title = p.plain || "";
+    wrap.appendChild(mk);
+    const show = (e) => {
+      const cr = container.getBoundingClientRect();
+      tip.innerHTML = p.tip || p.plain || "";
+      tip.style.left = (e.clientX - cr.left) + "px";
+      tip.style.top = (e.clientY - cr.top) + "px";
+      tip.classList.add("show");
     };
-    g.addEventListener("mouseenter", enter);
-    g.addEventListener("mousemove", enter);
-    g.addEventListener("mouseleave", hideTip);
+    mk.addEventListener("mouseenter", show);
+    mk.addEventListener("mousemove", show);
+    mk.addEventListener("mouseleave", () => tip.classList.remove("show"));
   });
 }
 

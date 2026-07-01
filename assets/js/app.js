@@ -2,11 +2,11 @@
 // app.js  —  Entry point: load data, run model, render the single page, wire UI
 // =============================================================================
 
-import * as DATA from "../data/dataset.js?v=26";
-import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=26";
-import * as C from "./charts.js?v=26";
-import { monthlyPayment, monthsBetween, ymIndex, ymToISO } from "./finance.js?v=26";
-import { rentVsSell } from "./letting.js?v=26";
+import * as DATA from "../data/dataset.js?v=27";
+import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=27";
+import * as C from "./charts.js?v=27";
+import { monthlyPayment, monthsBetween, ymIndex, ymToISO } from "./finance.js?v=27";
+import { rentVsSell } from "./letting.js?v=27";
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const gbp = (n) => (n < 0 ? "−" : "") + "£" + Math.abs(Math.round(n)).toLocaleString("en-GB");
