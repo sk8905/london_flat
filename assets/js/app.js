@@ -2,11 +2,11 @@
 // app.js  —  Entry point: load data, run model, render the single page, wire UI
 // =============================================================================
 
-import * as DATA from "../data/dataset.js?v=33";
-import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=33";
-import * as C from "./charts.js?v=33";
-import { monthlyPayment, monthsBetween, ymIndex, ymToISO } from "./finance.js?v=33";
-import { rentVsSell } from "./letting.js?v=33";
+import * as DATA from "../data/dataset.js?v=34";
+import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=34";
+import * as C from "./charts.js?v=34";
+import { monthlyPayment, monthsBetween, ymIndex, ymToISO } from "./finance.js?v=34";
+import { rentVsSell } from "./letting.js?v=34";
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const gbp = (n) => (n < 0 ? "−" : "") + "£" + Math.abs(Math.round(n)).toLocaleString("en-GB");
@@ -332,8 +332,7 @@ function initNotifications() {
 // Cloudflare Access identity (sign-in status + sign-out)
 // ---------------------------------------------------------------------------
 async function loadIdentity() {
-  const text = $("#user-status-text"), email = $("#user-email"), initial = $("#user-initial");
-  const chip = document.querySelector(".user-chip");
+  const status = $("#id-status");
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), 2500);
   try {
@@ -341,18 +340,36 @@ async function loadIdentity() {
     if (!res.ok) throw new Error("no access");
     if (!(res.headers.get("content-type") || "").includes("json")) throw new Error("not json");
     const id = await res.json();
-    const who = id.email || id.name || "Signed in";
-    text.textContent = "Signed in";
-    email.textContent = who;
-    initial.textContent = (who[0] || "•").toUpperCase();
-    if (chip) chip.querySelector(".user-status").classList.add("online");
+    const who = id.email || id.name || "your account";
+    if (status) status.innerHTML = "Signed in as <strong>" + who + "</strong>";
   } catch (_) {
-    // Local/dev or no Access session: show a neutral state, keep sign-out available.
-    text.textContent = "Local preview";
-    email.textContent = "not behind Access";
-    initial.textContent = "•";
+    // Local/dev or no Access session: neutral state, keep sign-out available.
+    if (status) status.innerHTML = "<strong>Local preview</strong> — not behind Access";
   } finally {
     clearTimeout(timer);
+  }
+}
+
+// Data-freshness line: when this view loaded, and the newest dated item the
+// notifications watch (most recent sale, base-rate date or 2yr-swap date).
+function fmtItemDate(iso) {
+  const mi = parseInt(iso.slice(5, 7), 10) - 1;
+  const d = iso.length >= 10 ? parseInt(iso.slice(8, 10), 10) : null;
+  return (d ? d + " " : "") + (MONTHS[mi] || "") + " " + iso.slice(0, 4);
+}
+function renderFreshness() {
+  const r = $("#id-refresh");
+  if (r) {
+    try {
+      r.textContent = "Last refresh " + new Date().toLocaleString("en-GB",
+        { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", timeZoneName: "short" });
+    } catch (_) { r.textContent = "Last refresh —"; }
+  }
+  const l = $("#id-latest");
+  if (l) {
+    const dates = [...(DATA.COMPS.rows || []).map((x) => x.date), DATA.RATES.baseRateAsOf, DATA.RATES.swap2yrAsOf].filter(Boolean);
+    const maxISO = dates.sort().slice(-1)[0];
+    l.textContent = "Latest item " + (maxISO ? fmtItemDate(maxISO) : "—");
   }
 }
 
@@ -401,6 +418,7 @@ function renderHeader() {
   }
   const build = $("#build");
   if (build) build.textContent = "build " + (DATA.META.build || "—");
+  renderFreshness();
   // Render the curated snapshot first (above), then try a non-blocking live refresh.
   // If the Worker route isn't deployed it 404s and we silently keep the snapshot —
   // the page never waits on this, so it can't hang behind Zero Trust.
