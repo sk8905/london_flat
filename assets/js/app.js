@@ -2,11 +2,11 @@
 // app.js  —  Entry point: load data, run model, render the single page, wire UI
 // =============================================================================
 
-import * as DATA from "../data/dataset.js?v=32";
-import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=32";
-import * as C from "./charts.js?v=32";
-import { monthlyPayment, monthsBetween, ymIndex, ymToISO } from "./finance.js?v=32";
-import { rentVsSell } from "./letting.js?v=32";
+import * as DATA from "../data/dataset.js?v=33";
+import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=33";
+import * as C from "./charts.js?v=33";
+import { monthlyPayment, monthsBetween, ymIndex, ymToISO } from "./finance.js?v=33";
+import { rentVsSell } from "./letting.js?v=33";
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const gbp = (n) => (n < 0 ? "−" : "") + "£" + Math.abs(Math.round(n)).toLocaleString("en-GB");
@@ -172,8 +172,7 @@ const PAGE_META = {
   comps: ["Recent N1 sales", "Actual sold 2-bed flats — size, baths, type & £/m²"],
   finances: ["Your finances", "Your position and projected net proceeds"],
   selllet: ["Sell vs let", "Keep and rent it out, or sell now?"],
-  assumptions: ["Assumptions", "Tweak the forecast and read the methodology"],
-  inputs: ["Inputs", "Enter your real purchase, mortgage & cost figures"],
+  inputs: ["Inputs", "Your figures, forecast assumptions & methodology"],
 };
 
 function switchTab(id) {
@@ -977,12 +976,12 @@ function buildLettingControls() {
           <option value="higher" ${state.letting.taxBand === "higher" ? "selected" : ""}>Higher (40% → 42%)</option>
           <option value="additional" ${state.letting.taxBand === "additional" ? "selected" : ""}>Additional (45% → 47%)</option>
         </select></label>
-      <label class="ctrl"><span>Monthly rent: <strong id="lbl-rent">${gbp(state.letting.monthlyRent)}</strong></span>
-        <input id="let-rent" type="range" min="2000" max="4200" step="25" value="${state.letting.monthlyRent}"></label>
-      <label class="ctrl"><span>Service charge + ground rent/yr: <strong id="lbl-sc">${gbp(state.letting.serviceCharge)}</strong></span>
-        <input id="let-sc" type="range" min="0" max="8000" step="100" value="${state.letting.serviceCharge}"></label>
-      <label class="ctrl"><span>Opportunity return on sale cash: <strong id="lbl-opp">${pct(state.letting.opportunityRate)}</strong></span>
-        <input id="let-opp" type="range" min="0" max="8" step="0.25" value="${state.letting.opportunityRate}"></label>
+      <label class="ctrl"><span>Monthly rent (£)</span>
+        <input id="let-rent" type="number" min="0" step="25" value="${state.letting.monthlyRent}"></label>
+      <label class="ctrl"><span>Service charge + ground rent (£/yr)</span>
+        <input id="let-sc" type="number" min="0" step="50" value="${state.letting.serviceCharge}"></label>
+      <label class="ctrl"><span>Opportunity return on sale cash (%)</span>
+        <input id="let-opp" type="number" min="0" max="20" step="0.25" value="${state.letting.opportunityRate}"></label>
       <label class="ctrl ctrl-check"><input id="let-self" type="checkbox" ${state.letting.selfManage ? "checked" : ""}>
         <span>Self-manage (no letting agent fee)</span></label>
       <label class="ctrl ctrl-check"><input id="let-io" type="checkbox" ${state.letting.interestOnly ? "checked" : ""}>
@@ -991,15 +990,9 @@ function buildLettingControls() {
 
   $("#let-horizon").addEventListener("change", (e) => { state.letting.horizon = e.target.value; rerenderLetting(); });
   $("#let-band").addEventListener("change", (e) => { state.letting.taxBand = e.target.value; rerenderLetting(); });
-  $("#let-rent").addEventListener("input", (e) => {
-    state.letting.monthlyRent = parseFloat(e.target.value); $("#lbl-rent").textContent = gbp(state.letting.monthlyRent); scheduleLetting();
-  });
-  $("#let-sc").addEventListener("input", (e) => {
-    state.letting.serviceCharge = parseFloat(e.target.value); $("#lbl-sc").textContent = gbp(state.letting.serviceCharge); scheduleLetting();
-  });
-  $("#let-opp").addEventListener("input", (e) => {
-    state.letting.opportunityRate = parseFloat(e.target.value); $("#lbl-opp").textContent = pct(state.letting.opportunityRate); scheduleLetting();
-  });
+  $("#let-rent").addEventListener("input", (e) => { state.letting.monthlyRent = num(e.target.value, state.letting.monthlyRent); scheduleLetting(); });
+  $("#let-sc").addEventListener("input", (e) => { state.letting.serviceCharge = num(e.target.value, state.letting.serviceCharge); scheduleLetting(); });
+  $("#let-opp").addEventListener("input", (e) => { state.letting.opportunityRate = num(e.target.value, state.letting.opportunityRate); scheduleLetting(); });
   $("#let-self").addEventListener("change", (e) => { state.letting.selfManage = e.target.checked; rerenderLetting(); });
   $("#let-io").addEventListener("change", (e) => { state.letting.interestOnly = e.target.checked; rerenderLetting(); });
 }
@@ -1140,29 +1133,22 @@ function buildControls() {
           <option value="optimistic">Optimistic</option>
         </select>
       </label>
-      <label class="ctrl">
-        <span>Remortgage rate after fix: <strong id="lbl-remo">${pct(state.remortgageRate)}</strong></span>
-        <input id="ctrl-remo" type="range" min="3.5" max="7" step="0.05" value="${state.remortgageRate}">
-      </label>
-      <label class="ctrl">
-        <span>Est. value now: <strong id="lbl-pv"></strong></span>
-        <input id="ctrl-pv" type="range" min="780000" max="980000" step="5000">
-      </label>
+      <label class="ctrl"><span>Remortgage rate after fix (%)</span>
+        <input id="ctrl-remo" type="number" min="0" max="15" step="0.05" value="${state.remortgageRate}"></label>
+      <label class="ctrl"><span>Est. value now (£)</span>
+        <input id="ctrl-pv" type="number" min="0" step="1000"></label>
       ${yrs.map((y) => `
-      <label class="ctrl">
-        <span>${y} growth: <strong id="lbl-g${y}">${state.growthByYear[y].toFixed(1)}%</strong></span>
-        <input class="ctrl-growth" data-year="${y}" type="range" min="-8" max="10" step="0.5" value="${state.growthByYear[y]}">
-      </label>`).join("")}
+      <label class="ctrl"><span>${y} growth (%)</span>
+        <input class="ctrl-growth" data-year="${y}" type="number" min="-20" max="20" step="0.5" value="${state.growthByYear[y]}"></label>`).join("")}
       <button id="ctrl-reset" class="btn-reset" type="button">Reset to consensus</button>
     </div>
-    <p class="muted small">Sliders recompute every chart and the recommendation live. Defaults reflect the
-      Savills / Knight Frank / Zoopla consensus and the June 2026 rate market.</p>`;
+    <p class="muted small">These recompute every chart and the recommendation live. Leave "Est. value now" blank to use the
+      model's derived figure. Defaults reflect the Savills / Knight Frank / Zoopla consensus and the June 2026 rate market.</p>`;
 
-  // init present-value slider to derived value
+  // init present-value box to the derived value (blank => derived at runtime)
   const derived = runModel(effectiveData(), {}).presentValue;
   const pvInput = $("#ctrl-pv");
-  pvInput.value = Math.round(derived / 5000) * 5000;
-  $("#lbl-pv").textContent = gbp(pvInput.value);
+  pvInput.value = state.presentValue != null ? state.presentValue : Math.round(derived / 1000) * 1000;
 
   document.querySelectorAll(".preset-btn").forEach((b) =>
     b.addEventListener("click", () => applyPreset(b.dataset.preset)));
@@ -1175,21 +1161,18 @@ function buildControls() {
     rerender();
   });
   $("#ctrl-remo").addEventListener("input", (e) => {
-    state.remortgageRate = parseFloat(e.target.value);
-    $("#lbl-remo").textContent = pct(state.remortgageRate);
+    state.remortgageRate = num(e.target.value, state.remortgageRate);
     scheduleRerender();
   });
   pvInput.addEventListener("input", (e) => {
-    state.presentValue = parseFloat(e.target.value);
-    $("#lbl-pv").textContent = gbp(state.presentValue);
+    state.presentValue = e.target.value === "" ? null : num(e.target.value);
     scheduleRerender();
   });
   document.querySelectorAll(".ctrl-growth").forEach((inp) => {
     inp.addEventListener("input", (e) => {
       const y = e.target.dataset.year;
-      state.growthByYear[y] = parseFloat(e.target.value);
+      state.growthByYear[y] = num(e.target.value, state.growthByYear[y]);
       state.custom = true;
-      $("#lbl-g" + y).textContent = state.growthByYear[y].toFixed(1) + "%";
       scheduleRerender();
     });
   });
@@ -1202,11 +1185,8 @@ function buildControls() {
     state.letting.monthlyRent = DATA.LETTING.monthlyRent;
     $("#ctrl-scenario").value = state.scenario;
     $("#ctrl-remo").value = state.remortgageRate;
-    $("#lbl-remo").textContent = pct(state.remortgageRate);
-    pvInput.value = Math.round(derived / 5000) * 5000;
-    $("#lbl-pv").textContent = gbp(pvInput.value);
+    pvInput.value = Math.round(derived / 1000) * 1000;
     const lr = $("#let-rent"); if (lr) lr.value = state.letting.monthlyRent;
-    const lblRent = $("#lbl-rent"); if (lblRent) lblRent.textContent = gbp(state.letting.monthlyRent);
     document.querySelectorAll(".preset-btn").forEach((b) => b.classList.remove("active"));
     $("#preset-note").textContent = "Bear / Base / Bull move growth, remortgage rate and rent together.";
     syncGrowthSliders();
@@ -1216,9 +1196,7 @@ function buildControls() {
 
 function syncGrowthSliders() {
   document.querySelectorAll(".ctrl-growth").forEach((inp) => {
-    const y = inp.dataset.year;
-    inp.value = state.growthByYear[y];
-    $("#lbl-g" + y).textContent = state.growthByYear[y].toFixed(1) + "%";
+    inp.value = state.growthByYear[inp.dataset.year];
   });
 }
 
@@ -1236,11 +1214,9 @@ function applyPreset(name) {
   // sync scenario controls
   const sc = $("#ctrl-scenario"); if (sc) sc.value = p.scenario;
   const remo = $("#ctrl-remo"); if (remo) remo.value = p.remortgageRate;
-  const lblRemo = $("#lbl-remo"); if (lblRemo) lblRemo.textContent = pct(p.remortgageRate);
   syncGrowthSliders();
   // sync letting rent control
   const lr = $("#let-rent"); if (lr) lr.value = state.letting.monthlyRent;
-  const lblRent = $("#lbl-rent"); if (lblRent) lblRent.textContent = gbp(state.letting.monthlyRent);
 
   const note = $("#preset-note"); if (note) note.textContent = p.note;
   document.querySelectorAll(".preset-btn").forEach((b) =>
