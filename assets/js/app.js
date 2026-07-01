@@ -2,11 +2,11 @@
 // app.js  —  Entry point: load data, run model, render the single page, wire UI
 // =============================================================================
 
-import * as DATA from "../data/dataset.js?v=24";
-import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=24";
-import * as C from "./charts.js?v=24";
-import { monthlyPayment, monthsBetween, ymIndex, ymToISO } from "./finance.js?v=24";
-import { rentVsSell } from "./letting.js?v=24";
+import * as DATA from "../data/dataset.js?v=25";
+import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=25";
+import * as C from "./charts.js?v=25";
+import { monthlyPayment, monthsBetween, ymIndex, ymToISO } from "./finance.js?v=25";
+import { rentVsSell } from "./letting.js?v=25";
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const gbp = (n) => (n < 0 ? "−" : "") + "£" + Math.abs(Math.round(n)).toLocaleString("en-GB");
@@ -691,6 +691,15 @@ function renderComps(r) {
   const yourPsm = Math.round(yours.price / yours.sqm);
   const diffPct = (yourPsm / median - 1) * 100;
 
+  // Map: number the comps newest-first (matching the dataset order), plus your flat.
+  const mapComps = DATA.COMPS.rows.map((x, i) => ({ ...x, n: i + 1, perSqm: Math.round(x.price / x.sqm) }));
+  const mapPoints = mapComps.map((x) => ({ lat: x.lat, lng: x.lng, n: x.n }))
+    .concat(Number.isFinite(p.lat) && Number.isFinite(p.lng) ? [{ lat: p.lat, lng: p.lng, you: true }] : []);
+  const mapLegend = `<div class="map-legend">
+      <div class="map-legend-item"><span class="map-num you"></span><span><strong>Your flat</strong> — ${p.postcode} · ${gbp(p.purchasePrice)}</span></div>
+      ${mapComps.map((x) => `<div class="map-legend-item"><span class="map-num">${x.n}</span><span><strong>${x.addr}</strong> · ${gbp(x.price)} · ${gbp(x.perSqm)}/m²</span></div>`).join("")}
+    </div>`;
+
   host.innerHTML = `
     <div class="cards">
       ${card("Sales shown", String(DATA.COMPS.rows.length), "recent N1 2-bed flats")}
@@ -698,7 +707,12 @@ function renderComps(r) {
       ${card("Your £/m² (paid)", gbp(yourPsm), signed(diffPct, (x) => x.toFixed(0) + "%") + " vs median")}
       ${card("Your flat", gbp(p.purchasePrice), p.floorAreaSqm + " m² · " + p.bedrooms + "-bed/" + p.bathrooms + "-bath")}
     </div>
-    <div class="table-wrap"><table class="rank-table comps-table">
+    <h3 class="panel-h" style="margin-top:22px">Where these sold</h3>
+    <div id="comps-map" class="chart-wrap"></div>
+    ${mapLegend}
+    <p class="chart-cap">Approximate street-level positions across N1 (not exact door numbers). Green marks your flat;
+      numbered pins match the list above and the table below.</p>
+    <div class="table-wrap" style="margin-top:20px"><table class="rank-table comps-table">
       <thead><tr><th>Sold</th><th>Address / area</th><th>Price</th><th>Beds</th><th>Baths</th><th>Building type</th><th>Size (m²)</th><th>£/m²</th></tr></thead>
       <tbody>${rows.map((x) => `<tr class="${x.you ? "best-row" : ""}">
         <td>${monthName(x.date)}</td><td>${x.you ? `<span class="best-tag">Yours</span> ` : ""}${x.addr}</td><td>${gbp(x.price)}</td>
@@ -711,6 +725,8 @@ function renderComps(r) {
     <p class="disclaimer"><strong>Representative data.</strong> Compiled from Land Registry sold prices with floor area and
       bathrooms from EPC/listing data; bathroom counts and some areas reflect each property's typical spec where not in open
       data. Verify individual transactions against the sources before relying on them.</p>`;
+
+  C.scatterMap($("#comps-map"), { points: mapPoints });
 }
 
 // ---------------------------------------------------------------------------

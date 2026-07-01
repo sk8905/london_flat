@@ -349,6 +349,76 @@ export function stackedContrib(container, windows, factors, height = 320, yUnit)
   drawLegend(container, factors.map((f) => ({ name: f.label, color: f.color })).concat([{ name: "Net signal", color: "#111827", line: true }]));
 }
 
+// ---------------------------------------------------------------------------
+// Schematic location map — plots each sale by lat/lng on an abstract N1 canvas.
+// Dependency-free (no tiles, no network), so it works offline and behind Access.
+// opts.points: [{lat,lng,label,priceLabel,n,you}]
+// ---------------------------------------------------------------------------
+export function scatterMap(container, opts) {
+  const pts = (opts.points || []).filter((p) => Number.isFinite(p.lat) && Number.isFinite(p.lng));
+  if (!pts.length) { container.innerHTML = ""; return; }
+  const W = 720;
+  const lats = pts.map((p) => p.lat), lngs = pts.map((p) => p.lng);
+  let latMin = Math.min(...lats), latMax = Math.max(...lats);
+  let lngMin = Math.min(...lngs), lngMax = Math.max(...lngs);
+  const padLat = (latMax - latMin) * 0.22 || 0.003, padLng = (lngMax - lngMin) * 0.22 || 0.003;
+  latMin -= padLat; latMax += padLat; lngMin -= padLng; lngMax += padLng;
+  const latMid = (latMin + latMax) / 2, cosl = Math.cos((latMid * Math.PI) / 180);
+  const latSpan = latMax - latMin, lngSpan = (lngMax - lngMin) * cosl || 1;
+  const m = { t: 14, r: 14, b: 14, l: 14 };
+  const iw = W - m.l - m.r;
+  let ih = iw * (latSpan / lngSpan);
+  ih = Math.max(320, Math.min(500, ih));
+  const H = ih + m.t + m.b;
+  const svg = svgRoot(container, W, H);
+
+  // canvas + faint grid for orientation
+  el("rect", { x: m.l, y: m.t, width: iw, height: ih, rx: 12, fill: "#eaf0f2", stroke: "#dbe3e7", "stroke-width": 1 }, svg);
+  for (let i = 1; i < 4; i++) el("line", { x1: m.l + (iw * i) / 4, y1: m.t, x2: m.l + (iw * i) / 4, y2: m.t + ih, stroke: "#dde6ea", "stroke-width": 1 }, svg);
+  for (let i = 1; i < 3; i++) el("line", { x1: m.l, y1: m.t + (ih * i) / 3, x2: m.l + iw, y2: m.t + (ih * i) / 3, stroke: "#dde6ea", "stroke-width": 1 }, svg);
+  const comp = el("text", { x: m.l + iw - 12, y: m.t + 22, class: "map-compass" }, svg);
+  comp.setAttribute("text-anchor", "end"); comp.textContent = "N ↑";
+
+  const px = (lng) => m.l + (((lng - lngMin) * cosl) / lngSpan) * iw;
+  const py = (lat) => m.t + ((latMax - lat) / latSpan) * ih;
+
+  // Some N1 sales cluster tightly (the wharf area). Nudge markers apart so the
+  // pins stay legible while keeping each roughly in its true position.
+  const placed = pts.map((p) => ({ ...p, x: px(p.lng), y: py(p.lat) }));
+  const minD = 34;
+  for (let iter = 0; iter < 80; iter++) {
+    for (let i = 0; i < placed.length; i++) {
+      for (let j = i + 1; j < placed.length; j++) {
+        const a = placed[i], b = placed[j];
+        let dx = b.x - a.x, dy = b.y - a.y;
+        let d = Math.hypot(dx, dy) || 0.01;
+        if (d < minD) {
+          const push = (minD - d) / 2, ux = dx / d, uy = dy / d;
+          a.x -= ux * push; a.y -= uy * push; b.x += ux * push; b.y += uy * push;
+        }
+      }
+    }
+  }
+  placed.forEach((p) => {
+    p.x = Math.max(m.l + 16, Math.min(m.l + iw - 16, p.x));
+    p.y = Math.max(m.t + 22, Math.min(m.t + ih - 20, p.y));
+  });
+
+  // draw comps first, the "you" marker last so it sits on top
+  [...placed].sort((a, b) => (a.you === b.you ? 0 : a.you ? 1 : -1)).forEach((p) => {
+    if (p.you) {
+      el("circle", { cx: p.x, cy: p.y, r: 13, fill: "none", stroke: "#2f7d57", "stroke-width": 2, opacity: 0.45 }, svg);
+      el("circle", { cx: p.x, cy: p.y, r: 8, fill: "#2f7d57", stroke: "#fff", "stroke-width": 2 }, svg);
+      const t = el("text", { x: p.x, y: p.y + 24, class: "map-you", "paint-order": "stroke", stroke: "#eaf0f2", "stroke-width": 3 }, svg);
+      t.setAttribute("text-anchor", "middle"); t.textContent = "Your flat";
+    } else {
+      el("circle", { cx: p.x, cy: p.y, r: 13, fill: "#1f5a73", stroke: "#fff", "stroke-width": 1.5 }, svg);
+      const t = el("text", { x: p.x, y: p.y + 5, class: "map-pin" }, svg);
+      t.setAttribute("text-anchor", "middle"); t.textContent = String(p.n);
+    }
+  });
+}
+
 // shared legend renderer
 function drawLegend(container, items) {
   const legend = document.createElement("div");
