@@ -2,11 +2,11 @@
 // app.js  —  Entry point: load data, run model, render the single page, wire UI
 // =============================================================================
 
-import * as DATA from "../data/dataset.js?v=35";
-import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=35";
-import * as C from "./charts.js?v=35";
-import { monthlyPayment, monthsBetween, ymIndex, ymToISO } from "./finance.js?v=35";
-import { rentVsSell } from "./letting.js?v=35";
+import * as DATA from "../data/dataset.js?v=36";
+import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=36";
+import * as C from "./charts.js?v=36";
+import { monthlyPayment, monthsBetween, ymIndex, ymToISO } from "./finance.js?v=36";
+import { rentVsSell } from "./letting.js?v=36";
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const gbp = (n) => (n < 0 ? "−" : "") + "£" + Math.abs(Math.round(n)).toLocaleString("en-GB");
@@ -410,12 +410,11 @@ function rerender() {
 // ---------------------------------------------------------------------------
 // Header
 // ---------------------------------------------------------------------------
-function setBadge(id, text, title, live) {
+function setBadge(id, text, title) {
   const el = $("#" + id);
   if (!el) return;
   el.textContent = text;
   el.title = title;
-  el.classList.toggle("badge-live", !!live);
 }
 
 // ISO dates from any successful live fetch, folded into the "Latest item" line.
@@ -423,9 +422,9 @@ let _liveDates = [];
 
 function renderHeader() {
   const R = DATA.RATES;
-  setBadge("live-rate", pct(R.baseRateNow) + " base rate", "Bank of England base rate · snapshot " + R.baseRateAsOf, false);
-  setBadge("live-remo", pct(R.remortgage70Now) + " remortgage", "Average 2-year fixed remortgage at ~70% LTV · snapshot " + R.remortgage70AsOf, false);
-  if (R.swap2yrNow != null) setBadge("live-swap", pct(R.swap2yrNow) + " 2yr swap", "2-year GBP interest-rate swap (SONIA) — what UK lenders price fixed mortgages off · snapshot " + R.swap2yrAsOf, false);
+  setBadge("live-rate", pct(R.baseRateNow) + " base rate", "Bank of England base rate · " + R.baseRateAsOf + " — click for source");
+  setBadge("live-remo", pct(R.remortgage70Now) + " remortgage", "Average 2-year fixed remortgage at ~70% LTV · " + R.remortgage70AsOf + " — click for source");
+  if (R.swap2yrNow != null) setBadge("live-swap", pct(R.swap2yrNow) + " 2yr swap", "2-year GBP interest-rate swap (SONIA) · " + R.swap2yrAsOf + " — click for source");
   const build = $("#build");
   if (build) build.textContent = "build " + (DATA.META.build || "—");
   renderFreshness();
@@ -451,18 +450,18 @@ async function refreshLiveRates() {
     if (d.live && Number.isFinite(d.baseRateNow)) {
       DATA.RATES.baseRateNow = d.baseRateNow;
       setBadge("live-rate", pct(d.baseRateNow) + " base rate",
-        "Bank of England base rate · live " + (d.baseRateAsOf || "") + " (" + src + ")", true);
+        "Bank of England base rate · " + (d.baseRateAsOf || "") + " (" + src + ") — click for source");
       seen.push(boeToISO(d.baseRateAsOf));
     }
     if (d.remortgageLive && Number.isFinite(d.remortgage70Now)) {
       DATA.RATES.remortgage70Now = d.remortgage70Now;
       setBadge("live-remo", pct(d.remortgage70Now) + " remortgage",
-        "Average 2-year fixed remortgage at ~70% LTV · live " + (d.remortgage70AsOf || "") + " (" + src + ", interpolated 60/75% LTV)", true);
+        "Average 2-year fixed remortgage at ~70% LTV · " + (d.remortgage70AsOf || "") + " (" + src + ", interpolated 60/75% LTV) — click for source");
       seen.push(boeToISO(d.remortgage70AsOf));
     }
     if (d.swapLive && Number.isFinite(d.swap2yrNow)) {
       DATA.RATES.swap2yrNow = d.swap2yrNow;
-      setBadge("live-swap", pct(d.swap2yrNow) + " 2yr swap", "2-year GBP interest-rate swap (SONIA) · live " + (d.swap2yrAsOf || ""), true);
+      setBadge("live-swap", pct(d.swap2yrNow) + " 2yr swap", "2-year GBP interest-rate swap (SONIA) · " + (d.swap2yrAsOf || "") + " — click for source");
       seen.push(boeToISO(d.swap2yrAsOf));
     }
     _liveDates = seen.filter(Boolean);

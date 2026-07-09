@@ -97,9 +97,9 @@ Every push to the connected branch redeploys automatically.
 
 ### Live rates (Worker-native)
 
-The header rate badges show the **curated snapshot** in `assets/data/dataset.js` by default, and
-upgrade themselves to **live values** when deployed as a Worker (a small green `live` tag marks
-the ones that did):
+The header rate badges are **links to their source** (BoE) and show the **curated snapshot** in
+`assets/data/dataset.js` by default, upgrading themselves to **live values** when deployed as a
+Worker:
 
 - `worker.js` exposes `GET /api/rates`, which fetches the Bank of England Interactive Database
   server-side in one multi-series request and returns JSON. Series used:
@@ -112,8 +112,9 @@ the ones that did):
 - The call is time-boxed (~4.5s), edge-cached 6h, and has a per-series snapshot fallback — any
   missing series keeps its snapshot silently.
 - After first paint, `app.js` calls `/api/rates` **non-blocking** and swaps in each live value,
-  tags it `live`, and updates the header "Last refresh / Latest item" line. If the route 404s
-  (plain static hosting) or the upstream is unreachable, snapshots stay and nothing hangs.
+  and updates the header "Last refresh / Latest item" line. Each badge links to its BoE source.
+  If the route 404s (plain static hosting) or the upstream is unreachable, snapshots stay and
+  nothing hangs.
 - The BoE series codes are in `worker.js` (`SERIES`); if one returns no data in production the
   badge falls back to its snapshot — adjust the code there and redeploy.
 
