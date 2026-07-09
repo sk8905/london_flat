@@ -95,18 +95,27 @@ Every push to the connected branch redeploys automatically.
 > **Cloudflare Pages** is an equally good target (`Workers & Pages → Create → Pages`) if your
 > dashboard offers it. Either works — the site is the same static files.
 
-### Live Bank of England rate (Worker-native)
+### Live rates (Worker-native)
 
-The base-rate badge shows the **curated snapshot** (3.75%, 17 Jun 2026) by default — accurate
-and editable in `assets/data/dataset.js`. When deployed as a Worker, the badge also upgrades
-itself to the **live Bank Rate**:
+The header rate badges show the **curated snapshot** in `assets/data/dataset.js` by default, and
+upgrade themselves to **live values** when deployed as a Worker (a small green `live` tag marks
+the ones that did):
 
-- `worker.js` exposes `GET /api/rates`, which fetches the Bank of England's Interactive
-  Database (series `IUDBEDR`) server-side, parses the latest value, and returns JSON. It's
-  time-boxed to 4s with a snapshot fallback and edge-cached for 6 hours.
-- After first paint, `app.js` calls `/api/rates` **non-blocking** and only swaps in a value
-  flagged `live: true`, appending a small `live` marker to the badge. If the route 404s (plain
-  static hosting) or the upstream is unreachable, the snapshot stays and nothing hangs.
+- `worker.js` exposes `GET /api/rates`, which fetches the Bank of England Interactive Database
+  server-side in one multi-series request and returns JSON. Series used:
+  - `IUDBEDR` → **Bank Rate** (base rate badge).
+  - `IUMBV37` (60% LTV) and `IUMBV34` (75% LTV) 2-year fixed quoted mortgage rates → linearly
+    interpolated to the **~70% LTV remortgage** badge. (BoE doesn't publish a 70% bucket; 70% is
+    derived between the 60% and 75% series. These quoted rates update monthly.)
+  - The **2-year swap** has no free official daily feed, so it stays on the snapshot (no `live`
+    tag). Plug in a market-data provider, or derive it, if you want it live.
+- The call is time-boxed (~4.5s), edge-cached 6h, and has a per-series snapshot fallback — any
+  missing series keeps its snapshot silently.
+- After first paint, `app.js` calls `/api/rates` **non-blocking** and swaps in each live value,
+  tags it `live`, and updates the header "Last refresh / Latest item" line. If the route 404s
+  (plain static hosting) or the upstream is unreachable, snapshots stay and nothing hangs.
+- The BoE series codes are in `worker.js` (`SERIES`); if one returns no data in production the
+  badge falls back to its snapshot — adjust the code there and redeploy.
 
 To deploy with the Worker route, either connect the repo in the dashboard (Cloudflare
 auto-detects `wrangler.jsonc`) or run:
@@ -174,26 +183,33 @@ Notification permission so new items also raise a native notification when the p
 (Because the site is static, alerts surface when you open it after a data refresh — they aren't
 pushed in the background.)
 
-## Keeping data fresh — weekly routine
+## Keeping data fresh — daily routine
 
-Everything (charts, signal, proceeds, notifications) recomputes from `assets/data/dataset.js`.
-Paste the block below into a weekly Claude Code session (or run it yourself) to refresh it:
+The **base rate** and the **~70% LTV remortgage rate** now refresh themselves live from the Bank
+of England on every page load (see *Live rates* above) — the routine does **not** need to touch
+those. It handles everything that has no live feed: new sales, forecasts, policy, £/m², HPI, the
+2-year swap, and the snapshot fallbacks. Everything recomputes from `assets/data/dataset.js`.
+
+Paste the block below into your daily (08:00) Claude Code routine:
 
 ```text
 Refresh assets/data/dataset.js in the london_flat repo with the latest figures, then bump the
-build and open a PR. Work through each item, keeping every value sourced:
+build and open a PR. Note: RATES.baseRateNow and RATES.remortgage70Now are fetched LIVE from the
+Bank of England by the Worker, so do NOT hand-edit those (only refresh their snapshot fallbacks
+if they've drifted far). Work through each item, keeping every value sourced; if nothing changed
+today, make no PR.
 
-1. BoE base rate — set RATES.baseRateNow + baseRateAsOf to the latest Bank Rate and its
-   decision date; append the point to RATES.baseSeries. Note the next MPC date.
-2. 2-year GBP swap — set RATES.swap2yrNow + swap2yrAsOf to the current 2-year SONIA swap.
-   (A move of 10bps or more from the current value will alert me in the app.)
-3. Market mortgage fixes — update RATES.avg2yrFix / avg5yrFix and append to fix2yrSeries from
-   Rightmove/Moneyfacts averages.
-4. Recent N1 sales — search HM Land Registry + Zoopla for newly-registered sold 2-bed
+1. Recent N1 sales — search HM Land Registry + Zoopla for newly-registered sold 2-bed
    new-build or purpose-built apartments in N1. Add each as a COMPS.rows entry
    {addr, date "YYYY-MM", price, beds, baths, type, sqm, lat, lng}, geocoding lat/lng from the
    street's postcode (checkmypostcode / postcodes.io). Keep only new-build/purpose-built.
    Update COMPS.asOf. (Each new row alerts me in the app.)
+2. 2-year GBP swap — set RATES.swap2yrNow + swap2yrAsOf to the current 2-year SONIA swap (no
+   live feed, so it's manual). A move of 10bps or more from the current value alerts me in-app.
+3. Market mortgage fixes — update RATES.avg2yrFix / avg5yrFix and append to fix2yrSeries from
+   Rightmove/Moneyfacts averages.
+4. Bank Rate context — on an MPC decision day, append the new point to RATES.baseSeries and note
+   RATES.nextDecision (the live badge already shows the current value).
 5. £/m² comparables — refresh COMPARABLES.perSqm (low/median/high) and n1_7txAvg12m from the
    latest N1 Land Registry £/m² distribution.
 6. Islington HPI / price history — extend PRICE_HISTORY.series with the newest UK HPI release
@@ -202,10 +218,11 @@ build and open a PR. Work through each item, keeping every value sourced:
    (base/optimistic/pessimistic by year).
 8. Policy & macro — reflect any Budget/tax changes in POLICY_FACTORS (mansion tax, Section 24
    landlord rates, SDLT, CGT) with correct effective dates; update the Market tab text.
-9. Mortgage assumption — align MORTGAGE.remortgageRatePctAssumed with the current 2yr swap
-   plus a typical lender margin.
+9. Snapshot fallbacks — if the live values have drifted materially, update the fallbacks
+   (RATES.baseRateNow/baseRateAsOf, RATES.remortgage70Now/AsOf) and the same FALLBACK block in
+   worker.js so offline/no-Worker views aren't stale.
 10. Sources — fix any SOURCES URLs/labels that have moved on (e.g. the latest HPI month page).
-11. Stamp & ship — set META.asOf to today and bump META.build (e.g. "v31 · <today>"); also bump
+11. Stamp & ship — set META.asOf to today and bump META.build (e.g. "v36 · <today>"); also bump
     the ?v= query on every module import in index.html and the JS files so caches refresh.
     Commit, push, and confirm the deployed footer shows the new build.
 

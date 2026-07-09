@@ -2,11 +2,11 @@
 // app.js  —  Entry point: load data, run model, render the single page, wire UI
 // =============================================================================
 
-import * as DATA from "../data/dataset.js?v=34";
-import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=34";
-import * as C from "./charts.js?v=34";
-import { monthlyPayment, monthsBetween, ymIndex, ymToISO } from "./finance.js?v=34";
-import { rentVsSell } from "./letting.js?v=34";
+import * as DATA from "../data/dataset.js?v=35";
+import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=35";
+import * as C from "./charts.js?v=35";
+import { monthlyPayment, monthsBetween, ymIndex, ymToISO } from "./finance.js?v=35";
+import { rentVsSell } from "./letting.js?v=35";
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const gbp = (n) => (n < 0 ? "−" : "") + "£" + Math.abs(Math.round(n)).toLocaleString("en-GB");
@@ -367,7 +367,11 @@ function renderFreshness() {
   }
   const l = $("#id-latest");
   if (l) {
-    const dates = [...(DATA.COMPS.rows || []).map((x) => x.date), DATA.RATES.baseRateAsOf, DATA.RATES.swap2yrAsOf].filter(Boolean);
+    const dates = [
+      ...(DATA.COMPS.rows || []).map((x) => x.date),
+      DATA.RATES.baseRateAsOf, DATA.RATES.swap2yrAsOf, DATA.RATES.remortgage70AsOf,
+      ..._liveDates,
+    ].filter(Boolean);
     const maxISO = dates.sort().slice(-1)[0];
     l.textContent = "Latest item " + (maxISO ? fmtItemDate(maxISO) : "—");
   }
@@ -406,16 +410,22 @@ function rerender() {
 // ---------------------------------------------------------------------------
 // Header
 // ---------------------------------------------------------------------------
+function setBadge(id, text, title, live) {
+  const el = $("#" + id);
+  if (!el) return;
+  el.textContent = text;
+  el.title = title;
+  el.classList.toggle("badge-live", !!live);
+}
+
+// ISO dates from any successful live fetch, folded into the "Latest item" line.
+let _liveDates = [];
+
 function renderHeader() {
-  $("#as-of").textContent = "Data as of " + monthName(DATA.META.asOf);
-  const badge = $("#live-rate");
-  badge.textContent = pct(DATA.RATES.baseRateNow) + " base rate";
-  badge.title = "Bank of England base rate · snapshot " + DATA.RATES.baseRateAsOf;
-  const swap = $("#live-swap");
-  if (swap && DATA.RATES.swap2yrNow != null) {
-    swap.textContent = pct(DATA.RATES.swap2yrNow) + " 2yr swap";
-    swap.title = "2-year GBP interest-rate swap (SONIA) — what UK lenders price fixed mortgages off · snapshot " + DATA.RATES.swap2yrAsOf;
-  }
+  const R = DATA.RATES;
+  setBadge("live-rate", pct(R.baseRateNow) + " base rate", "Bank of England base rate · snapshot " + R.baseRateAsOf, false);
+  setBadge("live-remo", pct(R.remortgage70Now) + " remortgage", "Average 2-year fixed remortgage at ~70% LTV · snapshot " + R.remortgage70AsOf, false);
+  if (R.swap2yrNow != null) setBadge("live-swap", pct(R.swap2yrNow) + " 2yr swap", "2-year GBP interest-rate swap (SONIA) — what UK lenders price fixed mortgages off · snapshot " + R.swap2yrAsOf, false);
   const build = $("#build");
   if (build) build.textContent = "build " + (DATA.META.build || "—");
   renderFreshness();
@@ -425,26 +435,48 @@ function renderHeader() {
   refreshLiveRates();
 }
 
-// Optional live upgrade of the base-rate badge from the /api/rates Worker route.
-// Purely additive: any failure leaves the snapshot in place.
+// Live upgrade of the rate badges from the /api/rates Worker route (Bank of
+// England data). Purely additive: any missing value leaves its snapshot in place.
 async function refreshLiveRates() {
   try {
     const ctl = new AbortController();
-    const timer = setTimeout(() => ctl.abort(), 4000);
+    const timer = setTimeout(() => ctl.abort(), 4500);
     const res = await fetch("/api/rates", { headers: { accept: "application/json" }, signal: ctl.signal });
     clearTimeout(timer);
     if (!res.ok) return;
     const d = await res.json();
-    if (!d || !d.live || !Number.isFinite(d.baseRateNow)) return; // only upgrade on a genuine live value
-    DATA.RATES.baseRateNow = d.baseRateNow;
-    const badge = $("#live-rate");
-    if (badge) {
-      badge.textContent = pct(d.baseRateNow) + " base rate";
-      badge.title = "Bank of England base rate · live, as of " + (d.baseRateAsOf || "today") +
-        (d.source ? " (" + d.source + ")" : "");
-      badge.classList.add("badge-live");
+    if (!d) return;
+    const src = d.source || "Bank of England";
+    const seen = [];
+    if (d.live && Number.isFinite(d.baseRateNow)) {
+      DATA.RATES.baseRateNow = d.baseRateNow;
+      setBadge("live-rate", pct(d.baseRateNow) + " base rate",
+        "Bank of England base rate · live " + (d.baseRateAsOf || "") + " (" + src + ")", true);
+      seen.push(boeToISO(d.baseRateAsOf));
     }
+    if (d.remortgageLive && Number.isFinite(d.remortgage70Now)) {
+      DATA.RATES.remortgage70Now = d.remortgage70Now;
+      setBadge("live-remo", pct(d.remortgage70Now) + " remortgage",
+        "Average 2-year fixed remortgage at ~70% LTV · live " + (d.remortgage70AsOf || "") + " (" + src + ", interpolated 60/75% LTV)", true);
+      seen.push(boeToISO(d.remortgage70AsOf));
+    }
+    if (d.swapLive && Number.isFinite(d.swap2yrNow)) {
+      DATA.RATES.swap2yrNow = d.swap2yrNow;
+      setBadge("live-swap", pct(d.swap2yrNow) + " 2yr swap", "2-year GBP interest-rate swap (SONIA) · live " + (d.swap2yrAsOf || ""), true);
+      seen.push(boeToISO(d.swap2yrAsOf));
+    }
+    _liveDates = seen.filter(Boolean);
+    renderFreshness();
   } catch (_) { /* offline, blocked, or not deployed — keep the snapshot silently */ }
+}
+
+// "17 Jun 2026" / "01 Jun 2026" -> "2026-06-17"; "" if unparseable.
+function boeToISO(s) {
+  const m = /^(\d{1,2})\s+([A-Za-z]{3})\s+(\d{4})$/.exec((s || "").trim());
+  if (!m) return "";
+  const mi = MONTHS.indexOf(m[2]);
+  if (mi < 0) return "";
+  return m[3] + "-" + String(mi + 1).padStart(2, "0") + "-" + m[1].padStart(2, "0");
 }
 
 // ---------------------------------------------------------------------------

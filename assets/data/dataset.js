@@ -10,7 +10,7 @@
 
 export const META = {
   asOf: "2026-06-30",
-  build: "v34 · 2026-07-01", // bump on each change so the footer confirms the live build
+  build: "v35 · 2026-07-01", // bump on each change so the footer confirms the live build
   currency: "GBP",
   disclaimer:
     "This tool is an informational model, not financial, tax, mortgage or legal advice. " +
@@ -249,6 +249,11 @@ export const RATES = {
   // the market expects cuts to be slow; the key driver of fixed mortgage pricing.
   swap2yrNow: 4.06,
   swap2yrAsOf: "2026-06-26",
+  // Current average 2-year fixed REMORTGAGE rate at ~70% LTV (the band that fits
+  // this flat). Live-refreshed from Bank of England quoted mortgage rates,
+  // interpolated between the published 60% and 75% LTV series. Snapshot fallback:
+  remortgage70Now: 5.02,
+  remortgage70AsOf: "2026-06",
   cpiPct: 2.8, // CPI to May 2026
   nextDecision: "2026-07-30",
   // Bank Rate path (history + light forward estimate)
