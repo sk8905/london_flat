@@ -19,10 +19,13 @@
 const FALLBACK = {
   baseRateNow: 3.75,
   baseRateAsOf: "2026-06-17",
+  baseRatePrev: 3.75,
   swap2yrNow: 4.06,
   swap2yrAsOf: "2026-06-26",
+  swap2yrPrev: 4.09,
   remortgage70Now: 5.02,
   remortgage70AsOf: "2026-06",
+  remortgage70Prev: 5.02,
 };
 
 // Bank of England Interactive Database (IADB) series we pull, all in one request:
@@ -79,6 +82,7 @@ async function fetchRates() {
   const now = new Date();
   try {
     const dateTo = `${String(now.getUTCDate()).padStart(2, "0")}/${MON[now.getUTCMonth()]}/${now.getUTCFullYear()}`;
+    const yISO = isoOf(new Date(now.getTime() - 86400000)); // yesterday (UTC)
     const codes = [SERIES.base, SERIES.ltv60, SERIES.ltv75].join(",");
     const endpoint =
       "https://www.bankofengland.co.uk/boeapps/database/_iadb-fromshowcolumns.asp" +
@@ -94,23 +98,27 @@ async function fetchRates() {
     clearTimeout(timer);
     if (!r.ok) throw new Error("HTTP " + r.status);
 
-    const latest = parseSeries(await r.text()); // { CODE: {date, value} }
+    // { CODE: {date, value, prev} } where prev = value effective yesterday
+    const s = parseSeries(await r.text(), yISO);
     const out = { ...FALLBACK, live: false, source: "Bank of England IADB", fetchedAt: now.toISOString() };
 
-    const base = latest[SERIES.base];
-    if (base) { out.baseRateNow = base.value; out.baseRateAsOf = base.date; out.live = true; }
+    const base = s[SERIES.base];
+    if (base) {
+      out.baseRateNow = base.value; out.baseRateAsOf = base.date; out.live = true;
+      if (base.prev != null) out.baseRatePrev = base.prev;
+    }
 
-    const v60 = latest[SERIES.ltv60], v75 = latest[SERIES.ltv75];
+    const v60 = s[SERIES.ltv60], v75 = s[SERIES.ltv75];
+    const interp = (a, b) => round2(a + ((70 - 60) / (75 - 60)) * (b - a));
     if (v60 && v75) {
-      // linear interpolation 60→75% LTV, evaluated at 70%
-      out.remortgage70Now = round2(v60.value + ((70 - 60) / (75 - 60)) * (v75.value - v60.value));
+      out.remortgage70Now = interp(v60.value, v75.value);
       out.remortgage70AsOf = (v75.date > v60.date ? v75.date : v60.date);
       out.remortgageLive = true;
+      if (v60.prev != null && v75.prev != null) out.remortgage70Prev = interp(v60.prev, v75.prev);
     } else if (v75 || v60) {
       const one = v75 || v60;
-      out.remortgage70Now = one.value;
-      out.remortgage70AsOf = one.date;
-      out.remortgageLive = true;
+      out.remortgage70Now = one.value; out.remortgage70AsOf = one.date; out.remortgageLive = true;
+      if (one.prev != null) out.remortgage70Prev = one.prev;
     }
     return out;
   } catch (err) {
@@ -119,23 +127,43 @@ async function fetchRates() {
 }
 
 const round2 = (x) => Math.round(x * 100) / 100;
+const isoOf = (d) => d.getUTCFullYear() + "-" + String(d.getUTCMonth() + 1).padStart(2, "0") + "-" + String(d.getUTCDate()).padStart(2, "0");
+// "17 Jun 2026" -> "2026-06-17" (for date comparison); "" if unparseable.
+function boeISO(s) {
+  const m = /^(\d{1,2})\s+([A-Za-z]{3})\s+(\d{4})$/.exec((s || "").trim());
+  if (!m) return "";
+  const mi = MON.indexOf(m[2]);
+  return mi < 0 ? "" : m[3] + "-" + String(mi + 1).padStart(2, "0") + "-" + m[1].padStart(2, "0");
+}
 
-// Parse a BoE multi-series CSV. Header: "DATE,CODE1,CODE2,…"; each row a date and
-// (sparsely populated) values. Returns the most recent {date,value} per column.
-function parseSeries(csv) {
+// Parse a BoE multi-series CSV. Header: "DATE,CODE1,CODE2,…". Returns, per column,
+// the latest {date, value} and `prev` = the value effective on `yesterdayISO`
+// (the last point dated on/before yesterday) — for a day-over-day comparison.
+function parseSeries(csv, yesterdayISO) {
   const lines = csv.split(/\r?\n/).map((l) => l.split(",").map((c) => c.trim().replace(/^"|"$/g, "")));
   if (!lines.length) return {};
   const header = lines[0].map((h) => h.toUpperCase());
-  const latest = {};
+  const points = {}; // code -> [{iso, value, date}] in file (chronological) order
   for (let i = 1; i < lines.length; i++) {
     const row = lines[i];
     const date = row[0];
     if (!date) continue;
+    const iso = boeISO(date);
     for (let c = 1; c < header.length; c++) {
       const code = header[c];
       const v = parseFloat(row[c]);
-      if (Number.isFinite(v)) latest[code] = { date, value: v }; // last wins = most recent
+      if (Number.isFinite(v)) (points[code] = points[code] || []).push({ iso, value: v, date });
     }
   }
-  return latest;
+  const out = {};
+  for (const code in points) {
+    const arr = points[code];
+    const latest = arr[arr.length - 1];
+    let prev = null;
+    for (let k = arr.length - 1; k >= 0; k--) {
+      if (!arr[k].iso || arr[k].iso <= yesterdayISO) { prev = arr[k].value; break; }
+    }
+    out[code] = { date: latest.date, value: latest.value, prev };
+  }
+  return out;
 }

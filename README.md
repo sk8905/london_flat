@@ -205,8 +205,10 @@ today, make no PR.
    {addr, date "YYYY-MM", price, beds, baths, type, sqm, lat, lng}, geocoding lat/lng from the
    street's postcode (checkmypostcode / postcodes.io). Keep only new-build/purpose-built.
    Update COMPS.asOf. (Each new row alerts me in the app.)
-2. 2-year GBP swap — set RATES.swap2yrNow + swap2yrAsOf to the current 2-year SONIA swap (no
-   live feed, so it's manual). A move of 10bps or more from the current value alerts me in-app.
+2. 2-year GBP swap — FIRST copy the existing RATES.swap2yrNow into RATES.swap2yrPrev (so the
+   badge shows today's day-over-day change), THEN set RATES.swap2yrNow + swap2yrAsOf to the
+   current 2-year SONIA swap (no live feed, so it's manual). A move of 10bps or more alerts me.
+   (baseRatePrev and remortgage70Prev are computed live by the Worker — leave those.)
 3. Market mortgage fixes — update RATES.avg2yrFix / avg5yrFix and append to fix2yrSeries from
    Rightmove/Moneyfacts averages.
 4. Bank Rate context — on an MPC decision day, append the new point to RATES.baseSeries and note

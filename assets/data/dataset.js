@@ -10,7 +10,7 @@
 
 export const META = {
   asOf: "2026-06-30",
-  build: "v36 · 2026-07-01", // bump on each change so the footer confirms the live build
+  build: "v37 · 2026-07-01", // bump on each change so the footer confirms the live build
   currency: "GBP",
   disclaimer:
     "This tool is an informational model, not financial, tax, mortgage or legal advice. " +
@@ -254,6 +254,12 @@ export const RATES = {
   // interpolated between the published 60% and 75% LTV series. Snapshot fallback:
   remortgage70Now: 5.02,
   remortgage70AsOf: "2026-06",
+  // Previous CALENDAR-DAY values, so each badge can show a day-over-day % change.
+  // The daily 08:00 routine rolls "*Now" into "*Prev" before writing the new value;
+  // the Worker also supplies the prior day's figure for the live series.
+  baseRatePrev: 3.75,
+  remortgage70Prev: 5.02,
+  swap2yrPrev: 4.09,
   cpiPct: 2.8, // CPI to May 2026
   nextDecision: "2026-07-30",
   // Bank Rate path (history + light forward estimate)

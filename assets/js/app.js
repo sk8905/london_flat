@@ -2,11 +2,11 @@
 // app.js  —  Entry point: load data, run model, render the single page, wire UI
 // =============================================================================
 
-import * as DATA from "../data/dataset.js?v=36";
-import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=36";
-import * as C from "./charts.js?v=36";
-import { monthlyPayment, monthsBetween, ymIndex, ymToISO } from "./finance.js?v=36";
-import { rentVsSell } from "./letting.js?v=36";
+import * as DATA from "../data/dataset.js?v=37";
+import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=37";
+import * as C from "./charts.js?v=37";
+import { monthlyPayment, monthsBetween, ymIndex, ymToISO } from "./finance.js?v=37";
+import { rentVsSell } from "./letting.js?v=37";
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const gbp = (n) => (n < 0 ? "−" : "") + "£" + Math.abs(Math.round(n)).toLocaleString("en-GB");
@@ -410,21 +410,44 @@ function rerender() {
 // ---------------------------------------------------------------------------
 // Header
 // ---------------------------------------------------------------------------
-function setBadge(id, text, title) {
+// Small day-over-day (calendar) change on each rate badge. "Yesterday's" value is
+// carried in the dataset (RATES.*Prev), maintained by the daily 08:00 routine and
+// overridden by the Worker where it can supply the prior day's figure — so the
+// change is genuine calendar day-over-day, independent of when you last visited.
+function setRateBadge(id, text, title, deltaPct) {
   const el = $("#" + id);
   if (!el) return;
-  el.textContent = text;
   el.title = title;
+  let delta = "";
+  if (deltaPct != null && Number.isFinite(deltaPct)) {
+    const flat = Math.abs(deltaPct) < 0.005;
+    const cls = flat ? "flat" : (deltaPct > 0 ? "up" : "down");
+    const arrow = flat ? "" : (deltaPct > 0 ? "▲ " : "▼ ");
+    delta = ` <span class="badge-delta ${cls}" title="change vs yesterday">${arrow}${Math.abs(deltaPct).toFixed(2)}%</span>`;
+  }
+  el.innerHTML = `<span class="badge-label">${text}</span>${delta}`;
+}
+
+function dayDelta(now, prev) {
+  return (Number.isFinite(now) && Number.isFinite(prev) && prev !== 0) ? ((now - prev) / prev) * 100 : null;
+}
+
+// Render all three rate badges: source-linked label + day-over-day % change.
+function renderRateBadges() {
+  const R = DATA.RATES;
+  setRateBadge("live-rate", pct(R.baseRateNow) + " base rate",
+    "Bank of England base rate · " + R.baseRateAsOf + " — click for source", dayDelta(R.baseRateNow, R.baseRatePrev));
+  setRateBadge("live-remo", pct(R.remortgage70Now) + " remortgage",
+    "Average 2-year fixed remortgage at ~70% LTV · " + R.remortgage70AsOf + " — click for source", dayDelta(R.remortgage70Now, R.remortgage70Prev));
+  if (R.swap2yrNow != null) setRateBadge("live-swap", pct(R.swap2yrNow) + " 2yr swap",
+    "2-year GBP interest-rate swap (SONIA) · " + R.swap2yrAsOf + " — click for source", dayDelta(R.swap2yrNow, R.swap2yrPrev));
 }
 
 // ISO dates from any successful live fetch, folded into the "Latest item" line.
 let _liveDates = [];
 
 function renderHeader() {
-  const R = DATA.RATES;
-  setBadge("live-rate", pct(R.baseRateNow) + " base rate", "Bank of England base rate · " + R.baseRateAsOf + " — click for source");
-  setBadge("live-remo", pct(R.remortgage70Now) + " remortgage", "Average 2-year fixed remortgage at ~70% LTV · " + R.remortgage70AsOf + " — click for source");
-  if (R.swap2yrNow != null) setBadge("live-swap", pct(R.swap2yrNow) + " 2yr swap", "2-year GBP interest-rate swap (SONIA) · " + R.swap2yrAsOf + " — click for source");
+  renderRateBadges();
   const build = $("#build");
   if (build) build.textContent = "build " + (DATA.META.build || "—");
   renderFreshness();
@@ -434,7 +457,7 @@ function renderHeader() {
   refreshLiveRates();
 }
 
-// Live upgrade of the rate badges from the /api/rates Worker route (Bank of
+// Live upgrade of the rate values from the /api/rates Worker route (Bank of
 // England data). Purely additive: any missing value leaves its snapshot in place.
 async function refreshLiveRates() {
   try {
@@ -445,26 +468,12 @@ async function refreshLiveRates() {
     if (!res.ok) return;
     const d = await res.json();
     if (!d) return;
-    const src = d.source || "Bank of England";
     const seen = [];
-    if (d.live && Number.isFinite(d.baseRateNow)) {
-      DATA.RATES.baseRateNow = d.baseRateNow;
-      setBadge("live-rate", pct(d.baseRateNow) + " base rate",
-        "Bank of England base rate · " + (d.baseRateAsOf || "") + " (" + src + ") — click for source");
-      seen.push(boeToISO(d.baseRateAsOf));
-    }
-    if (d.remortgageLive && Number.isFinite(d.remortgage70Now)) {
-      DATA.RATES.remortgage70Now = d.remortgage70Now;
-      setBadge("live-remo", pct(d.remortgage70Now) + " remortgage",
-        "Average 2-year fixed remortgage at ~70% LTV · " + (d.remortgage70AsOf || "") + " (" + src + ", interpolated 60/75% LTV) — click for source");
-      seen.push(boeToISO(d.remortgage70AsOf));
-    }
-    if (d.swapLive && Number.isFinite(d.swap2yrNow)) {
-      DATA.RATES.swap2yrNow = d.swap2yrNow;
-      setBadge("live-swap", pct(d.swap2yrNow) + " 2yr swap", "2-year GBP interest-rate swap (SONIA) · " + (d.swap2yrAsOf || "") + " — click for source");
-      seen.push(boeToISO(d.swap2yrAsOf));
-    }
+    if (d.live && Number.isFinite(d.baseRateNow)) { DATA.RATES.baseRateNow = d.baseRateNow; if (d.baseRateAsOf) DATA.RATES.baseRateAsOf = d.baseRateAsOf; if (Number.isFinite(d.baseRatePrev)) DATA.RATES.baseRatePrev = d.baseRatePrev; seen.push(boeToISO(d.baseRateAsOf)); }
+    if (d.remortgageLive && Number.isFinite(d.remortgage70Now)) { DATA.RATES.remortgage70Now = d.remortgage70Now; if (d.remortgage70AsOf) DATA.RATES.remortgage70AsOf = d.remortgage70AsOf; if (Number.isFinite(d.remortgage70Prev)) DATA.RATES.remortgage70Prev = d.remortgage70Prev; seen.push(boeToISO(d.remortgage70AsOf)); }
+    if (d.swapLive && Number.isFinite(d.swap2yrNow)) { DATA.RATES.swap2yrNow = d.swap2yrNow; if (d.swap2yrAsOf) DATA.RATES.swap2yrAsOf = d.swap2yrAsOf; if (Number.isFinite(d.swap2yrPrev)) DATA.RATES.swap2yrPrev = d.swap2yrPrev; seen.push(boeToISO(d.swap2yrAsOf)); }
     _liveDates = seen.filter(Boolean);
+    renderRateBadges();
     renderFreshness();
   } catch (_) { /* offline, blocked, or not deployed — keep the snapshot silently */ }
 }
