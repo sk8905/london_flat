@@ -28,7 +28,7 @@ material** throughout. Every assumption is editable live via sliders.
 - **Scenario controls** — sliders for forecast scenario, remortgage rate, current value and
   per-year growth that recompute everything instantly.
 
-All data is a curated snapshot gathered **30 June 2026** (sources linked in-app). The Bank
+All data is a curated snapshot gathered **10 July 2026** (sources linked in-app). The Bank
 of England base-rate badge attempts a **live refresh** via a Cloudflare Pages Function.
 
 ## How the model works
