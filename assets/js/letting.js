@@ -14,7 +14,7 @@
 import {
   monthlyPayment, balanceAfter, monthsBetween, valueMultiplier, sellingCosts,
   ymIndex, ymToISO,
-} from "./finance.js?v=37";
+} from "./finance.js?v=38";
 
 // Build a month-by-month mortgage schedule from `fromISO` to `toISO`, handling the
 // switch from the residential fix to the post-fix (let/BTL) rate at fixEndDate.
