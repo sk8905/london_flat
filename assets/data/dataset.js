@@ -9,8 +9,8 @@
 // =============================================================================
 
 export const META = {
-  asOf: "2026-06-30",
-  build: "v37 · 2026-07-01", // bump on each change so the footer confirms the live build
+  asOf: "2026-07-14",
+  build: "v38 · 2026-07-14", // bump on each change so the footer confirms the live build
   currency: "GBP",
   disclaimer:
     "This tool is an informational model, not financial, tax, mortgage or legal advice. " +
@@ -31,6 +31,16 @@ export const SOURCES = {
     label: "UK House Price Index for March 2026",
     url: "https://www.gov.uk/government/news/uk-house-price-index-for-march-2026",
     publisher: "GOV.UK",
+  },
+  hpiApr2026: {
+    label: "UK House Price Index for April 2026",
+    url: "https://www.gov.uk/government/news/uk-house-price-index-for-april-2026",
+    publisher: "GOV.UK",
+  },
+  moneyfactsJul2026: {
+    label: "Moneyfacts — average 2yr/5yr fixed mortgage rates, July 2026",
+    url: "https://www.mortgagesolutions.co.uk/mortgage-news/2026/07/13/mortgage-rates-see-sharpest-decline-in-nearly-two-years-moneyfacts/",
+    publisher: "Moneyfacts (via Mortgage Solutions)",
   },
   onsIslington: {
     label: "ONS — Housing prices in Islington (local area)",
@@ -207,8 +217,10 @@ export const SELLING_COSTS = {
 export const PRICE_HISTORY = {
   source: "landRegistryHPI",
   note:
-    "Islington average price £673k (Mar 2025, revised) → £679k (Mar 2026), +0.9%. " +
-    "Islington FLATS were broadly flat over the year; London-wide -2.1%. Index is " +
+    "Islington average price £673k (Mar 2025, revised) → £665k (Apr 2026, latest release), -5.4% YoY. " +
+    "Islington FLATS fell further, -6.1% YoY; London-wide -2.1% YoY (ninth straight month of decline). " +
+    "The market turned down between the March and April readings — small-area HPI is noisy month to " +
+    "month and April's figure is provisional, so treat the size of the swing with caution. Index is " +
     "anchored to your purchase month so 100 = £890,000.",
   anchorDate: "2025-03-01",
   // {date, islingtonIndex, londonIndex} relative to Mar 2025 = 100
@@ -218,22 +230,27 @@ export const PRICE_HISTORY = {
     { date: "2025-09", islington: 99.4, london: 99.0 },
     { date: "2025-12", islington: 99.2, london: 98.4 },
     { date: "2026-03", islington: 99.3, london: 97.9 }, // Islington flats ~flat, London -2.1%
-    { date: "2026-06", islington: 99.0, london: 97.6 }, // provisional / estimate
+    { date: "2026-04", islington: 98.8, london: 97.8 }, // newest release (HM Land Registry, pub. 17 Jun 2026): Islington -5.4% YoY, London -2.1% YoY
   ],
 };
 
 // Islington context figures (for callouts).
 export const ISLINGTON_FACTS = {
-  source: "hpiMar2026",
+  source: "hpiApr2026",
   avgPriceMar2025: 673000,
-  avgPriceMar2026: 679000,
-  yoyPct: 0.9,
-  flatsYoY: 0.0,
+  avgPriceApr2025: 703000,
+  avgPriceMar2026: 674468, // revised down from the earlier 679,000 estimate
+  avgPriceApr2026: 665067, // latest release; -5.4% YoY
+  yoyPct: -5.4,
+  flatsYoY: -6.1,
+  // Not re-verified this cycle — carried over from the last confirmed reading.
   homeMoverAvgMar2026: 850000,
   homeMoverAvgMar2025: 833000,
   avgRentApr2026: 2811,
   avgRentApr2025: 2704,
-  rentYoYPct: 4.0,
+  avgRentMay2026: 2828,
+  avgRentMay2025: 2700,
+  rentYoYPct: 4.8,
 };
 
 // -----------------------------------------------------------------------------
@@ -241,7 +258,7 @@ export const ISLINGTON_FACTS = {
 // -----------------------------------------------------------------------------
 export const RATES = {
   source: "boeJune2026",
-  rateSource: "rightmoveRates",
+  rateSource: "moneyfactsJul2026",
   baseRateNow: 3.75, // BoE Bank Rate, held June 2026 (live-refreshable)
   baseRateAsOf: "2026-06-17",
   // 2-year GBP interest-rate swap (SONIA) — the wholesale rate UK lenders price
@@ -272,15 +289,16 @@ export const RATES = {
     { date: "2025-11", rate: 3.75 },
     { date: "2026-06", rate: 3.75 },
   ],
-  // Average market fixes, June 2026 (Rightmove/Moneyfacts-style averages)
-  avg2yrFix: 5.55,
-  avg5yrFix: 5.54,
+  // Average market fixes (Moneyfacts averages, via Mortgage Solutions)
+  avg2yrFix: 5.52,
+  avg5yrFix: 5.52,
   fix2yrSeries: [
     { date: "2025-09", rate: 5.05 },
     { date: "2025-12", rate: 5.20 },
     { date: "2026-03", rate: 5.78 }, // Middle East shock pushed swaps up
     { date: "2026-05", rate: 5.78 },
     { date: "2026-06", rate: 5.55 }, // easing back
+    { date: "2026-07", rate: 5.52 }, // sharpest monthly fall in ~2yrs per Moneyfacts (2yr & 5yr now level)
   ],
   yourRate: MORTGAGE.ratePct,
 };
