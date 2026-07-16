@@ -9,8 +9,8 @@
 // =============================================================================
 
 export const META = {
-  asOf: "2026-06-30",
-  build: "v37 · 2026-07-01", // bump on each change so the footer confirms the live build
+  asOf: "2026-07-16",
+  build: "v38 · 2026-07-16", // bump on each change so the footer confirms the live build
   currency: "GBP",
   disclaimer:
     "This tool is an informational model, not financial, tax, mortgage or legal advice. " +
@@ -27,9 +27,9 @@ export const SOURCES = {
     url: "https://landregistry.data.gov.uk/app/ukhpi/browse?from=2024-01-01&location=http%3A%2F%2Flandregistry.data.gov.uk%2Fid%2Fregion%2Fislington&to=2026-03-01",
     publisher: "HM Land Registry / ONS",
   },
-  hpiMar2026: {
-    label: "UK House Price Index for March 2026",
-    url: "https://www.gov.uk/government/news/uk-house-price-index-for-march-2026",
+  hpiApr2026: {
+    label: "UK House Price Index for April 2026",
+    url: "https://www.gov.uk/government/news/uk-house-price-index-for-april-2026",
     publisher: "GOV.UK",
   },
   onsIslington: {
@@ -132,18 +132,21 @@ export const PROPERTY = {
 // prices or agent forecasts). Used to value the flat by £/m² for its 91.45 m².
 // -----------------------------------------------------------------------------
 export const COMPARABLES = {
-  sources: ["soldPriceData", "hpiMar2026", "onsIslington"],
+  sources: ["soldPriceData", "hpiApr2026", "onsIslington"],
   asOf: "2026-04-11",
   note:
     "Actual SOLD prices, not asking prices or forecasts. Half of 1,923 N1 (Islington) Land " +
     "Registry sales completed at £8,350–£11,790/m² (interquartile range); the median is ~£10,000/m². " +
-    "N1 flats were broadly flat in value over the year to March 2026, and the N1 7TX postcode " +
-    "12-month average sold price was ~£1.07m. Your flat is a 2020-built 2-bed/2-bath of 91.45 m², " +
-    "which typically sits in the upper half of the range (new-build premium, maturing with age).",
+    "Islington FLATS fell 6.1% in value over the year to April 2026 (per HM Land Registry/ONS), a " +
+    "sharper drop than the borough's all-property average. The N1 7TX postcode 12-month average " +
+    "sold price is ~£575k — but N1 7TX is effectively a single building with unit sizes from 1- to " +
+    "3-bed, so this average swings a lot with the sales mix and isn't a like-for-like comp on its " +
+    "own. Your flat is a 2020-built 2-bed/2-bath of 91.45 m², which typically sits in the upper half " +
+    "of the £/m² range (new-build premium, maturing with age).",
   // N1 sold price per square metre (Land Registry-derived).
   perSqm: { low: 8350, median: 9900, high: 11790 },
   n1FlatAvg12m: 665438, // all N1 flats, all sizes — skewed small/older
-  n1_7txAvg12m: 1070000, // your postcode, last 12 months
+  n1_7txAvg12m: 575000, // your postcode, last 12 months — small-sample, mixed unit sizes
 };
 
 // -----------------------------------------------------------------------------
@@ -155,7 +158,7 @@ export const COMPARABLES = {
 // -----------------------------------------------------------------------------
 export const COMPS = {
   sources: ["soldPriceData", "zooplaN17tx", "onsIslington"],
-  asOf: "2026-06-30",
+  asOf: "2026-07-16",
   note:
     "Recent N1 two-bedroom flat sales — restricted to new-build and purpose-built apartments, the like-for-like " +
     "set for your 2020-built flat (period/warehouse conversions and maisonettes are excluded). Prices from HM Land " +
@@ -163,6 +166,8 @@ export const COMPS = {
   // lat/lng geocoded from each street's postcode (checkmypostcode / streetcheck /
   // doogal) — street-level, not exact door numbers.
   rows: [
+    { addr: "Mono Tower, Penn Street, N1 5", date: "2026-04", price: 842000, beds: 2, baths: 2, type: "Apartment — new build", sqm: 76, lat: 51.5364, lng: -0.0863 },
+    { addr: "Packington Square, N1 7", date: "2026-03", price: 745000, beds: 2, baths: 2, type: "Apartment — purpose-built", sqm: 93, lat: 51.5355, lng: -0.0954 },
     { addr: "Wenlock Road (Wharf), N1 7", date: "2026-03", price: 840000, beds: 2, baths: 2, type: "Apartment — new build", sqm: 80, lat: 51.5318, lng: -0.0947 },
     { addr: "Prebend Street, N1 8", date: "2026-02", price: 660000, beds: 2, baths: 1, type: "Apartment — purpose-built", sqm: 70, lat: 51.5365, lng: -0.0961 },
     { addr: "City Wharf, Wharf Road, N1 7", date: "2026-01", price: 870000, beds: 2, baths: 2, type: "Apartment — new build", sqm: 83, lat: 51.5328, lng: -0.0966 },
@@ -207,9 +212,10 @@ export const SELLING_COSTS = {
 export const PRICE_HISTORY = {
   source: "landRegistryHPI",
   note:
-    "Islington average price £673k (Mar 2025, revised) → £679k (Mar 2026), +0.9%. " +
-    "Islington FLATS were broadly flat over the year; London-wide -2.1%. Index is " +
-    "anchored to your purchase month so 100 = £890,000.",
+    "Islington FLATS (the segment closest to your flat) fell 6.1% over the year to April 2026, per " +
+    "HM Land Registry/ONS — a sharp downgrade from the ~flat reading in the March release. " +
+    "Islington's all-property average price fell too: £703k (Apr 2025, revised) → £665k (Apr 2026), " +
+    "-5.4%. London-wide -2.1%. Index is anchored to your purchase month so 100 = £890,000.",
   anchorDate: "2025-03-01",
   // {date, islingtonIndex, londonIndex} relative to Mar 2025 = 100
   series: [
@@ -218,22 +224,22 @@ export const PRICE_HISTORY = {
     { date: "2025-09", islington: 99.4, london: 99.0 },
     { date: "2025-12", islington: 99.2, london: 98.4 },
     { date: "2026-03", islington: 99.3, london: 97.9 }, // Islington flats ~flat, London -2.1%
-    { date: "2026-06", islington: 99.0, london: 97.6 }, // provisional / estimate
+    { date: "2026-04", islington: 93.9, london: 97.9 }, // Islington flats -6.1% YoY, London -2.1% (unchanged)
   ],
 };
 
 // Islington context figures (for callouts).
 export const ISLINGTON_FACTS = {
-  source: "hpiMar2026",
-  avgPriceMar2025: 673000,
-  avgPriceMar2026: 679000,
-  yoyPct: 0.9,
-  flatsYoY: 0.0,
-  homeMoverAvgMar2026: 850000,
-  homeMoverAvgMar2025: 833000,
-  avgRentApr2026: 2811,
-  avgRentApr2025: 2704,
-  rentYoYPct: 4.0,
+  source: "hpiApr2026",
+  avgPriceApr2025: 702724,
+  avgPriceApr2026: 665067,
+  yoyPct: -5.4,
+  flatsYoY: -6.1, // Islington flat/maisonette average, year to Apr 2026 (£553k)
+  homeMoverAvgApr2026: 831000,
+  homeMoverAvgApr2025: 872000,
+  avgRentMay2026: 2828,
+  avgRentMay2025: 2700,
+  rentYoYPct: 4.8,
 };
 
 // -----------------------------------------------------------------------------
@@ -247,8 +253,8 @@ export const RATES = {
   // 2-year GBP interest-rate swap (SONIA) — the wholesale rate UK lenders price
   // fixed-rate mortgages and real-estate lending off. Sits above Bank Rate when
   // the market expects cuts to be slow; the key driver of fixed mortgage pricing.
-  swap2yrNow: 4.06,
-  swap2yrAsOf: "2026-06-26",
+  swap2yrNow: 4.15,
+  swap2yrAsOf: "2026-07-15",
   // Current average 2-year fixed REMORTGAGE rate at ~70% LTV (the band that fits
   // this flat). Live-refreshed from Bank of England quoted mortgage rates,
   // interpolated between the published 60% and 75% LTV series. Snapshot fallback:
@@ -259,7 +265,7 @@ export const RATES = {
   // the Worker also supplies the prior day's figure for the live series.
   baseRatePrev: 3.75,
   remortgage70Prev: 5.02,
-  swap2yrPrev: 4.09,
+  swap2yrPrev: 4.23, // ~prior day (MFB), so the badge's day-over-day % change stays meaningful
   cpiPct: 2.8, // CPI to May 2026
   nextDecision: "2026-07-30",
   // Bank Rate path (history + light forward estimate)
@@ -272,15 +278,16 @@ export const RATES = {
     { date: "2025-11", rate: 3.75 },
     { date: "2026-06", rate: 3.75 },
   ],
-  // Average market fixes, June 2026 (Rightmove/Moneyfacts-style averages)
-  avg2yrFix: 5.55,
-  avg5yrFix: 5.54,
+  // Average market fixes, July 2026 (Moneyfacts averages)
+  avg2yrFix: 5.52,
+  avg5yrFix: 5.52,
   fix2yrSeries: [
     { date: "2025-09", rate: 5.05 },
     { date: "2025-12", rate: 5.20 },
     { date: "2026-03", rate: 5.78 }, // Middle East shock pushed swaps up
     { date: "2026-05", rate: 5.78 },
     { date: "2026-06", rate: 5.55 }, // easing back
+    { date: "2026-07", rate: 5.52 }, // 2yr/5yr fixes now roughly level
   ],
   yourRate: MORTGAGE.ratePct,
 };
@@ -294,7 +301,7 @@ export const FORECAST = {
   note:
     "Consensus: a soft 2026 (Savills revised to -2%) then recovery from 2027 " +
     "(Knight Frank +3% 2027, +4% 2028; Savills +4% then +5%). London lags the UK " +
-    "near-term but Knight Frank models ~13.6% cumulative London growth 2026–2030.",
+    "near-term but Savills models ~13.6% cumulative London growth 2026–2030.",
   // Annual growth (%) applied from each calendar year.
   scenarios: {
     pessimistic: { 2026: -4.0, 2027: 0.0, 2028: 1.5, 2029: 2.5 },
@@ -309,15 +316,15 @@ export const FORECAST = {
 // Defaults are sourced; all are editable in the UI. Income tax matters a lot here.
 // -----------------------------------------------------------------------------
 export const LETTING = {
-  sources: ["hpiMar2026", "budgetZoopla", "cgtRates"],
+  sources: ["hpiApr2026", "budgetZoopla", "cgtRates"],
   note:
-    "Islington average private rent was £2,811/mo in April 2026 (+4.0% YoY). Section 24 " +
+    "Islington average private rent was £2,828/mo in May 2026 (+4.8% YoY). Section 24 " +
     "means mortgage interest is NOT a deductible expense for individual landlords — instead " +
     "you get a 20% tax credit on the interest. From April 2027 the Budget raised property- " +
     "income tax rates by 2 points (to 22/42/47%). Letting your former home also erodes " +
     "Private Residence Relief, so part of the eventual gain becomes liable to CGT.",
-  monthlyRent: 2811, // Islington average (Apr 2026); editable for your specific flat
-  rentGrowthPct: 4.0, // annual; Islington rent YoY to Apr 2026
+  monthlyRent: 2828, // Islington average (May 2026); editable for your specific flat
+  rentGrowthPct: 4.8, // annual; Islington rent YoY to May 2026
   voidMonthsPerYear: 1, // assume ~1 month vacant per year
   agentFeePct: 10, // full-management letting agent fee (% of rent), excl VAT
   agentVatPct: 20,
