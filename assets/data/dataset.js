@@ -9,8 +9,8 @@
 // =============================================================================
 
 export const META = {
-  asOf: "2026-06-30",
-  build: "v37 · 2026-07-01", // bump on each change so the footer confirms the live build
+  asOf: "2026-07-18",
+  build: "v38 · 2026-07-18", // bump on each change so the footer confirms the live build
   currency: "GBP",
   disclaimer:
     "This tool is an informational model, not financial, tax, mortgage or legal advice. " +
@@ -24,12 +24,12 @@ export const META = {
 export const SOURCES = {
   landRegistryHPI: {
     label: "HM Land Registry — UK House Price Index (Islington)",
-    url: "https://landregistry.data.gov.uk/app/ukhpi/browse?from=2024-01-01&location=http%3A%2F%2Flandregistry.data.gov.uk%2Fid%2Fregion%2Fislington&to=2026-03-01",
+    url: "https://landregistry.data.gov.uk/app/ukhpi/browse?from=2024-01-01&location=http%3A%2F%2Flandregistry.data.gov.uk%2Fid%2Fregion%2Fislington&to=2026-04-01",
     publisher: "HM Land Registry / ONS",
   },
-  hpiMar2026: {
-    label: "UK House Price Index for March 2026",
-    url: "https://www.gov.uk/government/news/uk-house-price-index-for-march-2026",
+  hpiApr2026: {
+    label: "UK House Price Index for April 2026",
+    url: "https://www.gov.uk/government/news/uk-house-price-index-for-april-2026",
     publisher: "GOV.UK",
   },
   onsIslington: {
@@ -63,7 +63,7 @@ export const SOURCES = {
     publisher: "Knight Frank Research",
   },
   zooplaHPI: {
-    label: "Zoopla — House Price Index (May 2026)",
+    label: "Zoopla — House Price Index (June 2026)",
     url: "https://www.zoopla.co.uk/discover/property-news/house-price-index/",
     publisher: "Zoopla",
   },
@@ -107,6 +107,16 @@ export const SOURCES = {
     url: "https://www.zoopla.co.uk/house-prices/n1-7tx/",
     publisher: "Zoopla",
   },
+  mansionTaxConsultation: {
+    label: "HM Treasury — High Value Council Tax Surcharge consultation (May–Jul 2026)",
+    url: "https://www.gov.uk/government/consultations/high-value-council-tax-surcharge/high-value-council-tax-surcharge",
+    publisher: "HM Treasury",
+  },
+  onsPrivateRent: {
+    label: "ONS — Private rent and house prices, UK: June 2026 (rents to May 2026)",
+    url: "https://www.ons.gov.uk/economy/inflationandpriceindices/bulletins/privaterentandhousepricesuk/june2026",
+    publisher: "Office for National Statistics",
+  },
 };
 
 // -----------------------------------------------------------------------------
@@ -132,18 +142,23 @@ export const PROPERTY = {
 // prices or agent forecasts). Used to value the flat by £/m² for its 91.45 m².
 // -----------------------------------------------------------------------------
 export const COMPARABLES = {
-  sources: ["soldPriceData", "hpiMar2026", "onsIslington"],
-  asOf: "2026-04-11",
+  sources: ["soldPriceData", "hpiApr2026", "onsIslington", "zooplaN17tx"],
+  asOf: "2026-07-18",
   note:
     "Actual SOLD prices, not asking prices or forecasts. Half of 1,923 N1 (Islington) Land " +
-    "Registry sales completed at £8,350–£11,790/m² (interquartile range); the median is ~£10,000/m². " +
-    "N1 flats were broadly flat in value over the year to March 2026, and the N1 7TX postcode " +
-    "12-month average sold price was ~£1.07m. Your flat is a 2020-built 2-bed/2-bath of 91.45 m², " +
-    "which typically sits in the upper half of the range (new-build premium, maturing with age).",
+    "Registry sales completed at £8,350–£11,790/m² (interquartile range); the median is ~£10,000/m² " +
+    "(£/m² distribution unchanged since its 11 Apr 2026 calculation — no fresher recalculation " +
+    "published yet). Islington flats fell 6.1% over the year to April 2026 (see PRICE_HISTORY). " +
+    "The N1 7TX postcode 12-month average sold price is now ~£575k per Zoopla's live tracker — a " +
+    "sharp drop from the ~£1.07m read in April, most likely a small-sample mix-shift (only ~36 " +
+    "sold-price records for this postcode) toward smaller flats rather than a genuine repricing; " +
+    "treat with caution and prefer the £/m² and COMPS rows below for like-for-like valuation. Your " +
+    "flat is a 2020-built 2-bed/2-bath of 91.45 m², which typically sits in the upper half of the " +
+    "£/m² range (new-build premium, maturing with age).",
   // N1 sold price per square metre (Land Registry-derived).
   perSqm: { low: 8350, median: 9900, high: 11790 },
   n1FlatAvg12m: 665438, // all N1 flats, all sizes — skewed small/older
-  n1_7txAvg12m: 1070000, // your postcode, last 12 months
+  n1_7txAvg12m: 575000, // your postcode, last 12 months (Zoopla, live — small sample, volatile)
 };
 
 // -----------------------------------------------------------------------------
@@ -155,7 +170,7 @@ export const COMPARABLES = {
 // -----------------------------------------------------------------------------
 export const COMPS = {
   sources: ["soldPriceData", "zooplaN17tx", "onsIslington"],
-  asOf: "2026-06-30",
+  asOf: "2026-07-18",
   note:
     "Recent N1 two-bedroom flat sales — restricted to new-build and purpose-built apartments, the like-for-like " +
     "set for your 2020-built flat (period/warehouse conversions and maisonettes are excluded). Prices from HM Land " +
@@ -163,6 +178,9 @@ export const COMPS = {
   // lat/lng geocoded from each street's postcode (checkmypostcode / streetcheck /
   // doogal) — street-level, not exact door numbers.
   rows: [
+    { addr: "Flat 105, Bracklyn Court, Wimbourne Street, N1 7ES", date: "2026-05", price: 420000, beds: 2, baths: 1, type: "Apartment — purpose-built", sqm: 65, lat: 51.533668, lng: -0.090358 },
+    { addr: "Flat 58, Mono Tower, Penn Street, N1 5FD", date: "2026-04", price: 842000, beds: 2, baths: 2, type: "Apartment — new build", sqm: 78, lat: 51.536443, lng: -0.086291 },
+    { addr: "Flat 2, Duo Tower, Penn Street, N1 5FF", date: "2026-04", price: 765000, beds: 2, baths: 2, type: "Apartment — new build", sqm: 75, lat: 51.536316, lng: -0.08569 },
     { addr: "Wenlock Road (Wharf), N1 7", date: "2026-03", price: 840000, beds: 2, baths: 2, type: "Apartment — new build", sqm: 80, lat: 51.5318, lng: -0.0947 },
     { addr: "Prebend Street, N1 8", date: "2026-02", price: 660000, beds: 2, baths: 1, type: "Apartment — purpose-built", sqm: 70, lat: 51.5365, lng: -0.0961 },
     { addr: "City Wharf, Wharf Road, N1 7", date: "2026-01", price: 870000, beds: 2, baths: 2, type: "Apartment — new build", sqm: 83, lat: 51.5328, lng: -0.0966 },
@@ -200,40 +218,46 @@ export const SELLING_COSTS = {
 
 // -----------------------------------------------------------------------------
 // Price history — index anchored to the purchase (Mar 2025 = 100).
-// Built from Land Registry Islington series + London-wide trend. Islington FLATS
-// were roughly flat year-to-March-2026 while London-wide fell ~2%; we lean to the
-// flat-specific signal but keep London softness visible.
+// Built from Land Registry Islington series + London-wide trend, re-pulled from
+// the raw UKHPI linked-data API (not the smoothed browse UI) so figures tie out
+// exactly to the published index. Islington FLATS fell 6.1% year-to-April-2026
+// while London-wide fell 2.1%; earlier months are restated from this refresh
+// because Land Registry revises recent months as more sales register — the
+// Mar-2026 point in particular moved from an earlier provisional read.
 // -----------------------------------------------------------------------------
 export const PRICE_HISTORY = {
   source: "landRegistryHPI",
   note:
-    "Islington average price £673k (Mar 2025, revised) → £679k (Mar 2026), +0.9%. " +
-    "Islington FLATS were broadly flat over the year; London-wide -2.1%. Index is " +
-    "anchored to your purchase month so 100 = £890,000.",
+    "Islington average price £703k (Apr 2025) → £665k (Apr 2026), -5.4%. " +
+    "Islington FLATS fell 6.1% over the year; London-wide -2.1%. Land Registry " +
+    "revises recent months upward/downward as more sales register, so this series " +
+    "is restated from the raw UKHPI API each refresh rather than incrementally " +
+    "patched. Index is anchored to your purchase month so 100 = £890,000.",
   anchorDate: "2025-03-01",
-  // {date, islingtonIndex, londonIndex} relative to Mar 2025 = 100
+  // {date, islingtonIndex, londonIndex} relative to Mar 2025 = 100, derived from
+  // the official (non-seasonally-adjusted) UKHPI housePriceIndex for each region.
   series: [
     { date: "2025-03", islington: 100.0, london: 100.0 },
-    { date: "2025-06", islington: 99.7, london: 99.4 },
-    { date: "2025-09", islington: 99.4, london: 99.0 },
-    { date: "2025-12", islington: 99.2, london: 98.4 },
-    { date: "2026-03", islington: 99.3, london: 97.9 }, // Islington flats ~flat, London -2.1%
-    { date: "2026-06", islington: 99.0, london: 97.6 }, // provisional / estimate
+    { date: "2025-06", islington: 108.2, london: 102.4 },
+    { date: "2025-09", islington: 104.4, london: 101.6 },
+    { date: "2025-12", islington: 103.5, london: 99.0 },
+    { date: "2026-03", islington: 100.1, london: 97.9 },
+    { date: "2026-04", islington: 98.7, london: 99.8 }, // newest release; Islington flats -6.1% YoY
   ],
 };
 
 // Islington context figures (for callouts).
 export const ISLINGTON_FACTS = {
-  source: "hpiMar2026",
-  avgPriceMar2025: 673000,
-  avgPriceMar2026: 679000,
-  yoyPct: 0.9,
-  flatsYoY: 0.0,
-  homeMoverAvgMar2026: 850000,
-  homeMoverAvgMar2025: 833000,
-  avgRentApr2026: 2811,
-  avgRentApr2025: 2704,
-  rentYoYPct: 4.0,
+  source: "hpiApr2026",
+  avgPriceApr2025: 702724,
+  avgPriceApr2026: 665067,
+  yoyPct: -5.4,
+  flatsYoY: -6.1,
+  homeMoverAvgApr2026: 830857,
+  homeMoverAvgApr2025: 871758,
+  avgRentMay2026: 2828,
+  avgRentMay2025: 2699,
+  rentYoYPct: 4.8,
 };
 
 // -----------------------------------------------------------------------------
@@ -247,13 +271,13 @@ export const RATES = {
   // 2-year GBP interest-rate swap (SONIA) — the wholesale rate UK lenders price
   // fixed-rate mortgages and real-estate lending off. Sits above Bank Rate when
   // the market expects cuts to be slow; the key driver of fixed mortgage pricing.
-  swap2yrNow: 4.06,
-  swap2yrAsOf: "2026-06-26",
+  swap2yrNow: 4.14,
+  swap2yrAsOf: "2026-07-17",
   // Current average 2-year fixed REMORTGAGE rate at ~70% LTV (the band that fits
   // this flat). Live-refreshed from Bank of England quoted mortgage rates,
   // interpolated between the published 60% and 75% LTV series. Snapshot fallback:
-  remortgage70Now: 5.02,
-  remortgage70AsOf: "2026-06",
+  remortgage70Now: 4.89,
+  remortgage70AsOf: "2026-07",
   // Previous CALENDAR-DAY values, so each badge can show a day-over-day % change.
   // The daily 08:00 routine rolls "*Now" into "*Prev" before writing the new value;
   // the Worker also supplies the prior day's figure for the live series.
@@ -272,15 +296,16 @@ export const RATES = {
     { date: "2025-11", rate: 3.75 },
     { date: "2026-06", rate: 3.75 },
   ],
-  // Average market fixes, June 2026 (Rightmove/Moneyfacts-style averages)
-  avg2yrFix: 5.55,
-  avg5yrFix: 5.54,
+  // Average market fixes, July 2026 (Rightmove — averages across ~95% of the market)
+  avg2yrFix: 4.96,
+  avg5yrFix: 4.95,
   fix2yrSeries: [
     { date: "2025-09", rate: 5.05 },
     { date: "2025-12", rate: 5.20 },
     { date: "2026-03", rate: 5.78 }, // Middle East shock pushed swaps up
     { date: "2026-05", rate: 5.78 },
     { date: "2026-06", rate: 5.55 }, // easing back
+    { date: "2026-07", rate: 4.96 }, // continued easing
   ],
   yourRate: MORTGAGE.ratePct,
 };
@@ -309,15 +334,15 @@ export const FORECAST = {
 // Defaults are sourced; all are editable in the UI. Income tax matters a lot here.
 // -----------------------------------------------------------------------------
 export const LETTING = {
-  sources: ["hpiMar2026", "budgetZoopla", "cgtRates"],
+  sources: ["onsPrivateRent", "budgetZoopla", "cgtRates"],
   note:
-    "Islington average private rent was £2,811/mo in April 2026 (+4.0% YoY). Section 24 " +
+    "Islington average private rent was £2,828/mo in May 2026 (+4.8% YoY). Section 24 " +
     "means mortgage interest is NOT a deductible expense for individual landlords — instead " +
     "you get a 20% tax credit on the interest. From April 2027 the Budget raised property- " +
     "income tax rates by 2 points (to 22/42/47%). Letting your former home also erodes " +
     "Private Residence Relief, so part of the eventual gain becomes liable to CGT.",
-  monthlyRent: 2811, // Islington average (Apr 2026); editable for your specific flat
-  rentGrowthPct: 4.0, // annual; Islington rent YoY to Apr 2026
+  monthlyRent: 2828, // Islington average (May 2026); editable for your specific flat
+  rentGrowthPct: 4.8, // annual; Islington rent YoY to May 2026
   voidMonthsPerYear: 1, // assume ~1 month vacant per year
   agentFeePct: 10, // full-management letting agent fee (% of rent), excl VAT
   agentVatPct: 20,
@@ -366,7 +391,10 @@ export const POLICY_FACTORS = [
     summary:
       "From April 2028, an annual surcharge (£2,500–£7,500) applies to homes valued over £2m. " +
       "Your flat (~£0.89m) is well below the threshold, so it is unaffected — but the policy " +
-      "cools demand at the very top of the London market, which can ripple down over time.",
+      "cools demand at the very top of the London market, which can ripple down over time. HM " +
+      "Treasury ran a consultation (19 May–14 Jul 2026) on implementation detail, including a " +
+      "possible extra premium for non-UK-resident owners — the core £2m threshold and band " +
+      "structure are unchanged from the original announcement.",
     effective: "2028-04-01",
   },
   {
