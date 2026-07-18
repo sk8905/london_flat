@@ -20,11 +20,11 @@ const FALLBACK = {
   baseRateNow: 3.75,
   baseRateAsOf: "2026-06-17",
   baseRatePrev: 3.75,
-  swap2yrNow: 4.06,
-  swap2yrAsOf: "2026-06-26",
+  swap2yrNow: 4.14,
+  swap2yrAsOf: "2026-07-17",
   swap2yrPrev: 4.09,
-  remortgage70Now: 5.02,
-  remortgage70AsOf: "2026-06",
+  remortgage70Now: 4.89,
+  remortgage70AsOf: "2026-07",
   remortgage70Prev: 5.02,
 };
 
