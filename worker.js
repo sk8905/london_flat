@@ -20,21 +20,24 @@ const FALLBACK = {
   baseRateNow: 3.75,
   baseRateAsOf: "2026-06-17",
   baseRatePrev: 3.75,
-  swap2yrNow: 4.06,
-  swap2yrAsOf: "2026-06-26",
-  swap2yrPrev: 4.09,
-  remortgage70Now: 5.02,
+  swap2yrNow: 4.20,
+  swap2yrAsOf: "2026-07-20",
+  swap2yrPrev: 4.06,
+  remortgage70Now: 4.74,
   remortgage70AsOf: "2026-06",
-  remortgage70Prev: 5.02,
+  remortgage70Prev: 4.87,
 };
 
 // Bank of England Interactive Database (IADB) series we pull, all in one request:
 //   IUDBEDR — official Bank Rate (updates on MPC decisions)
-//   IUMBV37 — quoted 2-year fixed mortgage, 60% LTV (monthly)
+//   IUMZICQ — quoted 2-year fixed mortgage, 60% LTV (monthly)
 //   IUMBV34 — quoted 2-year fixed mortgage, 75% LTV (monthly)
 // The 70% LTV remortgage rate is linearly interpolated between the 60% and 75%
 // series. If a series returns nothing, we fall back to the snapshot for it.
-const SERIES = { base: "IUDBEDR", ltv60: "IUMBV37", ltv75: "IUMBV34" };
+// FIXED 2026-07-21: this previously used IUMBV37 for the 60% LTV leg, which is
+// actually a different product (not 2yr/60% LTV fixed) — it was silently
+// overstating remortgage70Now by ~0.3pp for as long as the Worker's been live.
+const SERIES = { base: "IUDBEDR", ltv60: "IUMZICQ", ltv75: "IUMBV34" };
 const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 const JSON_HEADERS = {
