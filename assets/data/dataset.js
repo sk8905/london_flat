@@ -9,8 +9,8 @@
 // =============================================================================
 
 export const META = {
-  asOf: "2026-06-30",
-  build: "v37 · 2026-07-01", // bump on each change so the footer confirms the live build
+  asOf: "2026-07-22",
+  build: "v38 · 2026-07-22", // bump on each change so the footer confirms the live build
   currency: "GBP",
   disclaimer:
     "This tool is an informational model, not financial, tax, mortgage or legal advice. " +
@@ -30,6 +30,11 @@ export const SOURCES = {
   hpiMar2026: {
     label: "UK House Price Index for March 2026",
     url: "https://www.gov.uk/government/news/uk-house-price-index-for-march-2026",
+    publisher: "GOV.UK",
+  },
+  hpiApr2026: {
+    label: "UK House Price Index for April 2026",
+    url: "https://www.gov.uk/government/news/uk-house-price-index-for-april-2026",
     publisher: "GOV.UK",
   },
   onsIslington: {
@@ -224,16 +229,19 @@ export const PRICE_HISTORY = {
 
 // Islington context figures (for callouts).
 export const ISLINGTON_FACTS = {
-  source: "hpiMar2026",
-  avgPriceMar2025: 673000,
-  avgPriceMar2026: 679000,
-  yoyPct: 0.9,
-  flatsYoY: 0.0,
-  homeMoverAvgMar2026: 850000,
-  homeMoverAvgMar2025: 833000,
-  avgRentApr2026: 2811,
-  avgRentApr2025: 2704,
-  rentYoYPct: 4.0,
+  source: "hpiApr2026",
+  // Newest UK HPI release (Apr 2026, published 17 Jun 2026) shows a reversal
+  // from the ~flat Mar-2026 reading: Islington average price down 5.4% YoY.
+  // The property-type (flats-only) split is not published below England level,
+  // so there is no Islington-specific flats YoY figure to carry forward.
+  avgPriceApr2025: 702724,
+  avgPriceApr2026: 665067,
+  yoyPct: -5.4,
+  homeMoverAvgApr2026: 831000,
+  homeMoverAvgApr2025: 872000,
+  avgRentMay2026: 2828,
+  avgRentMay2025: 2700,
+  rentYoYPct: 4.8,
 };
 
 // -----------------------------------------------------------------------------
@@ -309,15 +317,15 @@ export const FORECAST = {
 // Defaults are sourced; all are editable in the UI. Income tax matters a lot here.
 // -----------------------------------------------------------------------------
 export const LETTING = {
-  sources: ["hpiMar2026", "budgetZoopla", "cgtRates"],
+  sources: ["onsIslington", "budgetZoopla", "cgtRates"],
   note:
-    "Islington average private rent was £2,811/mo in April 2026 (+4.0% YoY). Section 24 " +
+    "Islington average private rent was £2,828/mo in May 2026 (+4.8% YoY). Section 24 " +
     "means mortgage interest is NOT a deductible expense for individual landlords — instead " +
     "you get a 20% tax credit on the interest. From April 2027 the Budget raised property- " +
     "income tax rates by 2 points (to 22/42/47%). Letting your former home also erodes " +
     "Private Residence Relief, so part of the eventual gain becomes liable to CGT.",
-  monthlyRent: 2811, // Islington average (Apr 2026); editable for your specific flat
-  rentGrowthPct: 4.0, // annual; Islington rent YoY to Apr 2026
+  monthlyRent: 2828, // Islington average (May 2026); editable for your specific flat
+  rentGrowthPct: 4.8, // annual; Islington rent YoY to May 2026
   voidMonthsPerYear: 1, // assume ~1 month vacant per year
   agentFeePct: 10, // full-management letting agent fee (% of rent), excl VAT
   agentVatPct: 20,
