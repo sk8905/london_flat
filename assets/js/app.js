@@ -2,13 +2,13 @@
 // app.js  —  Entry point: load data, run model, render the single page, wire UI
 // =============================================================================
 
-import * as DATA from "../data/dataset.js?v=38";
-import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=38";
-import * as C from "./charts.js?v=38";
-import { monthlyPayment, monthsBetween, ymIndex, ymToISO, breakEvenRecoupAll, interestPaidToDate } from "./finance.js?v=38";
-import { rentVsSell } from "./letting.js?v=38";
-import { rentVsBuy } from "./ownrent.js?v=38";
-import * as MKT from "./market.js?v=38";
+import * as DATA from "../data/dataset.js?v=42";
+import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=42";
+import * as C from "./charts.js?v=42";
+import { monthlyPayment, monthsBetween, ymIndex, ymToISO, breakEvenRecoupAll, interestPaidToDate } from "./finance.js?v=42";
+import { rentVsSell } from "./letting.js?v=42";
+import { rentVsBuy } from "./ownrent.js?v=42";
+import * as MKT from "./market.js?v=42";
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const gbp = (n) => (n < 0 ? "−" : "") + "£" + Math.abs(Math.round(n)).toLocaleString("en-GB");
@@ -183,12 +183,8 @@ window.addEventListener("unhandledrejection", (e) => {
 });
 
 const PAGE_META = {
-  dashboard: ["Dashboard", "Your at-a-glance summary"],
-  localmarket: ["Local market", "Listings & sales within 1 km — DOM, asking, £/m², HPI & forecasts"],
-  finances: ["Our finances", "What we paid, the mortgage cost, and the recoup-all break-even"],
-  rentbuy: ["Rent vs buy", "Own this flat, or rent the equivalent nearby?"],
-  signal: ["When to sell", "The weighted timing score across windows and factors"],
-  selllet: ["Sell vs let", "Keep and rent it out, or sell now?"],
+  localmarket: ["Local market", "Sales & listings within 1 km — DOM, asking, £/m², HPI & forecasts"],
+  finances: ["Our finances", "What we paid, and whether to sell, rent or hold"],
   inputs: ["Inputs", "Your figures, forecast assumptions & methodology"],
 };
 
@@ -413,16 +409,10 @@ function scheduleLetting() {
 function rerender() {
   const result = runModel(effectiveData(), currentOverrides());
   window.__model = result; // handy for inspection
-  renderVerdict(result);
-  renderDashboard(result);
   renderPaid(result);
   renderBreakEven(result);
-  renderSignal(result);
   renderProceeds(result);
-  renderForecastChart(result);
-  renderFactorCharts(result);
   renderLocalMarket(result);
-  renderFactorScores(result);
   renderLetting(result);
   renderRentBuy(result);
 }

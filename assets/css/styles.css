@@ -39,7 +39,7 @@ html { scroll-behavior: smooth; }
 body {
   margin: 0; background: var(--bg); color: var(--ink);
   font-family: var(--font); line-height: 1.55; -webkit-font-smoothing: antialiased;
-  font-size: 15px; font-feature-settings: "tnum" 1;
+  font-size: 13.5px; font-feature-settings: "tnum" 1;
 }
 a { color: var(--brand); text-decoration: none; }
 a:hover { text-decoration: underline; }
@@ -122,8 +122,8 @@ h1, h2, h3 { letter-spacing: -0.005em; }
 /* ---------- content ---------- */
 .content { padding: 26px 26px 44px; }
 .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 22px; padding-bottom: 16px; border-bottom: 1px solid var(--line); }
-.page-title { margin: 0; font-size: 22px; }
-.page-sub { font-size: 13.5px; color: var(--muted); margin-top: 3px; }
+.page-title { margin: 0; font-size: 19px; }
+.page-sub { font-size: 12.5px; color: var(--muted); margin-top: 3px; }
 .topbar-right { display: flex; gap: 8px; align-items: center; flex: 0 0 auto; flex-wrap: wrap; justify-content: flex-end; }
 .badge {
   font-size: 12.5px; font-weight: 600; padding: 6px 12px; border-radius: 999px; white-space: nowrap;
@@ -148,9 +148,9 @@ a.badge:hover { text-decoration: none; border-color: var(--brand); color: var(--
   background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
   box-shadow: var(--shadow); padding: 26px; margin-bottom: 20px;
 }
-.panel h2 { margin: 0 0 6px; font-size: 18px; }
-.panel-h { margin: 0 0 14px; font-size: 15.5px; color: var(--ink); }
-.section-lead { color: var(--ink-soft); margin: 0 0 18px; max-width: none; font-size: 14.5px; }
+.panel h2 { margin: 0 0 6px; font-size: 16px; }
+.panel-h { margin: 0 0 12px; font-size: 14px; color: var(--ink); }
+.section-lead { color: var(--ink-soft); margin: 0 0 16px; max-width: none; font-size: 13px; }
 .muted { color: var(--muted); }
 .small { font-size: 12.5px; }
 .loading { color: var(--muted); padding: 16px 0; }
@@ -176,7 +176,7 @@ a.badge:hover { text-decoration: none; border-color: var(--brand); color: var(--
 .kpi::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--brand); }
 .kpi.pos::before { background: var(--pos); } .kpi.neg::before { background: var(--neg); } .kpi.gold::before { background: var(--accent); }
 .kpi-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; font-weight: 600; }
-.kpi-value { font-size: 22px; font-weight: 700; margin: 6px 0 3px; letter-spacing: -0.015em; color: var(--ink); }
+.kpi-value { font-size: 20px; font-weight: 700; margin: 6px 0 3px; letter-spacing: -0.015em; color: var(--ink); }
 .kpi.pos .kpi-value { color: var(--pos); } .kpi.neg .kpi-value { color: var(--neg); }
 .kpi-sub { font-size: 12.5px; color: var(--ink-soft); }
 
@@ -229,7 +229,7 @@ a.badge:hover { text-decoration: none; border-color: var(--brand); color: var(--
 /* ---------- charts ---------- */
 .chart-wrap { margin: 14px 0 4px; }
 .chart-svg { width: 100%; height: auto; display: block; margin: 0 auto; }
-.chart-cap { font-size: 12.5px; color: var(--muted); margin: 8px 2px 0; }
+.chart-cap { font-size: 11.5px; color: var(--muted); margin: 8px 2px 0; }
 .chart-legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 10px; font-size: 12.5px; color: var(--ink-soft); }
 .legend-item { display: inline-flex; align-items: center; gap: 6px; }
 .legend-swatch { width: 14px; height: 4px; border-radius: 2px; display: inline-block; }
@@ -278,7 +278,7 @@ a.badge:hover { text-decoration: none; border-color: var(--brand); color: var(--
 
 /* ---------- tables ---------- */
 .table-wrap { overflow-x: auto; margin-top: 6px; }
-.rank-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.rank-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
 .rank-table th, .rank-table td { text-align: left; padding: 11px 12px; border-bottom: 1px solid var(--line-soft); }
 .rank-table th { font-size: 11px; text-transform: uppercase; letter-spacing: .03em; color: var(--muted); font-weight: 700; }
 .rank-table td:nth-child(n+3), .rank-table th:nth-child(n+3) { text-align: right; font-variant-numeric: tabular-nums; }
