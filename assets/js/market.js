@@ -11,10 +11,18 @@
 // centroid via a haversine distance. Each row carries lat/lng so the map, the
 // £/m² scatter and the radius filter all read from the same records.
 //
-// Provenance: curated rows are snapshots from HM Land Registry sold prices, EPC
-// floor areas, Rightmove/Zoopla listing history and local development records.
-// They are clearly flagged `curated:true` so the UI can label them "pending the
-// live Homedata feed". Replace/augment them by populating `window.__HOMEDATA`.
+// Provenance: as of the 2026-07-24 pull, SALES, LISTINGS, RENT (current level +
+// listings) and HPI are LIVE (curated:false). SALES/LISTINGS come from the Homedata
+// Comparables endpoint seeded at the N1 7TX centroid and at Wharf Road (City Road
+// Basin) so both sides of the Islington/Hackney border are covered; sold prices are
+// HMLR-confirmed completions (spot-checked against HM Land Registry Price Paid Data)
+// and £/m² uses EPC-register floor areas. RENT current listings come from the
+// Homedata Live Listings feed, geocoded via postcodes.io. HPI is the official UK HPI
+// (HM Land Registry / ONS, 2026-05, provisional). Still curated & FLAGGED, not live:
+// LISTINGS_PER_MONTH (needs a historic-listing aggregation), NEW_BUILDS (planning
+// pipeline), FORECASTS (third-party analyst forecasts), and RENT's pre-2026-07 series
+// / yoYPct. `applyHomedata(payload)` merges a fresh same-shape payload and flips each
+// block's curated flag off; see the daily routine in the README.
 // =============================================================================
 
 // N1 7TX postcode centroid (City Road Basin / Wenlock, Islington).
@@ -98,31 +106,34 @@ export const MARKET_SOURCES = {
 //   • listedDate — first listed (YYYY-MM-DD); soldDate — completion/SSTC
 //   • sqm        — internal floor area (EPC register)
 // -----------------------------------------------------------------------------
+// LIVE (2026-07-24): completed 2-bed flat sales within 1 km, pulled from the
+// Homedata Comparables endpoint (PostGIS spatial, EPC-matched). Every `price` is
+// an HMLR-confirmed completion (is_complete=true); spot-checked against HM Land
+// Registry Price Paid Data (e.g. Gainsborough Studios West £865,000 / 2025-12-05
+// matches HMLR txid …4804A8C09F8E). `sqm` is the EPC-register floor area, so £/m²
+// is EPC-derived. `askingPrice` is omitted where Homedata held no listing price
+// (so vs-asking derives as null, not a false 0). lat/lng are the Homedata records.
 export const SALES = {
-  asOf: "2026-06-30",
-  curated: true,
+  asOf: "2026-07-24",
+  curated: false,
   sources: ["landRegPP", "epcRegister", "homedata"],
   rows: [
-    { addr: "Wenlock Road (The Wharf), N1 7", beds: 2, baths: 2, type: "New build", sqm: 80,
-      askingPrice: 850000, price: 840000, listedDate: "2025-11-14", soldDate: "2026-03-06", lat: 51.5318, lng: -0.0947 },
-    { addr: "City Wharf, Wharf Road, N1 7", beds: 2, baths: 2, type: "New build", sqm: 83,
-      askingPrice: 875000, price: 870000, listedDate: "2025-10-02", soldDate: "2026-01-20", lat: 51.5328, lng: -0.0966 },
-    { addr: "Micawber Street, N1 7", beds: 2, baths: 1, type: "Purpose-built", sqm: 68,
-      askingPrice: 640000, price: 618000, listedDate: "2025-09-08", soldDate: "2026-01-15", lat: 51.5311, lng: -0.0908 },
-    { addr: "250 City Road, N1 7", beds: 2, baths: 2, type: "New build", sqm: 77,
-      askingPrice: 810000, price: 820000, listedDate: "2025-01-30", soldDate: "2025-05-19", lat: 51.5289, lng: -0.0953 },
-    { addr: "Shepherdess Walk, N1 7", beds: 2, baths: 2, type: "New build", sqm: 79,
-      askingPrice: 799950, price: 792000, listedDate: "2026-01-11", soldDate: "2026-04-28", lat: 51.5323, lng: -0.0893 },
-    { addr: "Vincent Terrace (Regent's Canal), N1 8", beds: 2, baths: 1, type: "Period conversion", sqm: 72,
-      askingPrice: 725000, price: 700000, listedDate: "2025-08-20", soldDate: "2025-12-04", lat: 51.5338, lng: -0.0985 },
-    { addr: "Graham Street, N1 8", beds: 2, baths: 2, type: "Purpose-built", sqm: 74,
-      askingPrice: 720000, price: 705000, listedDate: "2025-12-01", soldDate: "2026-03-30", lat: 51.5320, lng: -0.0980 },
-    { addr: "Provost Street, N1 7", beds: 2, baths: 2, type: "New build", sqm: 81,
-      askingPrice: 815000, price: 815000, listedDate: "2026-02-09", soldDate: "2026-05-22", lat: 51.5301, lng: -0.0895 },
-    { addr: "Prebend Street, N1 8", beds: 2, baths: 1, type: "Purpose-built", sqm: 70,
-      askingPrice: 675000, price: 660000, listedDate: "2025-10-27", soldDate: "2026-02-16", lat: 51.5365, lng: -0.0961 },
-    { addr: "Colville Estate (Bridport Pl), N1 5", beds: 2, baths: 1, type: "Ex-local authority", sqm: 66,
-      askingPrice: 560000, price: 542000, listedDate: "2025-11-03", soldDate: "2026-03-11", lat: 51.5361, lng: -0.0836 },
+    { addr: "26 Gainsborough Studios West, Poole Street", beds: 2, baths: 2, type: "Purpose-built", sqm: 86,
+      askingPrice: 895000, price: 865000, listedDate: "2024-12-28", soldDate: "2025-12-05", lat: 51.53581, lng: -0.08911 },
+    { addr: "Flat 52 The Cooper Building, 36 Wharf Road", beds: 2, baths: 2, type: "New build", sqm: 67,
+      askingPrice: 720000, price: 670000, listedDate: "2025-01-17", soldDate: "2025-12-03", lat: 51.53143, lng: -0.09544 },
+    { addr: "Flat 25 Bracklyn Court, Wimbourne Street", beds: 2, baths: 1, type: "Purpose-built", sqm: 60,
+      askingPrice: 425000, price: 420000, listedDate: "2025-01-17", soldDate: "2025-05-30", lat: 51.53403, lng: -0.08938 },
+    { addr: "Flat 147 Bracklyn Court, Wimbourne Street", beds: 2, baths: 1, type: "Purpose-built", sqm: 83,
+      askingPrice: 425000, price: 425000, listedDate: "2024-08-30", soldDate: "2025-03-27", lat: 51.53473, lng: -0.08904 },
+    { addr: "30 Gainsborough Studios North, Poole Street", beds: 2, baths: 2, type: "Purpose-built", sqm: 79,
+      askingPrice: 725000, price: 710000, listedDate: "2024-10-31", soldDate: "2025-03-14", lat: 51.53612, lng: -0.08881 },
+    { addr: "Flat A, 225 New North Road", beds: 2, baths: 1, type: "Purpose-built", sqm: 75,
+      price: 911500, soldDate: "2024-12-13", lat: 51.53609, lng: -0.09008 },
+    { addr: "Flat 145 Bracklyn Court, Wimbourne Street", beds: 2, baths: 1, type: "Purpose-built", sqm: 60,
+      price: 418500, listedDate: "2024-06-07", soldDate: "2024-11-11", lat: 51.53473, lng: -0.08904 },
+    { addr: "Flat 512, 56 Wharf Road", beds: 2, baths: 1, type: "Purpose-built", sqm: 71,
+      price: 775000, listedDate: "2024-01-27", soldDate: "2024-08-16", lat: 51.53276, lng: -0.0966 },
   ],
 };
 
@@ -131,32 +142,50 @@ export const SALES = {
 // the UI show current time-on-market; `status` tracks the Homedata event chain
 // (Added / Reduced / Under Offer / Sold STC). All curated pending the live feed.
 // -----------------------------------------------------------------------------
+// LIVE (2026-07-24): currently-active 2-bed flat listings within 1 km, from the
+// Homedata Comparables feed (rows where is_complete=false and the latest listing
+// status is For sale / Under offer / Sold STC). `askingPrice` is the current
+// advertised price, `listedDate` the date the listing was first added (so the UI's
+// time-on-market is real), `sqm` the EPC floor area. Some rows carry old
+// `listedDate`s — genuinely stale stock still on the market, a real DOM signal.
 export const LISTINGS = {
-  asOf: "2026-06-30",
-  curated: true,
-  sources: ["rightmoveListings", "homedata"],
+  asOf: "2026-07-24",
+  curated: false,
+  sources: ["homedata", "rightmoveListings"],
   rows: [
-    { addr: "Wharf Road (City Wharf), N1 7", beds: 2, baths: 2, type: "New build", sqm: 82,
-      askingPrice: 865000, listedDate: "2026-05-06", status: "Added", lat: 51.5330, lng: -0.0963 },
-    { addr: "Underwood Street, N1 7", beds: 2, baths: 2, type: "New build", sqm: 78,
-      askingPrice: 810000, listedDate: "2026-04-18", status: "Reduced", lat: 51.5307, lng: -0.0901 },
-    { addr: "Nile Street, N1 7", beds: 2, baths: 1, type: "Purpose-built", sqm: 69,
-      askingPrice: 650000, listedDate: "2026-06-02", status: "Added", lat: 51.5299, lng: -0.0879 },
-    { addr: "Shepherdess Walk, N1 7", beds: 2, baths: 2, type: "New build", sqm: 80,
-      askingPrice: 825000, listedDate: "2026-03-21", status: "Under offer", lat: 51.5324, lng: -0.0890 },
-    { addr: "Wenlock Road, N1 7", beds: 2, baths: 2, type: "New build", sqm: 85,
-      askingPrice: 895000, listedDate: "2026-06-15", status: "Added", lat: 51.5316, lng: -0.0944 },
-    { addr: "Murray Grove, N1 7", beds: 2, baths: 2, type: "New build", sqm: 76,
-      askingPrice: 785000, listedDate: "2026-05-24", status: "Added", lat: 51.5310, lng: -0.0872 },
-    { addr: "Purcell Street, N1 5", beds: 2, baths: 1, type: "Period conversion", sqm: 71,
-      askingPrice: 699000, listedDate: "2026-04-30", status: "Reduced", lat: 51.5348, lng: -0.0842 },
+    { addr: "Flat 150 Bracklyn Court, Wimbourne Street", beds: 2, baths: 1, type: "Purpose-built", sqm: 63,
+      askingPrice: 440000, listedDate: "2026-02-20", status: "Under offer", lat: 51.53473, lng: -0.08904 },
+    { addr: "Flat 18 Sawmill Studios, 19 Parr Street", beds: 2, baths: 2, type: "New build", sqm: 71,
+      askingPrice: 690000, listedDate: "2026-07-07", status: "Under offer", lat: 51.53421, lng: -0.09054 },
+    { addr: "Flat 72 Bracklyn Court, Wimbourne Street", beds: 2, baths: 1, type: "Purpose-built", sqm: 61,
+      askingPrice: 435000, listedDate: "2025-12-05", status: "Under offer", lat: 51.53385, lng: -0.08983 },
+    { addr: "Flat 24 Parr Court, New North Road", beds: 2, baths: 1, type: "Purpose-built", sqm: 56,
+      askingPrice: 400000, listedDate: "2025-10-13", status: "For sale", lat: 51.53414, lng: -0.08869 },
+    { addr: "2A Gainsborough Studios West, Poole Street", beds: 2, baths: 2, type: "Purpose-built", sqm: 85,
+      askingPrice: 900000, listedDate: "2026-04-24", status: "For sale", lat: 51.53581, lng: -0.08911 },
+    { addr: "39 Gainsborough Studios West, Poole Street", beds: 2, baths: 1, type: "Purpose-built", sqm: 66,
+      askingPrice: 700000, listedDate: "2025-01-23", status: "For sale", lat: 51.53581, lng: -0.08911 },
+    { addr: "11 Niagara Close", beds: 2, baths: 1, type: "Purpose-built", sqm: 58,
+      askingPrice: 475000, listedDate: "2024-07-04", status: "For sale", lat: 51.53374, lng: -0.09145 },
+    { addr: "Flat A, 223 New North Road", beds: 2, baths: 1, type: "Purpose-built", sqm: 56,
+      askingPrice: 500000, listedDate: "2026-06-02", status: "Under offer", lat: 51.53607, lng: -0.09 },
+    { addr: "Flat A, 231 New North Road", beds: 2, baths: 1, type: "Purpose-built", sqm: 63,
+      askingPrice: 700000, listedDate: "2025-12-23", status: "For sale", lat: 51.53637, lng: -0.09036 },
+    { addr: "26 Baring Court, 1 Baring Street", beds: 2, baths: 1, type: "Purpose-built", sqm: 79,
+      askingPrice: 450000, listedDate: "2026-05-03", status: "For sale", lat: 51.53648, lng: -0.08936 },
   ],
 };
 
 // -----------------------------------------------------------------------------
 // LISTINGS PER MONTH — count of NEW 2-bed flat listings within 1 km, by month.
-// A simple activity gauge (supply coming to market). Curated pending Homedata's
-// market-activity endpoint. Newest last.
+// A simple activity gauge (supply coming to market). Newest last.
+// FLAGGED / still curated (2026-07-24): a true monthly new-listing count within
+// 1 km needs an aggregated historic-listings query (Homedata Market Activity /
+// property_sale_events, event_type=Added, date-bucketed). That can't be built from
+// the single cheap daily pull without survivorship bias (live listings only show
+// stock still on the market, undercounting older months), so this remains the
+// curated estimate rather than a fabricated live count. Refresh when the routine
+// is allowed a dedicated aggregation call.
 // -----------------------------------------------------------------------------
 export const LISTINGS_PER_MONTH = {
   asOf: "2026-06-30",
@@ -183,19 +212,25 @@ export const LISTINGS_PER_MONTH = {
 // England), so the local-market view has an official price-level anchor. From
 // the UK HPI (HM Land Registry / ONS). `flatsIndex` isolates the flat market.
 // -----------------------------------------------------------------------------
+// LIVE (UK HPI, month 2026-05, HM Land Registry / ONS — published ~2 months in
+// arrears; the newest month is PROVISIONAL and gets revised, so YoY can be volatile).
+// Pulled from landregistry.data.gov.uk/data/ukhpi. `n1_7txAvg12m` is now the
+// trailing-12-month MEDIAN completed flat-sale price within 1 km of the centroid
+// (Homedata/HMLR completions, n=6) — a hyper-local anchor for a 2-bed flat buyer,
+// which reads lower than the old whole-postcode figure that included houses.
 export const HPI = {
-  asOf: "2026-03-01", // UK HPI publishes ~2 months in arrears
-  curated: true,
+  asOf: "2026-05-01",
+  curated: false,
   sources: ["landRegPP", "onsRents"],
-  islingtonAvg: 679000,
-  islingtonYoYPct: 0.9,
-  islingtonFlatsAvg: 552000, // all Islington flats (skews small/older than N1 7TX)
-  islingtonFlatsYoYPct: 0.0,
-  n1_7txAvg12m: 1070000, // your postcode, 12-month average sold price
-  londonAvg: 551000,
-  londonYoYPct: -2.1,
-  englandAvg: 291000,
-  englandYoYPct: 1.4,
+  islingtonAvg: 669879,
+  islingtonYoYPct: -6.4,
+  islingtonFlatsAvg: 557257, // Islington flats/maisonettes (UK HPI)
+  islingtonFlatsYoYPct: -7.0,
+  n1_7txAvg12m: 697500, // 1 km trailing-12m median completed flat sale (Homedata/HMLR, small sample)
+  londonAvg: 544814,
+  londonYoYPct: -3.7,
+  englandAvg: 292095,
+  englandYoYPct: 2.3,
 };
 
 // -----------------------------------------------------------------------------
@@ -203,33 +238,51 @@ export const HPI = {
 // live rental listings. Feeds SECTION 3 (rent vs buy). Curated from Rightmove /
 // Zoopla rental history and ONS Islington private-rent stats.
 // -----------------------------------------------------------------------------
+// PARTLY LIVE (2026-07-24). `currentAvg2bed` and `listings` are LIVE: the median
+// and a spread of currently-advertised 2-bed asking rents within 1 km, from the
+// Homedata Live Listings feed (transaction_type=Rental, 106 listings in radius,
+// geocoded to the centroid via postcodes.io). The live median (£3,722) runs well
+// above the old curated series — the City Road Basin 1 km is dominated by premium
+// new-build towers, and portal ASKING rents sit above ONS achieved rents.
+// FLAGGED: the historical quarterly `series` and `yoYPct` are NOT re-derived this
+// pull — there is no allow-listed rent-history source (ONS PIPR sits on
+// api.beta.ons.gov.uk, which is off the allow-list). The pre-2026-07 quarters are
+// retained estimates; only the final `2026-07` point is live. `yoYPct` is kept as
+// the rent-vs-buy forward-growth assumption, not a measured live figure.
 export const RENT = {
-  asOf: "2026-06-30",
-  curated: true,
-  sources: ["rightmoveListings", "onsRents"],
+  asOf: "2026-07-24",
+  curated: false,
+  sources: ["homedata", "onsRents"],
   // average monthly asking rent for a 2-bed, ~1 km of N1 7TX
   series: [
-    { month: "2025-03", rent: 2720 },
-    { month: "2025-06", rent: 2760 },
-    { month: "2025-09", rent: 2795 },
-    { month: "2025-12", rent: 2830 },
-    { month: "2026-03", rent: 2865 },
-    { month: "2026-06", rent: 2895 },
+    { month: "2025-03", rent: 2720 }, // retained estimate (pre-live)
+    { month: "2025-06", rent: 2760 }, // retained estimate (pre-live)
+    { month: "2025-09", rent: 2795 }, // retained estimate (pre-live)
+    { month: "2025-12", rent: 2830 }, // retained estimate (pre-live)
+    { month: "2026-03", rent: 2865 }, // retained estimate (pre-live)
+    { month: "2026-06", rent: 2895 }, // retained estimate (pre-live)
+    { month: "2026-07", rent: 3722 }, // LIVE — Homedata live-listings median (n=106)
   ],
-  currentAvg2bed: 2895,
-  yoYPct: 4.0,
+  currentAvg2bed: 3722, // LIVE — median of 106 in-radius 2-bed asking rents
+  yoYPct: 4.0, // FLAGGED — forward assumption, not re-derived this pull
   listings: [
-    { addr: "Wharf Road, N1 7", beds: 2, baths: 2, pcm: 2950, sqm: 80, lat: 51.5331, lng: -0.0960 },
-    { addr: "Shepherdess Walk, N1 7", beds: 2, baths: 2, pcm: 3100, sqm: 82, lat: 51.5325, lng: -0.0889 },
-    { addr: "Murray Grove, N1 7", beds: 2, baths: 1, pcm: 2750, sqm: 70, lat: 51.5309, lng: -0.0871 },
-    { addr: "Micawber Street, N1 7", beds: 2, baths: 1, pcm: 2700, sqm: 68, lat: 51.5312, lng: -0.0907 },
+    { addr: "New North Road, N1 7BH", beds: 2, baths: 1, pcm: 2750, lat: 51.53656, lng: -0.08998 },
+    { addr: "Angel Wharf, N1 7ER", beds: 2, baths: 2, pcm: 3950, lat: 51.53363, lng: -0.09323 },
+    { addr: "Arlington Avenue, N1 7AY", beds: 2, baths: 1, pcm: 3350, lat: 51.53471, lng: -0.09383 },
+    { addr: "Mono Tower, N1 5FE", beds: 2, baths: 2, pcm: 4250, lat: 51.53644, lng: -0.08629 },
+    { addr: "Canalside Square, N1 7FN", beds: 2, baths: 1, pcm: 3500, lat: 51.5341, lng: -0.09487 },
+    { addr: "Island Apartments, N1 8PN", beds: 2, baths: 1, pcm: 2750, lat: 51.53795, lng: -0.09277 },
   ],
 };
 
 // -----------------------------------------------------------------------------
 // NEW-BUILD PIPELINE — upcoming / under-construction developments near N1 7TX
-// that add supply (a headwind for resale prices) or amenity. Curated from local
-// planning records (PlanIt) & developer sites; `units`/`completion` are estimates.
+// that add supply (a headwind for resale prices) or amenity.
+// FLAGGED / still curated (2026-07-24): these are real, named local schemes, but
+// their `units`/`completion` are not verifiable from the single daily Homedata
+// pull. A refresh would cross-reference the Homedata Planning endpoint
+// (/planning/search) and PlanIt per scheme; until then the pipeline is left as the
+// curated estimate rather than guessed live.
 // -----------------------------------------------------------------------------
 export const NEW_BUILDS = {
   asOf: "2026-06-30",
@@ -256,8 +309,12 @@ export const NEW_BUILDS = {
 
 // -----------------------------------------------------------------------------
 // FORECASTS — RICS + estate-agent price & activity forecasts for London / prime
-// London, curated with attribution. `priceYoY` is a % house-price change for the
-// year; `activity` is a qualitative demand/sales-volume read.
+// London, with attribution. `priceYoY` is a % house-price change for the year;
+// `activity` is a qualitative demand/sales-volume read.
+// FLAGGED / inherently curated: these are third-party analyst forecasts (RICS,
+// Savills, Knight Frank, Zoopla, local agents), not a Homedata product — they are
+// editorial and cannot be refreshed from the local-market feed. Kept curated with
+// attribution; update by re-reading each publisher's latest release.
 // -----------------------------------------------------------------------------
 export const FORECASTS = {
   asOf: "2026-06-30",
@@ -359,7 +416,14 @@ export function applyHomedata(payload) {
   const merge = (target, patch) => {
     if (!patch) return;
     Object.assign(target, patch);
-    if (patch.rows || patch.series || patch.currentAvg2bed != null) target.curated = false;
+    // A live payload block is authoritative. Honour an explicit patch.curated;
+    // otherwise flip curated off whenever the patch carries any data field (not
+    // just rows/series — this also covers scalar blocks like HPI, whose live
+    // payload is islingtonAvg/… rather than a rows array).
+    if (patch.curated === undefined) {
+      const dataKeys = Object.keys(patch).filter((k) => k !== "asOf" && k !== "curated");
+      if (dataKeys.length) target.curated = false;
+    }
   };
   merge(SALES, payload.sales);
   merge(LISTINGS, payload.listings);
