@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow" />
   <title>London Flat</title>
-  <link rel="stylesheet" href="assets/css/styles.css?v=40" />
+  <link rel="stylesheet" href="assets/css/styles.css?v=41" />
 </head>
 <body>
 
@@ -39,24 +39,12 @@
     </div>
     <div class="navrow">
       <nav class="nav wrap" id="nav">
-        <button class="nav-item active" data-tab="dashboard">
-          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-          <span>Dashboard</span></button>
+        <button class="nav-item active" data-tab="finances">
+          <svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 9v6M18 9v6"/></svg>
+          <span>Our finances</span></button>
         <button class="nav-item" data-tab="localmarket">
           <svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V8l7-4 7 4v13M9 21v-6h6v6"/></svg>
           <span>Local market</span></button>
-        <button class="nav-item" data-tab="finances">
-          <svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 9v6M18 9v6"/></svg>
-          <span>Our finances</span></button>
-        <button class="nav-item" data-tab="rentbuy">
-          <svg viewBox="0 0 24 24"><path d="M3 9l9-6 9 6M5 9v11h5v-6h4v6h5V9"/><path d="M15 3h4v3"/></svg>
-          <span>Rent vs buy</span></button>
-        <button class="nav-item" data-tab="signal">
-          <svg viewBox="0 0 24 24"><polyline points="3 17 9 11 13 15 21 6"/><polyline points="15 6 21 6 21 12"/></svg>
-          <span>When to sell</span></button>
-        <button class="nav-item" data-tab="selllet">
-          <svg viewBox="0 0 24 24"><path d="M12 3v18M4 7h16M7 7l-3 6h6zM17 7l-3 6h6zM7 20h10"/></svg>
-          <span>Sell vs let</span></button>
         <button class="nav-item" data-tab="inputs">
           <svg viewBox="0 0 24 24"><path d="M12 20h9M3 20h3M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4z"/></svg>
           <span>Inputs</span></button>
@@ -68,8 +56,8 @@
   <main class="wrap content">
     <div class="page-head">
       <div>
-        <h1 class="page-title" id="page-title">Dashboard</h1>
-        <div class="page-sub" id="page-sub">Your at-a-glance summary</div>
+        <h1 class="page-title" id="page-title">Our finances</h1>
+        <div class="page-sub" id="page-sub">What we paid, and whether to sell, rent or hold</div>
       </div>
       <div class="topbar-right">
         <a class="badge" id="live-rate" href="https://www.bankofengland.co.uk/monetary-policy/the-interest-rate-bank-rate" target="_blank" rel="noopener" title="Bank of England base rate — click for source">—</a>
@@ -78,59 +66,30 @@
       </div>
     </div>
 
-      <!-- DASHBOARD -->
-      <section class="tab active" id="tab-dashboard">
-        <div id="verdict" class="panel hero"><div id="verdict-body" class="loading">Calculating…</div></div>
-        <div id="dash-kpis" class="kpi-row"></div>
-        <div class="dash-grid">
-          <div class="panel">
-            <h3 class="panel-h">Sell-timing signal by window</h3>
-            <div id="dash-signal-chart"></div>
-            <p class="chart-cap">A model score from −100 (wait) to +100 (sell now), <strong>not £</strong>. Higher = a
-              better time to sell. The recommended window is highlighted.</p>
-          </div>
-          <div class="panel">
-            <h3 class="panel-h">Net proceeds by window</h3>
-            <div id="dash-proceeds-chart"></div>
-            <p class="chart-cap">Bars = <strong>cash in your pocket (£)</strong> after repaying the mortgage and selling
-              costs. The grey dashed line is the <strong>cash you put in</strong>; the bar above it is your true
-              profit. The <strong style="color:#a06a3c">bronze line</strong> is the
-              <strong>recoup-all-cash break-even</strong> — the net proceeds needed to get every pound back.</p>
-          </div>
-        </div>
-        <div class="panel">
-          <h3 class="panel-h">What's driving the recommendation</h3>
-          <div id="dash-drivers"></div>
-        </div>
-        <div id="dash-links" class="quick-links"></div>
-      </section>
-
-      <!-- ================= SECTION 1 — LOCAL MARKET (within 1 km) ================= -->
+      <!-- ================= LOCAL MARKET (within 1 km) ================= -->
       <section class="tab" id="tab-localmarket">
         <div class="panel">
-          <h2>Local market — within 1&nbsp;km of N1&nbsp;7TX</h2>
-          <p class="section-lead">Recent listings and completed sales in a <strong>strict 1&nbsp;km radius</strong> of your
-            postcode: how many come to market each month, how long they take to sell, whether they beat or missed their
-            asking price, and the £/m² they achieved. <span id="lm-source-note" class="muted"></span></p>
+          <h2>Local market — within 1&nbsp;km</h2>
+          <p class="section-lead">Listings and completed sales in a strict 1&nbsp;km radius of N1&nbsp;7TX: supply, time to
+            sell, asking vs sold, and £/m². <span id="lm-source-note" class="muted"></span></p>
           <div id="lm-kpis" class="kpi-row"></div>
         </div>
 
         <div class="panel">
-          <h3 class="panel-h">New listings per month (2-bed flats, 1 km)</h3>
+          <h3 class="panel-h">New listings per month (2-bed, 1&nbsp;km)</h3>
           <div id="lm-listings-chart"></div>
-          <p class="chart-cap">Count of 2-bed flats newly listed each month within 1 km — a gauge of supply coming to market.</p>
+          <p class="chart-cap">2-bed flats newly listed each month — supply coming to market.</p>
         </div>
 
         <div class="panel">
           <h3 class="panel-h">Where they are</h3>
           <div id="lm-map" class="chart-wrap"></div>
           <div id="lm-legend"></div>
-          <p class="chart-cap">Approximate street-level positions inside the 1 km radius. Green marks your flat; blue pins are
-            completed sales, amber pins are homes currently on the market.</p>
+          <p class="chart-cap">Green = your flat · blue = sold · amber = on the market.</p>
         </div>
 
         <div class="panel">
-          <h3 class="panel-h">Recent completed sales — asking vs sold, days on market, £/m²</h3>
+          <h3 class="panel-h">Recent sales — asking vs sold, days on market, £/m²</h3>
           <div id="lm-sales-body" class="loading">Loading…</div>
         </div>
 
@@ -140,168 +99,71 @@
         </div>
 
         <div class="panel">
-          <h3 class="panel-h">House Price Index — latest figures</h3>
+          <h3 class="panel-h">House Price Index</h3>
           <div id="lm-hpi" class="loading">Loading…</div>
         </div>
 
         <div class="panel">
           <h3 class="panel-h">New-build pipeline nearby</h3>
-          <p class="section-lead">Upcoming and under-construction schemes near N1 7TX. More new supply is a headwind for
-            resale prices; new amenity can support them.</p>
+          <p class="section-lead">Schemes under way near N1 7TX — more supply is a price headwind.</p>
           <div id="lm-newbuilds" class="loading">Loading…</div>
         </div>
 
         <div class="panel">
-          <h3 class="panel-h">Price &amp; activity forecasts — RICS &amp; local agents</h3>
+          <h3 class="panel-h">Forecasts — RICS &amp; agents</h3>
           <div id="lm-forecasts" class="loading">Loading…</div>
         </div>
       </section>
 
-      <!-- ================= SECTION 2 — OUR FINANCES ================= -->
-      <section class="tab" id="tab-finances">
+      <!-- ================= OUR FINANCES (incl. rent-vs-buy & sell-vs-let) ================= -->
+      <section class="tab active" id="tab-finances">
         <div class="panel">
           <h2>Our finances</h2>
-          <p class="section-lead">Everything you have paid, what the mortgage is costing, and the price you would need to
-            sell for to <strong>recoup all your cash</strong> — get every pound back. Edit your figures on the
-            <strong>Inputs</strong> tab.</p>
+          <p class="section-lead">What we've paid, what the mortgage costs, and the price to recoup every pound.
+            Edit figures on <strong>Inputs</strong>.</p>
           <div id="paid-body" class="loading">Loading…</div>
         </div>
         <div class="panel">
-          <h2>Break-even — recoup all cash in</h2>
-          <p class="section-lead">The sale price at which your net proceeds return <strong>every pound you have sunk in</strong>
-            — deposit, Stamp Duty, buying costs and all the mortgage interest paid so far — after clearing the mortgage, any
-            early-repayment charge, agent fee (+VAT), legal and EPC costs.</p>
+          <h2>Break-even — recoup all cash</h2>
+          <p class="section-lead">The sale price that returns every pound sunk in — deposit, Stamp Duty, costs and interest
+            paid — after clearing the mortgage, ERC, agent (+VAT), legal and EPC.</p>
           <div id="breakeven-body" class="loading">Loading…</div>
         </div>
         <div class="panel">
           <h2>What you'd walk away with</h2>
-          <p class="section-lead">Projected sale value minus the outstanding mortgage, any early-repayment charge,
-            agent + VAT, legal and EPC costs. CGT is £0 (main residence).</p>
+          <p class="section-lead">Projected sale value minus mortgage, ERC, agent + VAT, legal and EPC. CGT £0 (main
+            residence).</p>
           <div id="proceeds-body" class="loading">Loading…</div>
         </div>
-      </section>
 
-      <!-- ================= SECTION 3 — RENT vs BUY ================= -->
-      <section class="tab" id="tab-rentbuy">
+        <!-- Rent vs buy (folded in) -->
         <div class="panel">
           <h2>Own it, or rent the equivalent?</h2>
-          <p class="section-lead">A like-for-like comparison against renting a similar 2-bed nearby, using
-            <strong>real local rental data</strong>. Two reads: the monthly economic cost of owning versus the rent, and
-            total wealth over your chosen horizon (keep owning versus sell now, invest the proceeds, and rent).</p>
+          <p class="section-lead">Like-for-like against renting a similar 2-bed nearby, on real local rents — the monthly
+            cost of owning vs rent, and total wealth over your horizon.</p>
           <div id="rb-summary" class="loading">Loading…</div>
         </div>
         <div class="panel">
-          <h3 class="panel-h">Average 2-bed rent nearby (1 km) over time</h3>
+          <h3 class="panel-h">2-bed rent nearby (1&nbsp;km) over time</h3>
           <div id="rb-rent-chart"></div>
           <p class="chart-cap" id="rb-rent-cap"></p>
         </div>
         <div class="panel">
-          <h3 class="panel-h">Year-by-year: rent vs the cost of owning</h3>
+          <h3 class="panel-h">Year-by-year: rent vs owning</h3>
           <div id="rb-table" class="loading">Loading…</div>
         </div>
         <div class="panel">
-          <h3 class="panel-h">Adjust the comparison</h3>
+          <h3 class="panel-h">Adjust</h3>
           <div id="rb-controls" class="loading">Loading…</div>
-          <p class="muted small">Rent defaults to the average advertised 2-bed within 1 km. Owning cost excludes principal
-            repayments (they build equity, not a cost) and nets off expected price growth.</p>
-        </div>
-      </section>
-
-      <!-- ================= WHEN TO SELL (timing signal + factors) ================= -->
-      <section class="tab" id="tab-signal">
-        <div class="panel">
-          <h2>When to sell — the timing signal</h2>
-          <p class="section-lead">A transparent weighted score across five factors, for four candidate windows —
-            a single headline signal <em>and</em> the full factor-by-factor breakdown.</p>
-          <div id="signal-body" class="loading">Loading…</div>
-        </div>
-        <div class="panel">
-          <h3 class="panel-h">Factor scores for the recommended window</h3>
-          <div id="factor-scores" class="loading">Loading…</div>
+          <p class="muted small">Rent defaults to the average 2-bed within 1 km. Owning cost excludes principal (it builds
+            equity) and nets off price growth.</p>
         </div>
 
+        <!-- Sell vs let (folded in) -->
         <div class="panel">
-          <h2>The factors, explained</h2>
-          <p class="section-lead">The data, the reasoning, and links to source material so you can check the working.</p>
-
-          <article class="factor">
-            <div class="factor-head"><h3><span class="factor-num">1</span> Price trajectory</h3><span class="factor-weight">weight 30%</span></div>
-            <p>Islington's average price was <strong>£673k (Mar 2025)</strong> and <strong>£679k (Mar 2026)</strong>
-              (<strong>+0.9%</strong>), but <strong>flats were broadly flat</strong> over the year while London-wide
-              fell <strong>2.1%</strong>. Indices anchored to your purchase (100 = £890,000).</p>
-            <div class="chart-wrap"><div id="price-chart"></div></div>
-            <p class="muted small">Sources:
-              <a href="https://www.gov.uk/search-house-prices" target="_blank" rel="noopener">HM Land Registry sold prices</a> ·
-              <a href="https://www.gov.uk/government/news/uk-house-price-index-for-march-2026" target="_blank" rel="noopener">UK HPI Mar 2026</a> ·
-              <a href="https://www.ons.gov.uk/visualisations/housingpriceslocal/E09000019/" target="_blank" rel="noopener">ONS Islington</a></p>
-          </article>
-
-          <article class="factor">
-            <div class="factor-head"><h3><span class="factor-num">2</span> Forecast trajectory &amp; scenarios</h3><span class="factor-weight">feeds price + proceeds</span></div>
-            <p>Consensus: a soft 2026 then recovery. <strong>Savills</strong> revised 2026 to <strong>−2%</strong>, with
-              <strong>+4%</strong> (2027) and <strong>+5%</strong> (2028); <strong>Knight Frank</strong> sees
-              <strong>+3%</strong> then <strong>+4%</strong>. The band shows the optimistic–pessimistic range; the solid line
-              is your active scenario.</p>
-            <div class="chart-wrap"><div id="forecast-chart"></div>
-              <p class="chart-cap">Projected value of your flat from today. The "fix ends" marker is March 2027.</p></div>
-            <p class="muted small">Sources:
-              <a href="https://www.savills.co.uk/insight-and-opinion/savills-news/391268/savills-revises-uk-house-price-forecast-as-higher-mortgage-costs-weigh-on-demand" target="_blank" rel="noopener">Savills</a> ·
-              <a href="https://www.knightfrank.co.uk/research/article/2026/4/uk-housing-market-forecast-q2-2026" target="_blank" rel="noopener">Knight Frank</a> ·
-              <a href="https://www.zoopla.co.uk/discover/property-news/house-price-index/" target="_blank" rel="noopener">Zoopla</a></p>
-          </article>
-
-          <article class="factor">
-            <div class="factor-head"><h3><span class="factor-num">3</span> Financing, rates &amp; your ERC</h3><span class="factor-weight">weight 25%</span></div>
-            <p>Your <strong>4.38% fix is now below market</strong> — average 2-year fix ~<strong>5.55%</strong>, base rate
-              <strong>3.75%</strong>. It <strong>ends March 2027</strong>: selling before then triggers your
-              <strong>1% early-repayment charge</strong>; holding past it means remortgaging higher. The
-              <strong>new deal you remortgage onto also has its own fix and ERC</strong>.</p>
-            <div class="chart-wrap"><div id="rates-chart"></div>
-              <p class="chart-cap">Average 2-year fix vs base rate vs your fixed rate.</p></div>
-            <p class="muted small">Sources:
-              <a href="https://www.bankofengland.co.uk/monetary-policy-summary-and-minutes/2026/june-2026" target="_blank" rel="noopener">BoE Jun 2026</a> ·
-              <a href="https://www.rightmove.co.uk/news/articles/property-news/current-uk-mortgage-rates/" target="_blank" rel="noopener">Rightmove rates</a> ·
-              <a href="https://hoa.org.uk/advice/guides-for-homeowners/for-owners/mortgage-rate-forecast/" target="_blank" rel="noopener">HOA forecast</a></p>
-          </article>
-
-          <article class="factor">
-            <div class="factor-head"><h3><span class="factor-num">4</span> Seasonality</h3><span class="factor-weight">weight 10%</span></div>
-            <p><strong>Feb–May</strong> are the strongest months to list, and <strong>flats sell especially well in late
-              spring</strong> — handily, your fix also ends in spring 2027.</p>
-            <p class="muted small">Source:
-              <a href="https://www.rightmove.co.uk/guides/seller/preparing-to-sell/is-now-the-right-time-to-sell/" target="_blank" rel="noopener">Rightmove — best time to sell</a></p>
-          </article>
-
-          <article class="factor">
-            <div class="factor-head"><h3><span class="factor-num">5</span> Political &amp; macro factors</h3><span class="factor-weight">weight 15%</span></div>
-            <ul class="policy-list">
-              <li><span class="tag pos">Neutral / mild +</span><strong>‘Mansion tax’</strong> from April 2028 on homes
-                over £2m — your flat is well below, but it cools the top of the London market.</li>
-              <li><span class="tag neu">Indirect</span><strong>Landlord income tax +2% (April 2027)</strong> — doesn't
-                touch owner-occupiers, but discourages buy-to-let investors.</li>
-              <li><span class="tag neu">Neutral</span><strong>Stamp duty unchanged; nil-rate band back to £125k</strong>
-                — a mild demand dampener.</li>
-              <li><span class="tag pos">Strong +</span><strong>Primary residence — CGT exempt</strong> via Private
-                Residence Relief, at any sale date.</li>
-              <li><span class="tag neg">Risk −</span><strong>Middle East conflict</strong> — the BoE's flagged dominant
-                inflation risk; pushed swap rates up in spring 2026.</li>
-            </ul>
-            <p class="muted small">Sources:
-              <a href="https://hoa.org.uk/news/new-property-tax/" target="_blank" rel="noopener">HOA mansion tax</a> ·
-              <a href="https://www.zoopla.co.uk/discover/property-news/autumn-budget-impact-on-uk-housing-market/" target="_blank" rel="noopener">Zoopla Budget</a> ·
-              <a href="https://www.gov.uk/tax-sell-home" target="_blank" rel="noopener">Private Residence Relief</a></p>
-          </article>
-        </div>
-      </section>
-
-      <!-- SELL VS LET -->
-      <section class="tab" id="tab-selllet">
-        <div class="panel">
-          <h2>Sell now, or rent it out and sell later?</h2>
-          <p class="section-lead">A like-for-like wealth comparison to your chosen horizon, with full UK income-tax
-            treatment: <strong>Section 24</strong> (mortgage interest gets a 20% credit, not full relief), the
-            <strong>April-2027 +2% landlord rate rise</strong>, and the <strong>partial loss of CGT relief</strong>
-            from moving out.</p>
+          <h2>Sell now, or let and sell later?</h2>
+          <p class="section-lead">A wealth comparison to your horizon with UK tax: Section 24, the April-2027 +2% landlord
+            rate, and the partial CGT-relief loss from moving out.</p>
           <div id="letting-summary" class="loading">Loading…</div>
           <h3 class="panel-h">Year-by-year rental cash flow</h3>
           <div id="letting-table" class="loading">Loading…</div>
@@ -309,11 +171,10 @@
           <div id="letting-controls" class="loading">Loading…</div>
           <p class="muted small">Sources:
             <a href="https://www.gov.uk/government/news/uk-house-price-index-for-march-2026" target="_blank" rel="noopener">Islington rents</a> ·
-            <a href="https://www.zoopla.co.uk/discover/property-news/autumn-budget-impact-on-uk-housing-market/" target="_blank" rel="noopener">landlord tax rise</a> ·
             <a href="https://www.gov.uk/capital-gains-tax/rates" target="_blank" rel="noopener">CGT rates</a> ·
             <a href="https://www.gov.uk/tax-sell-home" target="_blank" rel="noopener">Private Residence Relief</a></p>
-          <p class="disclaimer"><strong>Tax is simplified.</strong> Real liabilities depend on your total income, other
-            gains, allowable costs and reliefs. Confirm with an accountant before letting.</p>
+          <p class="disclaimer"><strong>Tax is simplified.</strong> Real liabilities depend on your circumstances — confirm
+            with an accountant before letting.</p>
         </div>
       </section>
 
@@ -328,28 +189,18 @@
         </div>
         <div class="panel">
           <h2>Forecast &amp; assumptions</h2>
-          <p class="section-lead">Set the growth scenario, remortgage rate and current valuation — the recommendation,
-            signal and every chart update live.</p>
+          <p class="section-lead">Set the growth scenario, remortgage rate and current valuation — every figure and chart
+            updates live.</p>
           <div id="controls-body" class="loading">Loading…</div>
         </div>
         <div class="panel">
           <h2>Methodology &amp; sources</h2>
-          <p>The signal is a weighted blend of five factor scores, each in −100 (wait) … +100 (sell here), computed for
-            four windows (now, spring 2027, H2 2027, spring 2028):</p>
-          <ul>
-            <li><strong>Price trajectory (30%)</strong> — projected sale value plus momentum.</li>
-            <li><strong>Financing &amp; ERC (25%)</strong> — early-repayment charge while fixed, plus extra interest
-              from holding past March 2027 at a higher remortgage rate.</li>
-            <li><strong>Net proceeds (20%)</strong> — your personal cash-in-hand after all costs.</li>
-            <li><strong>Seasonality (10%)</strong> — buyer-demand strength in the window's month.</li>
-            <li><strong>Policy &amp; macro (15%)</strong> — time-aware tally of the political factors.</li>
-          </ul>
-          <p><strong>Local market</strong> data (listings, sales, days-on-market, sold-vs-asking, £/m², rents and the
-            new-build pipeline) is filtered to a strict 1 km radius of the N1 7TX centroid. It is a curated snapshot from
-            HM Land Registry, the EPC register and local listing/planning records, refreshed from the
-            <a href="https://homedata.co.uk/" target="_blank" rel="noopener">Homedata</a> feed where available.</p>
-          <p class="muted small">All figures are curated snapshots gathered 30 June 2026 and forward-looking estimates;
-            they will go stale. Full sources are linked throughout.</p>
+          <p><strong>Local market</strong> data (sales, listings, days-on-market, sold-vs-asking, £/m², rents and the
+            new-build pipeline) is filtered to a strict 1 km radius of the N1 7TX centroid, from live
+            <a href="https://homedata.co.uk/" target="_blank" rel="noopener">Homedata</a>, HM Land Registry, the EPC
+            register, ONS and PlanIt — with a curated fallback where a live source isn't available.</p>
+          <p class="muted small">Figures are a mix of live pulls and forward-looking estimates; some will go stale. Full
+            sources are linked throughout.</p>
           <p class="disclaimer"><strong>Not advice.</strong> An informational model, not financial, tax, mortgage or
             legal advice. Forecasts are uncertain and often wrong. Verify against the linked sources and a qualified
             adviser before acting.</p>
@@ -361,6 +212,6 @@
       </footer>
   </main>
 
-<script type="module" src="assets/js/app.js?v=40"></script>
+<script type="module" src="assets/js/app.js?v=41"></script>
 </body>
 </html>
