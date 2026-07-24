@@ -15,21 +15,28 @@ material** throughout. Every assumption is editable live via sliders.
 
 ## What it does
 
-- **Headline recommendation** — the best window (currently **Spring 2028** under base
-  consensus) with a gauge and the top reasons.
-- **Your position** — purchase, estimated current value, mortgage, equity, monthly payment
-  now vs. after the fix ends, CGT status.
-- **Sell-timing signal** — a weighted blend of five factors across four windows (now,
-  Spring 2027, H2 2027, Spring 2028), shown as stacked contributions + a ranking table.
-- **The factors, explained** — price trajectory, forecast scenarios, financing & ERC,
-  seasonality, and political/macro, each with data, reasoning and source links.
-- **Net proceeds** — projected cash in hand after mortgage, ERC, agent+VAT, legal, EPC and
-  CGT (£0 as a main residence).
-- **Scenario controls** — sliders for forecast scenario, remortgage rate, current value and
-  per-year growth that recompute everything instantly.
+Three headline sections, plus the sell-timing tools:
 
-All data is a curated snapshot gathered **30 June 2026** (sources linked in-app). The Bank
-of England base-rate badge attempts a **live refresh** via a Cloudflare Pages Function.
+1. **Local market — within 1 km of N1 7TX** (`Local market` tab). Recent listings and
+   completed sales inside a **strict 1 km radius**: new listings per month, days on market,
+   sold-vs-asking (£ and %), £/m², a map of sales + live listings, the latest **HPI** figures,
+   the nearby **new-build pipeline**, and **RICS / estate-agent** price & activity forecasts.
+2. **Our finances** (`Our finances` tab). Everything paid (deposit, SDLT, buying costs,
+   interest and principal to date), what the mortgage is costing, and the **recoup-all-cash
+   break-even** — the sale price at which net proceeds return every pound sunk in, shown as a
+   waterfall, plus the projected net-proceeds-by-window chart.
+3. **Rent vs buy** (`Rent vs buy` tab). Own this flat or rent the equivalent nearby, using
+   **real local rental data**: the monthly economic cost of owning vs the rent, and total
+   wealth over a chosen horizon (keep owning vs sell, invest the proceeds and rent).
+
+Retained tools: the **When to sell** timing signal (weighted blend of five factors across four
+windows), **Sell vs let** (keep-and-let vs sell, full UK tax), the **map**, the
+**notifications** bell, and the **live rate badges**. Editable **Inputs** drive everything.
+
+Local-market data is a curated snapshot from HM Land Registry, the EPC register and local
+listing/planning records, designed to be refreshed from the **Homedata** feed (see
+*Keeping data fresh*). Personal figures are a snapshot gathered **June 2026**; the BoE rate
+badges attempt a **live refresh** via the Worker.
 
 ## How the model works
 
@@ -57,11 +64,21 @@ london_flat/
 │   ├── css/styles.css
 │   ├── data/dataset.js        # curated, sourced data + your figures (edit here)
 │   └── js/
-│       ├── finance.js         # amortization, ERC, net proceeds (pure)
+│       ├── finance.js         # amortization, ERC, net proceeds, recoup-all break-even (pure)
 │       ├── model.js           # weighted sell-timing signal (pure)
+│       ├── market.js          # 1 km local-market data layer + Homedata adapter (Section 1)
+│       ├── ownrent.js         # own-vs-rent comparator (Section 3, pure)
+│       ├── letting.js         # sell-vs-let comparison, UK tax aware (pure)
 │       ├── charts.js          # dependency-free SVG charts
 │       └── app.js             # rendering + interactivity
 ```
+
+**Local-market data (`market.js`).** All Section-1 rows carry `lat`/`lng` and are filtered to
+a strict 1 km radius of the N1 7TX centroid via a haversine distance. The curated constants are
+the **offline fallback**; `applyHomedata(payload)` merges a live Homedata payload of the same
+shape so the rest of the app keeps reading `market.js`. See *Keeping data fresh* for how the
+daily routine populates it. **The Homedata API key is a secret** — it lives in the Worker
+environment (`env.HOMEDATA_KEY`) or the routine's environment, and is **never committed**.
 
 **Zero build.** No bundler, no npm install, no framework — native ES modules and inline SVG.
 The app itself is **pure static** and renders entirely from the curated snapshot, so it works
@@ -188,8 +205,17 @@ pushed in the background.)
 
 The **base rate** and the **~70% LTV remortgage rate** now refresh themselves live from the Bank
 of England on every page load (see *Live rates* above) — the routine does **not** need to touch
-those. It handles everything that has no live feed: new sales, forecasts, policy, £/m², HPI, the
-2-year swap, and the snapshot fallbacks. Everything recomputes from `assets/data/dataset.js`.
+those. It handles everything that has no live feed: the **1 km local market** (`market.js`), new
+sales, forecasts, policy, £/m², HPI, rents, the 2-year swap, and the snapshot fallbacks.
+Sell-timing recomputes from `assets/data/dataset.js`; the local-market section reads `market.js`.
+
+**Homedata (local market).** `market.js` is the adapter target for the
+[Homedata](https://homedata.co.uk/) feed. The **free tier is ~100 calls/month (≈3/day)**, so the
+data cannot be fetched per visit — the daily routine fetches it **once** and commits it as static
+data. The API key is a **secret**: read it from `HOMEDATA_KEY` in the routine's environment (or
+the Worker's `env.HOMEDATA_KEY`); **never commit the key** to the repo. Auth header is
+`Authorization: Api-Key $HOMEDATA_KEY`. Network access to `homedata.co.uk` / `api.homedata.co.uk`
+must be allow-listed for the routine's environment (see *Data sources to allow-list* below).
 
 Paste the block below into your daily (08:00) Claude Code routine:
 
@@ -225,12 +251,38 @@ today, make no PR.
    (RATES.baseRateNow/baseRateAsOf, RATES.remortgage70Now/AsOf) and the same FALLBACK block in
    worker.js so offline/no-Worker views aren't stale.
 10. Sources — fix any SOURCES URLs/labels that have moved on (e.g. the latest HPI month page).
-11. Stamp & ship — set META.asOf to today and bump META.build (e.g. "v36 · <today>"); also bump
+11. Local market (1 km) — refresh assets/js/market.js from Homedata (key from $HOMEDATA_KEY in the
+    environment — NEVER commit it; auth header "Authorization: Api-Key $HOMEDATA_KEY"). Update the
+    rows in SALES (askingPrice, price, listedDate, soldDate, sqm, lat, lng), LISTINGS (asking,
+    listedDate, status), LISTINGS_PER_MONTH.series, RENT.series + currentAvg2bed, HPI, NEW_BUILDS
+    and FORECASTS. Keep every row within ~1 km of the N1 7TX centroid (51.5346, -0.0899). Set each
+    block's asOf and flip its `curated:` flag to false once it holds live data. One Homedata pull
+    per day only (free tier ≈100 calls/month). If Homedata is unreachable, leave the curated rows.
+12. Stamp & ship — set META.asOf to today and bump META.build (e.g. "v38 · <today>"); also bump
     the ?v= query on every module import in index.html and the JS files so caches refresh.
     Commit, push, and confirm the deployed footer shows the new build.
 
 Flag anything you couldn't verify from a primary source rather than guessing.
 ```
+
+### Data sources to allow-list
+
+The routine (and any live fetch) needs outbound HTTPS to these hosts. If your environment uses a
+network allow-list, add them:
+
+| Host | Used for |
+| --- | --- |
+| `api.homedata.co.uk`, `homedata.co.uk` | Homedata — listings, days-on-market, sold-vs-asking, rents |
+| `www.gov.uk`, `landregistry.data.gov.uk` | HM Land Registry sold prices & UK HPI |
+| `api.postcodes.io` | Geocoding postcodes → lat/lng for the 1 km radius |
+| `find-energy-certificate.service.gov.uk` | EPC floor areas (£/m²) |
+| `www.planit.org.uk` | Planning applications — the new-build pipeline |
+| `www.ons.gov.uk` | ONS Islington rents & house-price stats |
+| `www.rics.org` | RICS Residential Market Survey (forecasts) |
+| `www.bankofengland.co.uk` | Live base rate & quoted mortgage rates (Worker `/api/rates`) |
+
+The app itself renders fully **without** any of these (curated fallback); they only power the
+daily refresh and the live rate badges.
 
 ## Your inputs (as configured)
 

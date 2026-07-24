@@ -460,7 +460,7 @@ export function scatterMap(container, opts) {
     mk.style.left = pct(p.x, Wpx); mk.style.top = pct(p.y, Hpx);
     mk.innerHTML = p.you
       ? '<span class="map-dot you"></span><span class="map-youlbl">Your flat</span>'
-      : `<span class="map-dot">${p.n}</span>`;
+      : `<span class="map-dot${p.listing ? " listing" : ""}">${p.n}</span>`;
     mk.title = p.plain || "";
     wrap.appendChild(mk);
     const show = (e) => {

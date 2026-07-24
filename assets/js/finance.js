@@ -136,6 +136,101 @@ export function economicsForWindow(opts) {
   };
 }
 
+// Total mortgage INTEREST paid from purchase up to a sale date, accounting for the
+// switch from the fixed rate to the assumed remortgage rate when the fix ends.
+// interest = payments made − principal repaid, computed per rate phase so it stays
+// consistent with economicsForWindow's outstanding-balance figure.
+export function interestPaidToDate(mortgage, saleDateISO) {
+  const io = mortgage.repaymentType === "interest_only";
+  const monthsPaidAtFix = monthsBetween(mortgage._purchaseDate || mortgage.purchaseDate, mortgage.fixEndDate);
+  const monthsPaidAtSale = monthsBetween(mortgage._purchaseDate || mortgage.purchaseDate, saleDateISO);
+  if (monthsPaidAtSale <= 0) return 0;
+
+  // Phase 1: purchase -> min(sale, fix end), at the fixed rate.
+  const m1 = Math.min(monthsPaidAtSale, Math.max(0, monthsPaidAtFix));
+  let interest = 0;
+  if (io) {
+    interest += mortgage.principal * (mortgage.ratePct / 100 / 12) * m1;
+  } else if (m1 > 0) {
+    const pay1 = monthlyPayment(mortgage.principal, mortgage.ratePct, mortgage.termYears);
+    const bal1 = balanceAfter(mortgage.principal, mortgage.ratePct, mortgage.termYears, m1);
+    interest += pay1 * m1 - (mortgage.principal - bal1);
+  }
+
+  // Phase 2: fix end -> sale, at the assumed remortgage rate (only if held past the fix).
+  const m2 = Math.max(0, monthsPaidAtSale - monthsPaidAtFix);
+  if (m2 > 0) {
+    const balAtFix = io
+      ? mortgage.principal
+      : balanceAfter(mortgage.principal, mortgage.ratePct, mortgage.termYears, monthsPaidAtFix);
+    const remRate = mortgage.remortgageRatePctAssumed;
+    if (io) {
+      interest += balAtFix * (remRate / 100 / 12) * m2;
+    } else {
+      const remTermYears = Math.max(1, mortgage.termYears - monthsPaidAtFix / 12);
+      const pay2 = monthlyPayment(balAtFix, remRate, remTermYears);
+      const bal2 = balanceAfter(balAtFix, remRate, remTermYears, m2);
+      interest += pay2 * m2 - (balAtFix - bal2);
+    }
+  }
+  return Math.max(0, interest);
+}
+
+// Break-even sale price to RECOUP ALL CASH IN by a given sale date: the price at
+// which net proceeds exactly return every pound you have sunk in — deposit + SDLT
+// + buying costs + interest paid to date — after clearing the mortgage, ERC, agent
+// fee (+VAT), legal, EPC and any CGT. Solving net(P*) = cashToRecoup for P*:
+//   P*(1 − agentRate) = outstanding + ERC + legal + EPC + CGT + cashToRecoup
+// where agentRate = agentPct·(1 + VAT/100). CGT is 0 for a primary residence.
+export function breakEvenRecoupAll(opts) {
+  const { property, mortgage, sellingCfg, saleDateISO } = opts;
+
+  const deposit = Math.max(0, property.purchasePrice - mortgage.principal);
+  const sdlt = property.sdltPaid || 0;
+  const buyingCosts = property.otherBuyCosts || 0;
+  const interestPaid = interestPaidToDate(mortgage, saleDateISO);
+  const cashToRecoup = deposit + sdlt + buyingCosts + interestPaid;
+
+  // Outstanding balance and ERC at the sale date (mirrors economicsForWindow).
+  const io = mortgage.repaymentType === "interest_only";
+  const purchaseDate = mortgage._purchaseDate || mortgage.purchaseDate;
+  const monthsPaidAtFix = monthsBetween(purchaseDate, mortgage.fixEndDate);
+  const monthsPaidAtSale = monthsBetween(purchaseDate, saleDateISO);
+  const saleIdx = ymIndex(saleDateISO);
+  const fixIdx = ymIndex(mortgage.fixEndDate);
+  let outstanding;
+  if (io) {
+    outstanding = mortgage.principal;
+  } else if (saleIdx < fixIdx) {
+    outstanding = balanceAfter(mortgage.principal, mortgage.ratePct, mortgage.termYears, monthsPaidAtSale);
+  } else {
+    const balAtFix = balanceAfter(mortgage.principal, mortgage.ratePct, mortgage.termYears, monthsPaidAtFix);
+    const remTermYears = Math.max(1, mortgage.termYears - monthsPaidAtFix / 12);
+    outstanding = balanceAfter(balAtFix, mortgage.remortgageRatePctAssumed, remTermYears, monthsPaidAtSale - monthsPaidAtFix);
+  }
+  const newFixEndIdx = fixIdx + Math.round((mortgage.remortgageFixYears || 0) * 12);
+  let erc = 0;
+  if (saleIdx < fixIdx) erc = outstanding * (mortgage.ercPctWhileFixed / 100);
+  else if (saleIdx < newFixEndIdx) erc = outstanding * ((mortgage.remortgageErcPct || 0) / 100);
+
+  const agentRate = (sellingCfg.agentPct / 100) * (1 + sellingCfg.vatPct / 100);
+  const legal = sellingCfg.legalFixed || 0;
+  const epc = sellingCfg.epcAndMiscFixed || 0;
+  const cgt = property.isPrimaryResidence ? 0 : 0; // main residence -> PRR
+
+  const breakEvenPrice = (outstanding + erc + legal + epc + cgt + cashToRecoup) / (1 - agentRate);
+  const agentFee = breakEvenPrice * agentRate;
+
+  return {
+    saleDateISO,
+    breakEvenPrice,
+    cashToRecoup,
+    components: { deposit, sdlt, buyingCosts, interestPaid, outstanding, erc, agentFee, legal, epc, cgt },
+    // sanity: net proceeds at the break-even price should equal cashToRecoup
+    netAtBreakEven: breakEvenPrice - outstanding - erc - agentFee - legal - epc - cgt,
+  };
+}
+
 // Monthly mortgage payment now vs. after remortgage — the "holding cost" signal.
 export function holdingCostDelta(mortgage) {
   const io = mortgage.repaymentType === "interest_only";

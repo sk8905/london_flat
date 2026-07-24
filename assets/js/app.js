@@ -2,11 +2,13 @@
 // app.js  —  Entry point: load data, run model, render the single page, wire UI
 // =============================================================================
 
-import * as DATA from "../data/dataset.js?v=37";
-import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=37";
-import * as C from "./charts.js?v=37";
-import { monthlyPayment, monthsBetween, ymIndex, ymToISO } from "./finance.js?v=37";
-import { rentVsSell } from "./letting.js?v=37";
+import * as DATA from "../data/dataset.js?v=38";
+import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=38";
+import * as C from "./charts.js?v=38";
+import { monthlyPayment, monthsBetween, ymIndex, ymToISO, breakEvenRecoupAll, interestPaidToDate } from "./finance.js?v=38";
+import { rentVsSell } from "./letting.js?v=38";
+import { rentVsBuy } from "./ownrent.js?v=38";
+import * as MKT from "./market.js?v=38";
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const gbp = (n) => (n < 0 ? "−" : "") + "£" + Math.abs(Math.round(n)).toLocaleString("en-GB");
@@ -110,7 +112,22 @@ const state = {
     opportunityRate: DATA.LETTING.opportunityRatePct,
     interestOnly: DATA.LETTING.interestOnly,
   },
+  rentbuy: {
+    horizon: "2029-06-01",
+    monthlyRent: MKT.RENT.currentAvg2bed,
+    rentGrowthPct: MKT.RENT.yoYPct,
+    serviceCharge: DATA.LETTING.serviceChargeGroundRentPerYear,
+    maintenancePctOfValue: 1.0,
+    opportunityRate: DATA.LETTING.opportunityRatePct,
+  },
 };
+
+const RB_HORIZONS = [
+  { label: "1 year", date: "2027-06-01" },
+  { label: "3 years", date: "2029-06-01" },
+  { label: "5 years", date: "2031-06-01" },
+  { label: "10 years", date: "2036-06-01" },
+];
 
 const LET_HORIZONS = [
   { label: "Spring 2027", date: "2027-04-01" },
@@ -166,11 +183,11 @@ window.addEventListener("unhandledrejection", (e) => {
 });
 
 const PAGE_META = {
-  dashboard: ["Dashboard", "Your at-a-glance sell-timing summary"],
-  signal: ["Timing signal", "The weighted score across windows and factors"],
-  market: ["Market & factors", "Prices, rates, forecasts and policy — with sources"],
-  comps: ["Recent N1 sales", "Actual sold 2-bed flats — size, baths, type & £/m²"],
-  finances: ["Your finances", "Your position and projected net proceeds"],
+  dashboard: ["Dashboard", "Your at-a-glance summary"],
+  localmarket: ["Local market", "Listings & sales within 1 km — DOM, asking, £/m², HPI & forecasts"],
+  finances: ["Our finances", "What we paid, the mortgage cost, and the recoup-all break-even"],
+  rentbuy: ["Rent vs buy", "Own this flat, or rent the equivalent nearby?"],
+  signal: ["When to sell", "The weighted timing score across windows and factors"],
   selllet: ["Sell vs let", "Keep and rent it out, or sell now?"],
   inputs: ["Inputs", "Your figures, forecast assumptions & methodology"],
 };
@@ -204,6 +221,7 @@ function boot() {
     rerender();
     buildControls();
     buildLettingControls();
+    buildRentBuyControls();
     buildInputs();
     wireNav();
     initNotifications();
@@ -397,14 +415,16 @@ function rerender() {
   window.__model = result; // handy for inspection
   renderVerdict(result);
   renderDashboard(result);
-  renderPosition(result);
+  renderPaid(result);
+  renderBreakEven(result);
   renderSignal(result);
   renderProceeds(result);
   renderForecastChart(result);
   renderFactorCharts(result);
-  renderComps(result);
+  renderLocalMarket(result);
   renderFactorScores(result);
   renderLetting(result);
+  renderRentBuy(result);
 }
 
 // ---------------------------------------------------------------------------
@@ -568,10 +588,10 @@ function renderDashboard(r) {
 
   // quick links
   $("#dash-links").innerHTML = [
-    qlink("signal", "Full timing signal"),
-    qlink("market", "Explore market & factors"),
-    qlink("finances", "See your finances"),
-    qlink("selllet", "Sell vs let analysis"),
+    qlink("localmarket", "Explore the local market"),
+    qlink("finances", "Our finances & break-even"),
+    qlink("rentbuy", "Rent vs buy"),
+    qlink("signal", "When to sell"),
   ].join("");
   document.querySelectorAll("#dash-links .qlink").forEach((b) =>
     b.addEventListener("click", () => switchTab(b.dataset.go)));
@@ -610,13 +630,24 @@ function topReasons(w) {
 // ---------------------------------------------------------------------------
 // Your position
 // ---------------------------------------------------------------------------
-function renderPosition(r) {
+function renderPaid(r) {
   const p = r.inputs.property, m = r.inputs.mortgage;
   const io = m.repaymentType === "interest_only";
   const payNow = io ? m.principal * (m.ratePct / 100 / 12) : monthlyPayment(m.principal, m.ratePct, m.termYears);
   const equityNow = r.presentValue - balanceNow(r);
   const v = r.valuation;
-  const host = $("#position-body");
+  const host = $("#paid-body");
+  if (!host) return;
+
+  const deposit = Math.max(0, p.purchasePrice - m.principal);
+  const sdlt = p.sdltPaid || 0;
+  const buyCosts = p.otherBuyCosts || 0;
+  const cashInAtPurchase = deposit + sdlt + buyCosts;
+  const interestPaid = interestPaidToDate(m, DATA.META.asOf);
+  const paymentsToDate = monthsBetween(p.purchaseDate, DATA.META.asOf) * payNow;
+  const principalRepaid = Math.max(0, m.principal - balanceNow(r));
+  const totalPaidSoFar = cashInAtPurchase + paymentsToDate; // all cash out of pocket to date
+
   const valBox = v.compVal ? `
     <div class="val-box">
       <div class="val-head">Estimated current value — anchored to <strong>actual sold prices</strong></div>
@@ -626,24 +657,91 @@ function renderPosition(r) {
         <span><span class="anchor-num">B</span> £/m² comparable from N1 <strong>Land Registry sales</strong> (${gbp(v.perSqm.median)}/m²): <strong>${gbp(v.compVal)}</strong> <span class="muted">(range ${gbp(v.compLow)}–${gbp(v.compHigh)})</span></span>
         <span>For reference, you paid <strong>${gbp(p.purchasePrice)}</strong> = ${gbp(v.purchasePerSqm)}/m² in ${monthName(p.purchaseDate)}</span>
       </div>
-      <p class="muted small">The headline value is the <strong>blend of anchors A and B</strong> — both based on real
-        transactions, not asking prices or forecasts. Forward forecasts are used only to project this value into the future.</p>
     </div>` : "";
+
   host.innerHTML = valBox + `
+    <h3 class="panel-h">What we've paid so far</h3>
     <div class="cards">
-      ${card("Purchase", gbp(p.purchasePrice), monthName(p.purchaseDate) + " · " + p.postcode)}
+      ${card("Purchase price", gbp(p.purchasePrice), monthName(p.purchaseDate) + " · " + p.postcode)}
+      ${card("Deposit", gbp(deposit), (100 - m.ltv * 100).toFixed(0) + "% of price")}
+      ${card("Stamp Duty (SDLT)", gbp(sdlt), "paid at purchase")}
+      ${card("Other buying costs", gbp(buyCosts), "legal, survey, etc.")}
+      ${card("Cash in at purchase", gbp(cashInAtPurchase), "deposit + SDLT + buying costs", "gold")}
+      ${card("Mortgage payments to date", gbp(paymentsToDate), monthsBetween(p.purchaseDate, DATA.META.asOf) + " months @ " + gbp(payNow) + "/mo")}
+      ${card("— of which interest", gbp(interestPaid), "gone (not recoverable)")}
+      ${card("— of which principal", gbp(principalRepaid), "back to you as equity")}
+      ${card("Total paid so far", gbp(totalPaidSoFar), "all cash out of pocket to date", "gold")}
+    </div>
+    <h3 class="panel-h" style="margin-top:22px">What the mortgage is costing</h3>
+    <div class="cards">
+      ${card("Mortgage balance now", gbp(balanceNow(r)), "outstanding")}
+      ${card("Monthly payment", gbp(payNow), (io ? "interest-only" : "capital & interest") + " @ " + pct(m.ratePct))}
+      ${card("Rate / fix ends", pct(m.ratePct), "fixed until " + monthName(m.fixEndDate))}
+      ${card("Post-fix payment", gbp(r.holdingCost.after), signed(r.holdingCost.deltaMonthly, (x) => gbp(x)) + "/mo @ ~" + pct(m.remortgageRatePctAssumed))}
       ${card("Est. value now", gbp(r.presentValue), valueDelta(r.presentValue - p.purchasePrice))}
-      ${card("Mortgage", gbp(m.principal), (m.ltv * 100).toFixed(0) + "% LTV @ " + pct(m.ratePct))}
-      ${card("Deposit / equity in", gbp(p.purchasePrice - m.principal), "at purchase")}
-      ${card("Monthly payment", gbp(payNow), (io ? "interest-only" : "capital & interest") + ", " + m.termYears + "yr")}
       ${card("Est. equity now", gbp(equityNow), "value − outstanding balance")}
-      ${card("Fix ends", monthName(m.fixEndDate), "then remortgage @ ~" + pct(m.remortgageRatePctAssumed))}
-      ${card("Post-fix payment", gbp(r.holdingCost.after), signed(r.holdingCost.deltaMonthly, (x) => gbp(x)) + "/mo vs now")}
     </div>
     <p class="muted small">${p.isPrimaryResidence
       ? "CGT: this is your main residence, so a sale qualifies for Private Residence Relief — <strong>normally no Capital Gains Tax</strong> at any sale date."
-      : "CGT: marked as <strong>not your main residence</strong> — a sale may be liable to Capital Gains Tax (see Sell vs let for the partial-relief estimate)."}</p>
-    <p class="muted small">Edit any of these on the <strong>Inputs</strong> tab — your figures are saved in this browser.</p>`;
+      : "CGT: marked as <strong>not your main residence</strong> — a sale may be liable to Capital Gains Tax (see Sell vs let for the partial-relief estimate)."}
+      Edit any figure on the <strong>Inputs</strong> tab — saved in this browser.</p>`;
+}
+
+// Break-even to recoup all cash in — a headline price and a component waterfall.
+function renderBreakEven(r) {
+  const host = $("#breakeven-body");
+  if (!host) return;
+  const p = r.inputs.property, m = r.inputs.mortgage;
+  const be = breakEvenRecoupAll({
+    property: p, mortgage: m, sellingCfg: r.inputs.sellingCfg, saleDateISO: DATA.META.asOf,
+  });
+  const c = be.components;
+  const gapVsValue = be.breakEvenPrice - r.presentValue;
+  const overValue = gapVsValue > 0;
+  const perSqm = p.floorAreaSqm ? Math.round(be.breakEvenPrice / p.floorAreaSqm) : null;
+
+  host.innerHTML = `
+    <div class="be-hero">
+      <div>
+        <div class="verdict-kicker">Sell for at least</div>
+        <div class="be-price">${gbp(be.breakEvenPrice)}</div>
+        <div class="be-sub">${perSqm ? gbp(perSqm) + "/m² · " : ""}to get back every pound if you sold today</div>
+      </div>
+      <div class="pill pill-${overValue ? "neg" : "pos"}">
+        ${overValue ? gbp(gapVsValue) + " above" : gbp(-gapVsValue) + " below"} est. value ${gbp(r.presentValue)}
+      </div>
+    </div>
+    <p class="letting-lead">${overValue
+      ? `The break-even is <strong>${gbp(gapVsValue)} above</strong> today's estimated value of ${gbp(r.presentValue)}, so selling
+         right now would leave you short of recouping all your cash — price growth or more principal repaid closes the gap.`
+      : `Today's estimated value of <strong>${gbp(r.presentValue)}</strong> is already <strong>${gbp(-gapVsValue)} above</strong>
+         the break-even, so a sale now would recoup all your cash with room to spare.`}</p>
+    <div class="table-wrap"><table class="rank-table">
+      <thead><tr><th>To recoup (net proceeds must cover)</th><th>Amount</th></tr></thead>
+      <tbody>
+        <tr><td>Deposit</td><td>${gbp(c.deposit)}</td></tr>
+        <tr><td>Stamp Duty (SDLT)</td><td>${gbp(c.sdlt)}</td></tr>
+        <tr><td>Other buying costs</td><td>${gbp(c.buyingCosts)}</td></tr>
+        <tr><td>Mortgage interest paid to date</td><td>${gbp(c.interestPaid)}</td></tr>
+        <tr class="best-row"><td><strong>Total cash to recoup</strong></td><td><strong>${gbp(be.cashToRecoup)}</strong></td></tr>
+      </tbody>
+    </table></div>
+    <div class="table-wrap" style="margin-top:14px"><table class="rank-table">
+      <thead><tr><th>Plus, the sale must also cover</th><th>Amount</th></tr></thead>
+      <tbody>
+        <tr><td>Outstanding mortgage</td><td>${gbp(c.outstanding)}</td></tr>
+        <tr><td>Early-repayment charge (ERC)${c.erc > 0 ? "" : " — none"}</td><td>${gbp(c.erc)}</td></tr>
+        <tr><td>Estate agent fee (incl VAT)</td><td>${gbp(c.agentFee)}</td></tr>
+        <tr><td>Legal / conveyancing</td><td>${gbp(c.legal)}</td></tr>
+        <tr><td>EPC &amp; misc</td><td>${gbp(c.epc)}</td></tr>
+        <tr><td>Capital Gains Tax</td><td>${gbp(c.cgt)}${p.isPrimaryResidence ? " (main residence)" : ""}</td></tr>
+        <tr class="best-row"><td><strong>Break-even sale price</strong></td><td><strong>${gbp(be.breakEvenPrice)}</strong></td></tr>
+      </tbody>
+    </table></div>
+    <p class="muted small">Break-even solves net proceeds = cash to recoup. Because the agent fee scales with the price, it is
+      P* = (outstanding + ERC + legal + EPC + CGT + cash to recoup) ÷ (1 − agent%·(1+VAT)). Interest paid and the outstanding
+      balance both grow the longer you hold, so this figure drifts up over time — see the recoup-all line on the proceeds chart
+      below for each candidate window.</p>`;
 }
 
 // Total cash you sank in at purchase: deposit + SDLT + other buying costs.
@@ -659,17 +757,15 @@ function balanceNow(r) {
   return nowWin ? nowWin.outstanding : r.inputs.mortgage.principal;
 }
 
-// Break-even line for the proceeds chart. To beat "sell today and invest the cash",
-// a future window's net proceeds must clear today's net proceeds grown at the
-// opportunity return to that window's date. One value per window (rises over time).
+// Recoup-all-cash break-even line for the proceeds chart (bars = net proceeds).
+// The threshold is the total cash sunk in by each window's date — deposit + SDLT +
+// buying costs + interest paid to date — i.e. the net proceeds needed to get every
+// pound back. A bar above the line means you've recouped all your cash. Rises over
+// time as more interest is paid.
 function breakEvenValues(r) {
-  const nowWin = r.windows.find((w) => w.window.id === "now");
-  const sellNowNet = nowWin ? nowWin.net : 0;
-  const opp = num(state.letting.opportunityRate) / 100;
-  return r.windows.map((w) => {
-    const yrs = Math.max(0, monthsBetween(DATA.META.asOf, w.window.date) / 12);
-    return sellNowNet * Math.pow(1 + opp, yrs);
-  });
+  const p = r.inputs.property, m = r.inputs.mortgage;
+  const fixedCash = Math.max(0, p.purchasePrice - m.principal) + (p.sdltPaid || 0) + (p.otherBuyCosts || 0);
+  return r.windows.map((w) => fixedCash + interestPaidToDate(m, w.window.date));
 }
 
 function valueDelta(d) {
@@ -677,8 +773,8 @@ function valueDelta(d) {
   return `<span class="delta ${cls}">${signed(d, gbp)}</span> vs purchase`;
 }
 
-function card(label, big, sub) {
-  return `<div class="card"><div class="card-label">${label}</div>
+function card(label, big, sub, tone) {
+  return `<div class="card ${tone || ""}"><div class="card-label">${label}</div>
     <div class="card-value">${big}</div><div class="card-sub">${sub}</div></div>`;
 }
 
@@ -737,9 +833,9 @@ function renderProceeds(r) {
       <p class="chart-cap">Bars = <strong>net proceeds (cash in hand)</strong>. The grey dashed line is the
       <strong>${gbp(cashIn)} you put in</strong> (${gbp(deposit)} deposit + ${gbp(buyCosts)} SDLT/buying costs); the bar
       above it is your <strong>net profit</strong> (shown under each bar). The
-      <strong style="color:#a06a3c">bronze line</strong> is the <strong>break-even vs selling today</strong> —
-      today's net proceeds grown at your ${pct(state.letting.opportunityRate)} opportunity return; a bar above it beats
-      selling now and investing the cash. Scenario: <strong>${state.custom ? "Custom" : r.scenarioName}</strong>.</p></div>
+      <strong style="color:#a06a3c">bronze line</strong> is the <strong>recoup-all-cash break-even</strong> — the net
+      proceeds needed to get every pound back (deposit + SDLT + buying costs + interest paid to that date); a bar above it
+      means you've recouped all your cash. Scenario: <strong>${state.custom ? "Custom" : r.scenarioName}</strong>.</p></div>
     <div class="table-wrap"><table class="rank-table">
       <thead><tr><th>Window</th><th>Sale value</th><th>Outstanding</th><th>ERC</th><th>Selling costs</th><th>CGT</th><th>Net proceeds</th><th>Less deposit + SDLT</th><th>Net profit</th></tr></thead>
       <tbody>${r.windows.map((w) => `<tr class="${w === r.best ? "best-row" : ""}">
@@ -849,73 +945,158 @@ function nearestBase(series, dateISO) {
 }
 
 // ---------------------------------------------------------------------------
-// Recent N1 2-bed flat sales (comparables)
+// SECTION 1 — Local market (within 1 km of N1 7TX)
 // ---------------------------------------------------------------------------
-function renderComps(r) {
-  const host = $("#comps-body");
-  if (!host) return;
+function fmtDayMon(iso) {
+  if (!iso) return "—";
+  const d = iso.length >= 10 ? parseInt(iso.slice(8, 10), 10) : null;
+  return (d ? d + " " : "") + monthName(iso);
+}
+
+function renderLocalMarket(r) {
   const p = r.inputs.property;
-  const yours = {
-    addr: p.postcode + " — your flat", date: p.purchaseDate.slice(0, 7), price: p.purchasePrice,
-    beds: p.bedrooms, baths: p.bathrooms, type: "Apartment — new build (" + p.buildYear + ")", sqm: p.floorAreaSqm, you: true,
-  };
-  const rows = DATA.COMPS.rows.map((x) => ({ ...x, perSqm: Math.round(x.price / x.sqm) }));
-  rows.push({ ...yours, perSqm: Math.round(yours.price / yours.sqm) });
-  rows.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0)); // newest first
 
-  const psmList = DATA.COMPS.rows.map((x) => x.price / x.sqm).sort((a, b) => a - b);
-  const n = psmList.length;
-  const median = Math.round(n % 2 ? psmList[(n - 1) / 2] : (psmList[n / 2 - 1] + psmList[n / 2]) / 2);
-  const yourPsm = Math.round(yours.price / yours.sqm);
-  const diffPct = (yourPsm / median - 1) * 100;
+  // curated-vs-live banner
+  const note = $("#lm-source-note");
+  if (note) {
+    note.innerHTML = MKT.isCurated()
+      ? "Curated snapshot from HM Land Registry, the EPC register and local listing/planning records — pending the live Homedata feed."
+      : "Live from the Homedata feed.";
+  }
 
-  // Map: number the comps newest-first (matching the dataset order), plus your flat.
-  const mapComps = DATA.COMPS.rows.map((x, i) => ({ ...x, n: i + 1, perSqm: Math.round(x.price / x.sqm) }));
-  const tipHtml = (addr, price, psm, date, verb) =>
-    `<strong>${addr}</strong><span>${gbp(price)} · ${gbp(psm)}/m²</span><span>${verb} ${monthName(date)}</span>`;
-  const tipPlain = (addr, price, psm, date, verb) =>
-    `${addr} — ${gbp(price)} · ${gbp(psm)}/m² · ${verb} ${monthName(date)}`;
-  const mapPoints = mapComps.map((x) => ({
-    lat: x.lat, lng: x.lng, n: x.n,
-    tip: tipHtml(x.addr, x.price, x.perSqm, x.date, "sold"),
-    plain: tipPlain(x.addr, x.price, x.perSqm, x.date, "sold"),
-  })).concat(Number.isFinite(p.lat) && Number.isFinite(p.lng) ? [{
-    lat: p.lat, lng: p.lng, you: true,
-    tip: tipHtml("Your flat — " + p.postcode, p.purchasePrice, yourPsm, p.purchaseDate, "bought"),
-    plain: tipPlain("Your flat — " + p.postcode, p.purchasePrice, yourPsm, p.purchaseDate, "bought"),
-  }] : []);
-  const mapLegend = `<div class="map-legend">
+  const stats = MKT.salesStats();          // sold set within radius, enriched + summarised
+  const sales = stats.rows;
+  const listings = MKT.deriveListings(MKT.RADIUS_KM, DATA.META.asOf);
+  const lpm = MKT.LISTINGS_PER_MONTH.series;
+  const avgLpm = lpm.length ? Math.round(lpm.reduce((s, x) => s + x.count, 0) / lpm.length) : 0;
+  const yourPsm = p.floorAreaSqm ? Math.round(p.purchasePrice / p.floorAreaSqm) : null;
+
+  // ---- KPIs ----
+  const kpis = $("#lm-kpis");
+  if (kpis) kpis.innerHTML = [
+    kpi("Sales (1 km)", String(stats.count), "completed, in radius"),
+    kpi("Median £/m²", stats.medianPerSqm ? gbp(stats.medianPerSqm) : "—",
+      yourPsm && stats.medianPerSqm ? "you paid " + gbp(yourPsm) + "/m²" : "sold prices"),
+    kpi("Median days on market", stats.medianDaysOnMarket != null ? Math.round(stats.medianDaysOnMarket) + " days" : "—", "list → sold"),
+    kpi("Sold below asking", stats.pctBelowAsking != null ? stats.pctBelowAsking + "%" : "—",
+      stats.medianVsAskingPct != null ? "median " + signed(stats.medianVsAskingPct, (x) => x.toFixed(1)) + "% vs asking" : "of sales"),
+    kpi("On the market now", String(listings.length), "within 1 km"),
+    kpi("New listings / mo", String(avgLpm), "avg last " + lpm.length + " months"),
+  ].join("");
+
+  // ---- listings per month chart ----
+  const lpmHost = $("#lm-listings-chart");
+  if (lpmHost) C.barChart(lpmHost, {
+    bars: lpm.map((x) => ({ label: monthName(x.month).replace(/ 20/, " '"), value: x.count, valueLabel: String(x.count),
+      color: "#4a7c8c" })),
+    yFormat: (v) => v.toFixed(0), height: 240, yUnit: "new listings",
+  });
+
+  // ---- map: your flat (green) + sales (blue) + listings (amber) ----
+  const tipHtml = (a, b, c2) => `<strong>${a}</strong><span>${b}</span><span>${c2}</span>`;
+  const tipPlain = (a, b, c2) => `${a} — ${b} · ${c2}`;
+  let seq = 0;
+  const salePins = sales.map((x) => {
+    seq += 1;
+    return { lat: x.lat, lng: x.lng, n: seq,
+      tip: tipHtml(x.addr, gbp(x.price) + " · " + gbp(x.perSqm) + "/m²", "sold " + monthName(x.soldDate) + " · " + (x.daysOnMarket != null ? x.daysOnMarket + " days" : "")),
+      plain: tipPlain(x.addr, gbp(x.price) + " · " + gbp(x.perSqm) + "/m²", "sold " + monthName(x.soldDate)), _n: seq };
+  });
+  const listPins = listings.map((x) => {
+    seq += 1;
+    return { lat: x.lat, lng: x.lng, n: seq, listing: true,
+      tip: tipHtml(x.addr, gbp(x.askingPrice) + " · " + gbp(x.perSqm) + "/m²", x.status + " · " + (x.daysListed != null ? x.daysListed + " days on market" : "")),
+      plain: tipPlain(x.addr, gbp(x.askingPrice) + " asking", x.status), _n: seq };
+  });
+  const mapPoints = salePins.concat(listPins).concat(
+    Number.isFinite(p.lat) && Number.isFinite(p.lng) ? [{
+      lat: p.lat, lng: p.lng, you: true,
+      tip: tipHtml("Your flat — " + p.postcode, gbp(p.purchasePrice) + (yourPsm ? " · " + gbp(yourPsm) + "/m²" : ""), "bought " + monthName(p.purchaseDate)),
+      plain: tipPlain("Your flat — " + p.postcode, gbp(p.purchasePrice), "bought " + monthName(p.purchaseDate)),
+    }] : []);
+  const mapHost = $("#lm-map");
+  if (mapHost) C.scatterMap(mapHost, { points: mapPoints });
+  const legend = $("#lm-legend");
+  if (legend) legend.innerHTML = `<div class="map-legend">
       <div class="map-legend-item"><span class="map-num you"></span><span><strong>Your flat</strong> — ${p.postcode} · ${gbp(p.purchasePrice)}</span></div>
-      ${mapComps.map((x) => `<div class="map-legend-item"><span class="map-num">${x.n}</span><span><strong>${x.addr}</strong> · ${gbp(x.price)} · ${gbp(x.perSqm)}/m²</span></div>`).join("")}
+      ${salePins.map((x, i) => `<div class="map-legend-item"><span class="map-num">${x._n}</span><span><strong>${sales[i].addr}</strong> · sold ${gbp(sales[i].price)}</span></div>`).join("")}
+      ${listPins.map((x, i) => `<div class="map-legend-item"><span class="map-num listing">${x._n}</span><span><strong>${listings[i].addr}</strong> · ${gbp(listings[i].askingPrice)} asking (${listings[i].status})</span></div>`).join("")}
     </div>`;
 
-  host.innerHTML = `
-    <div class="cards">
-      ${card("Sales shown", String(DATA.COMPS.rows.length), "recent N1 2-bed flats")}
-      ${card("Median £/m²", gbp(median), "across these sales")}
-      ${card("Your £/m² (paid)", gbp(yourPsm), signed(diffPct, (x) => x.toFixed(0) + "%") + " vs median")}
-      ${card("Your flat", gbp(p.purchasePrice), p.floorAreaSqm + " m² · " + p.bedrooms + "-bed/" + p.bathrooms + "-bath")}
-    </div>
-    <h3 class="panel-h" style="margin-top:22px">Where these sold</h3>
-    <div id="comps-map" class="chart-wrap"></div>
-    ${mapLegend}
-    <p class="chart-cap">Approximate street-level positions across N1 (not exact door numbers). Green marks your flat;
-      numbered pins match the list above and the table below.</p>
-    <div class="table-wrap" style="margin-top:20px"><table class="rank-table comps-table">
-      <thead><tr><th>Sold</th><th>Address / area</th><th>Price</th><th>Beds</th><th>Baths</th><th>Building type</th><th>Size (m²)</th><th>£/m²</th></tr></thead>
-      <tbody>${rows.map((x) => `<tr class="${x.you ? "best-row" : ""}">
-        <td>${monthName(x.date)}</td><td>${x.you ? `<span class="best-tag">Yours</span> ` : ""}${x.addr}</td><td>${gbp(x.price)}</td>
-        <td>${x.beds}</td><td>${x.baths}</td><td>${x.type}</td><td>${x.sqm}</td>
-        <td><strong>${gbp(x.perSqm)}</strong></td></tr>`).join("")}</tbody>
+  // ---- sales table ----
+  const salesHost = $("#lm-sales-body");
+  if (salesHost) salesHost.innerHTML = `
+    <div class="table-wrap"><table class="rank-table comps-table">
+      <thead><tr><th>Sold</th><th>Address</th><th>Asking</th><th>Sold</th><th>vs asking</th><th>Days</th><th>Size</th><th>£/m²</th><th>Type</th></tr></thead>
+      <tbody>${sales.map((x) => `<tr>
+        <td>${monthName(x.soldDate)}</td><td>${x.addr} <span class="muted">· ${x.distKm} km</span></td>
+        <td>${x.askingPrice ? gbp(x.askingPrice) : "—"}</td><td><strong>${gbp(x.price)}</strong></td>
+        <td class="${x.vsAsking < 0 ? "neg-cell" : ""}">${x.vsAsking != null ? signed(x.vsAsking, gbp) + " (" + signed(x.vsAskingPct, (v) => v.toFixed(1)) + "%)" : "—"}</td>
+        <td>${x.daysOnMarket != null ? x.daysOnMarket : "—"}</td><td>${x.sqm} m²</td>
+        <td><strong>${gbp(x.perSqm)}</strong></td><td>${x.type}</td></tr>`).join("")}</tbody>
     </table></div>
-    <p class="muted small">${DATA.COMPS.note} Sources:
-      <a href="https://www.gov.uk/search-house-prices" target="_blank" rel="noopener">HM Land Registry sold prices</a> ·
-      <a href="https://www.zoopla.co.uk/house-prices/n1-7tx/" target="_blank" rel="noopener">Zoopla N1 7TX</a>.</p>
-    <p class="disclaimer"><strong>Representative data.</strong> Compiled from Land Registry sold prices with floor area and
-      bathrooms from EPC/listing data; bathroom counts and some areas reflect each property's typical spec where not in open
-      data. Verify individual transactions against the sources before relying on them.</p>`;
+    <p class="muted small">Sold prices from <a href="https://www.gov.uk/search-house-prices" target="_blank" rel="noopener">HM Land
+      Registry</a>; floor areas from the <a href="https://find-energy-certificate.service.gov.uk/" target="_blank" rel="noopener">EPC
+      register</a>; asking prices &amp; time-on-market from listing history / <a href="https://homedata.co.uk/" target="_blank" rel="noopener">Homedata</a>.
+      Positive "vs asking" = sold over the asking price.</p>`;
 
-  C.scatterMap($("#comps-map"), { points: mapPoints });
+  // ---- active listings table ----
+  const listHost = $("#lm-listings-body");
+  if (listHost) listHost.innerHTML = listings.length ? `
+    <div class="table-wrap"><table class="rank-table comps-table">
+      <thead><tr><th>Listed</th><th>Address</th><th>Asking</th><th>£/m²</th><th>On market</th><th>Size</th><th>Status</th><th>Type</th></tr></thead>
+      <tbody>${listings.map((x) => `<tr>
+        <td>${fmtDayMon(x.listedDate)}</td><td>${x.addr} <span class="muted">· ${x.distKm} km</span></td>
+        <td><strong>${gbp(x.askingPrice)}</strong></td><td>${gbp(x.perSqm)}</td>
+        <td>${x.daysListed != null ? x.daysListed + " days" : "—"}</td><td>${x.sqm} m²</td>
+        <td>${x.status}</td><td>${x.type}</td></tr>`).join("")}</tbody>
+    </table></div>` : `<p class="muted">No active listings in the radius right now.</p>`;
+
+  // ---- HPI ----
+  const H = MKT.HPI;
+  const hpiHost = $("#lm-hpi");
+  if (hpiHost) hpiHost.innerHTML = `
+    <div class="cards">
+      ${card("Islington avg", gbp(H.islingtonAvg), signed(H.islingtonYoYPct, (x) => x.toFixed(1) + "%") + " YoY")}
+      ${card("Islington flats", gbp(H.islingtonFlatsAvg), signed(H.islingtonFlatsYoYPct, (x) => x.toFixed(1) + "%") + " YoY")}
+      ${card("N1 7TX (12m avg)", gbp(H.n1_7txAvg12m), "your postcode")}
+      ${card("London avg", gbp(H.londonAvg), signed(H.londonYoYPct, (x) => x.toFixed(1) + "%") + " YoY")}
+      ${card("England avg", gbp(H.englandAvg), signed(H.englandYoYPct, (x) => x.toFixed(1) + "%") + " YoY")}
+    </div>
+    <p class="muted small">UK House Price Index, ${monthName(H.asOf)} (published ~2 months in arrears). Source:
+      <a href="https://www.gov.uk/government/news/uk-house-price-index-for-march-2026" target="_blank" rel="noopener">UK HPI</a> ·
+      <a href="https://www.ons.gov.uk/economy/inflationandpriceindices/bulletins/privaterentandhousepricesuk/latest" target="_blank" rel="noopener">ONS</a>.</p>`;
+
+  // ---- new-build pipeline ----
+  const pipe = MKT.pipelineWithinRadius();
+  const nbHost = $("#lm-newbuilds");
+  if (nbHost) nbHost.innerHTML = `
+    <div class="cards"><div class="card gold"><div class="card-label">Pipeline within 1 km</div>
+      <div class="card-value">${pipe.totalUnits.toLocaleString("en-GB")} homes</div>
+      <div class="card-sub">${pipe.rows.length} schemes</div></div></div>
+    <div class="table-wrap" style="margin-top:14px"><table class="rank-table">
+      <thead><tr><th>Scheme</th><th>Homes</th><th>Completion</th><th>Status</th><th>Note</th></tr></thead>
+      <tbody>${pipe.rows.map((x) => `<tr>
+        <td><strong>${x.name}</strong> <span class="muted">· ${x.distKm} km</span></td><td>${x.units}</td>
+        <td>${x.completion}</td><td>${x.status}</td><td class="muted">${x.note}</td></tr>`).join("")}</tbody>
+    </table></div>
+    <p class="muted small">From local planning records. Source:
+      <a href="https://www.planit.org.uk/planapplic/loc/N1%207TX/search" target="_blank" rel="noopener">PlanIt planning applications</a>.
+      Unit counts &amp; dates are estimates.</p>`;
+
+  // ---- forecasts ----
+  const fHost = $("#lm-forecasts");
+  if (fHost) fHost.innerHTML = `
+    <div class="table-wrap"><table class="rank-table">
+      <thead><tr><th>Source</th><th>Horizon</th><th>Price</th><th>Activity read</th></tr></thead>
+      <tbody>${MKT.FORECASTS.rows.map((x) => `<tr>
+        <td><strong>${x.source}</strong></td><td>${x.horizon}</td>
+        <td>${x.priceYoY == null ? "—" : signed(x.priceYoY, (v) => v.toFixed(1)) + "%"}</td>
+        <td class="muted">${x.activity}</td></tr>`).join("")}</tbody>
+    </table></div>
+    <p class="muted small">Curated with attribution. Sources:
+      <a href="https://www.rics.org/news-insights/market-surveys/uk-residential-market-survey" target="_blank" rel="noopener">RICS Residential Survey</a>,
+      Savills, Knight Frank, Zoopla and local agents. Forecasts are uncertain and often revised.</p>`;
 }
 
 // ---------------------------------------------------------------------------
@@ -1057,6 +1238,137 @@ function buildLettingControls() {
 
 function rerenderLetting() {
   renderLetting(runModel(effectiveData(), currentOverrides()));
+}
+
+// ---------------------------------------------------------------------------
+// SECTION 3 — Rent vs buy (own this flat, or rent the equivalent?)
+// ---------------------------------------------------------------------------
+function computeRentBuy(r) {
+  const RB = state.rentbuy;
+  const mortgage = { ...r.inputs.mortgage, _purchaseDate: r.inputs.property.purchaseDate };
+  return rentVsBuy({
+    property: r.inputs.property, mortgage, sellingCfg: r.inputs.sellingCfg,
+    presentValue: r.presentValue, presentISO: DATA.META.asOf,
+    growthByYear: r.growthByYear, horizonISO: RB.horizon,
+    rentCfg: {
+      monthlyRent: RB.monthlyRent, rentGrowthPct: RB.rentGrowthPct,
+      serviceChargePerYear: RB.serviceCharge, maintenancePctOfValue: RB.maintenancePctOfValue,
+    },
+    opportunityRatePct: RB.opportunityRate,
+  });
+}
+
+function renderRentBuy(r) {
+  const host = $("#rb-summary");
+  if (!host) return;
+  const res = computeRentBuy(r);
+  const M = res.monthly, T = res.terminal;
+  const horizonLabel = (RB_HORIZONS.find((h) => h.date === state.rentbuy.horizon) || {}).label || res.horizonISO;
+  const ownCheaperMonthly = M.ownVsRent < 0;
+  const ownWins = T.advantageOwn >= 0;
+
+  host.innerHTML = `
+    <div class="verdict-kicker">Monthly economic cost — owning vs renting the equivalent 2-bed</div>
+    <p class="letting-lead">Right now, owning costs about <strong>${gbp(M.ownEconomic)}/mo</strong> in economic terms versus
+      <strong>${gbp(M.rent)}/mo</strong> to rent — owning is
+      <strong class="${ownCheaperMonthly ? "delta up" : "delta down"}">${gbp(Math.abs(M.ownVsRent))}/mo ${ownCheaperMonthly ? "cheaper" : "dearer"}</strong>.
+      Owning cost excludes mortgage principal (that builds equity) and nets off expected price growth.</p>
+    <div class="cards">
+      ${card("Mortgage interest", gbp(M.interest) + "/mo", "not principal")}
+      ${card("Service charge + upkeep", gbp(M.serviceMaint) + "/mo", "curated estimate")}
+      ${card("Opportunity cost of equity", gbp(M.oppCostEquity) + "/mo", "on " + gbp(res.equityNow) + " @ " + pct(state.rentbuy.opportunityRate))}
+      ${card("Less expected growth", (M.appreciation >= 0 ? "−" : "+") + gbp(Math.abs(M.appreciation)) + "/mo", "value change this year")}
+      ${card("= Owning cost", gbp(M.ownEconomic) + "/mo", "economic monthly", "gold")}
+      ${card("Rent for equivalent", gbp(M.rent) + "/mo", "avg 2-bed within 1 km")}
+    </div>
+
+    <div class="verdict-kicker" style="margin-top:20px">Wealth after ${horizonLabel} — keep owning vs sell &amp; rent</div>
+    <p class="letting-lead">Keeping the flat leaves you
+      <strong class="${ownWins ? "delta up" : "delta down"}">${gbp(Math.abs(T.advantageOwn))} ${ownWins ? "better" : "worse"} off</strong>
+      than selling now for ${gbp(res.sellNowNet)} net, investing it at ${pct(state.rentbuy.opportunityRate)}, and renting —
+      over ${res.years.toFixed(1)} years. Each year the cheaper option invests the surplus at the same return.</p>
+    <div class="cards">
+      ${card("Own — wealth at horizon", gbp(T.wealthOwn), "net equity + invested savings")}
+      ${card("Rent — wealth at horizon", gbp(T.wealthRent), gbp(res.sellNowNet) + " grown @ " + pct(state.rentbuy.opportunityRate))}
+      ${card("Owning advantage", signed(T.advantageOwn, gbp), ownWins ? "owning ahead" : "renting ahead", ownWins ? "pos" : "neg")}
+    </div>
+    <div class="chart-wrap"><div id="rb-wealth-chart"></div>
+      <p class="chart-cap">Projected total wealth at ${horizonLabel} under each path.</p></div>`;
+
+  C.barChart($("#rb-wealth-chart"), {
+    bars: [
+      { label: "Keep owning", value: T.wealthOwn, color: ownWins ? "#2f7d57" : "#4a7c8c", valueLabel: gbp(T.wealthOwn) },
+      { label: "Sell & rent", value: T.wealthRent, color: ownWins ? "#4a7c8c" : "#2f7d57", valueLabel: gbp(T.wealthRent) },
+    ],
+    yFormat: (v) => "£" + Math.round(v / 1000) + "k", height: 280, yUnit: "£ total wealth",
+  });
+
+  // rent series chart
+  const rc = $("#rb-rent-chart");
+  if (rc) C.lineChart(rc, {
+    height: 260,
+    series: [{ name: "Avg 2-bed rent (1 km)", color: "#1f5a73",
+      points: MKT.RENT.series.map((s) => ({ x: monthName(s.month), y: s.rent })) }],
+    yFormat: (v) => "£" + Math.round(v).toLocaleString("en-GB"), yUnit: "£/month",
+  });
+  const cap = $("#rb-rent-cap");
+  if (cap) cap.innerHTML = `Average advertised rent for a 2-bed within 1 km: <strong>${gbp(MKT.RENT.currentAvg2bed)}/mo</strong>
+    (${signed(MKT.RENT.yoYPct, (x) => x.toFixed(1))}% YoY). Source:
+    <a href="https://www.rightmove.co.uk/property-to-rent/Islington.html" target="_blank" rel="noopener">Rightmove</a> ·
+    <a href="https://www.ons.gov.uk/economy/inflationandpriceindices/bulletins/privaterentandhousepricesuk/latest" target="_blank" rel="noopener">ONS</a>.`;
+
+  // year-by-year table
+  const tbl = $("#rb-table");
+  if (tbl) tbl.innerHTML = `
+    <div class="table-wrap"><table class="rank-table">
+      <thead><tr><th>Period</th><th>Rent paid</th><th>Own — interest</th><th>Own — principal†</th><th>Service+upkeep</th><th>Own cash out</th><th>Rent − own cash</th></tr></thead>
+      <tbody>${res.yearsTable.map((y) => {
+        const diff = y.rent - y.ownCash;
+        return `<tr><td>${letPeriodLabel(y.label, y.months)}</td><td>${gbp(y.rent)}</td>
+          <td>${gbp(y.interest)}</td><td>${gbp(y.principal)}</td><td>${gbp(y.serviceMaint)}</td>
+          <td>${gbp(y.ownCash)}</td><td class="${diff >= 0 ? "" : "neg-cell"}"><strong>${signed(diff, gbp)}</strong></td></tr>`;
+      }).join("")}</tbody>
+    </table>
+    <p class="muted small">†Principal repayments leave your cash flow but build equity — a positive "Rent − own cash" means
+      owning is cheaper that year, and the surplus is invested at your opportunity rate toward the horizon.</p></div>`;
+}
+
+function buildRentBuyControls() {
+  const host = $("#rb-controls");
+  if (!host) return;
+  const RB = state.rentbuy;
+  host.innerHTML = `
+    <div class="controls-grid">
+      <label class="ctrl"><span>Compare over</span>
+        <select id="rb-horizon">${RB_HORIZONS.map((h) =>
+          `<option value="${h.date}" ${h.date === RB.horizon ? "selected" : ""}>${h.label}</option>`).join("")}</select></label>
+      <label class="ctrl"><span>Rent for equivalent (£/mo)</span>
+        <input id="rb-rent" type="number" min="0" step="25" value="${RB.monthlyRent}"></label>
+      <label class="ctrl"><span>Rent growth (%/yr)</span>
+        <input id="rb-rentg" type="number" min="0" max="15" step="0.25" value="${RB.rentGrowthPct}"></label>
+      <label class="ctrl"><span>Service charge + ground rent (£/yr)</span>
+        <input id="rb-sc" type="number" min="0" step="50" value="${RB.serviceCharge}"></label>
+      <label class="ctrl"><span>Maintenance (% of value/yr)</span>
+        <input id="rb-maint" type="number" min="0" max="5" step="0.1" value="${RB.maintenancePctOfValue}"></label>
+      <label class="ctrl"><span>Opportunity return (%/yr)</span>
+        <input id="rb-opp" type="number" min="0" max="20" step="0.25" value="${RB.opportunityRate}"></label>
+    </div>`;
+  $("#rb-horizon").addEventListener("change", (e) => { RB.horizon = e.target.value; rerenderRentBuy(); });
+  $("#rb-rent").addEventListener("input", (e) => { RB.monthlyRent = num(e.target.value, RB.monthlyRent); scheduleRentBuy(); });
+  $("#rb-rentg").addEventListener("input", (e) => { RB.rentGrowthPct = num(e.target.value, RB.rentGrowthPct); scheduleRentBuy(); });
+  $("#rb-sc").addEventListener("input", (e) => { RB.serviceCharge = num(e.target.value, RB.serviceCharge); scheduleRentBuy(); });
+  $("#rb-maint").addEventListener("input", (e) => { RB.maintenancePctOfValue = num(e.target.value, RB.maintenancePctOfValue); scheduleRentBuy(); });
+  $("#rb-opp").addEventListener("input", (e) => { RB.opportunityRate = num(e.target.value, RB.opportunityRate); scheduleRentBuy(); });
+}
+
+let _rbQueued = false;
+function scheduleRentBuy() {
+  if (_rbQueued) return;
+  _rbQueued = true;
+  requestAnimationFrame(() => { _rbQueued = false; rerenderRentBuy(); });
+}
+function rerenderRentBuy() {
+  renderRentBuy(runModel(effectiveData(), currentOverrides()));
 }
 
 // ---------------------------------------------------------------------------
