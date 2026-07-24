@@ -16,13 +16,14 @@
 // Comparables endpoint seeded at the N1 7TX centroid and at Wharf Road (City Road
 // Basin) so both sides of the Islington/Hackney border are covered; sold prices are
 // HMLR-confirmed completions (spot-checked against HM Land Registry Price Paid Data)
-// and £/m² uses EPC-register floor areas. RENT current listings come from the
-// Homedata Live Listings feed, geocoded via postcodes.io. HPI is the official UK HPI
-// (HM Land Registry / ONS, 2026-05, provisional). Still curated & FLAGGED, not live:
-// LISTINGS_PER_MONTH (needs a historic-listing aggregation), NEW_BUILDS (planning
-// pipeline), FORECASTS (third-party analyst forecasts), and RENT's pre-2026-07 series
-// / yoYPct. `applyHomedata(payload)` merges a fresh same-shape payload and flips each
-// block's curated flag off; see the daily routine in the README.
+// and £/m² uses EPC-register floor areas. RENT current listings + yoYPct are live
+// (Homedata Live Listings, geocoded via postcodes.io; yoYPct from ONS PIPR). HPI is
+// the official UK HPI (HM Land Registry / ONS, 2026-05, provisional). NEW_BUILDS is
+// live from PlanIt planning records (completion years are estimates). Still curated
+// & FLAGGED: LISTINGS_PER_MONTH (a clean 1 km monthly census isn't cheaply
+// reconstructable — see its note), FORECASTS (third-party analyst forecasts), and
+// RENT's pre-2026-07 series. `applyHomedata(payload)` merges a fresh same-shape
+// payload and flips each block's curated flag off; see the daily routine in README.
 // =============================================================================
 
 // N1 7TX postcode centroid (City Road Basin / Wenlock, Islington).
@@ -179,13 +180,14 @@ export const LISTINGS = {
 // -----------------------------------------------------------------------------
 // LISTINGS PER MONTH — count of NEW 2-bed flat listings within 1 km, by month.
 // A simple activity gauge (supply coming to market). Newest last.
-// FLAGGED / still curated (2026-07-24): a true monthly new-listing count within
-// 1 km needs an aggregated historic-listings query (Homedata Market Activity /
-// property_sale_events, event_type=Added, date-bucketed). That can't be built from
-// the single cheap daily pull without survivorship bias (live listings only show
-// stock still on the market, undercounting older months), so this remains the
-// curated estimate rather than a fabricated live count. Refresh when the routine
-// is allowed a dedicated aggregation call.
+// FLAGGED / still curated (2026-07-24): a refresh was ATTEMPTED and can't be done
+// honestly on the cheap. The Homedata Live Listings feed (newest-first, page 1 of
+// both boroughs) only reaches back to 2026-05 within 1 km — three months — and,
+// being active-only, it undercounts every month by the sold/withdrawn share. A true
+// monthly new-listing census needs a date-bucketed historic aggregation (Market
+// Activity / property_sale_events, event_type=Added, per-property), which is too
+// call-heavy for the free tier. Left as the curated estimate rather than a
+// survivorship-biased live count.
 // -----------------------------------------------------------------------------
 export const LISTINGS_PER_MONTH = {
   asOf: "2026-06-30",
@@ -244,11 +246,11 @@ export const HPI = {
 // geocoded to the centroid via postcodes.io). The live median (£3,722) runs well
 // above the old curated series — the City Road Basin 1 km is dominated by premium
 // new-build towers, and portal ASKING rents sit above ONS achieved rents.
-// FLAGGED: the historical quarterly `series` and `yoYPct` are NOT re-derived this
-// pull — there is no allow-listed rent-history source (ONS PIPR sits on
-// api.beta.ons.gov.uk, which is off the allow-list). The pre-2026-07 quarters are
-// retained estimates; only the final `2026-07` point is live. `yoYPct` is kept as
-// the rent-vs-buy forward-growth assumption, not a measured live figure.
+// `yoYPct` is LIVE: ONS Price Index of Private Rents (PIPR), London, +2.2% in the
+// 12 months to June 2026 (the bulletin doesn't break out Islington; London is the
+// closest verified figure). The historical quarterly `series` before 2026-07 is
+// still retained estimates — there is no allow-listed source for a 1 km 2-bed rent
+// history — so only the final `2026-07` point is a live measurement.
 export const RENT = {
   asOf: "2026-07-24",
   curated: false,
@@ -264,7 +266,7 @@ export const RENT = {
     { month: "2026-07", rent: 3722 }, // LIVE — Homedata live-listings median (n=106)
   ],
   currentAvg2bed: 3722, // LIVE — median of 106 in-radius 2-bed asking rents
-  yoYPct: 4.0, // FLAGGED — forward assumption, not re-derived this pull
+  yoYPct: 2.2, // LIVE — ONS PIPR, London private rents, 12 months to June 2026
   listings: [
     { addr: "New North Road, N1 7BH", beds: 2, baths: 1, pcm: 2750, lat: 51.53656, lng: -0.08998 },
     { addr: "Angel Wharf, N1 7ER", beds: 2, baths: 2, pcm: 3950, lat: 51.53363, lng: -0.09323 },
@@ -284,26 +286,32 @@ export const RENT = {
 // (/planning/search) and PlanIt per scheme; until then the pipeline is left as the
 // curated estimate rather than guessed live.
 // -----------------------------------------------------------------------------
+// LIVE (2026-07-24): active residential pipeline within 1 km, from PlanIt planning
+// records (www.planit.org.uk). Each row links to its planning application. `units`
+// is used only where the decision notice states a clear figure; `completion` is an
+// ESTIMATE from the permission date + typical build-out (PlanIt does not publish
+// completion dates), so treat the year as indicative. `status` maps the PlanIt
+// application state (Permitted / discharging Conditions ≈ under construction).
 export const NEW_BUILDS = {
-  asOf: "2026-06-30",
-  curated: true,
+  asOf: "2026-07-24",
+  curated: false,
   sources: ["planit"],
   rows: [
-    { name: "City Road Basin (Islington Wharf later phases)", units: 190, completion: "2027",
-      status: "Under construction", note: "Canalside towers on City Road Basin — direct competing 1–2 bed stock.",
-      lat: 51.5306, lng: -0.0938 },
-    { name: "Vibe / Eagle Wharf Road regeneration", units: 120, completion: "2027",
-      status: "Under construction", note: "Mixed-use blocks off Eagle Wharf Road; adds 1–2 bed supply.",
-      lat: 51.5333, lng: -0.0925 },
-    { name: "Moreland Street / Central St scheme", units: 85, completion: "2028",
-      status: "Approved", note: "Approved residential-led redevelopment south of City Road.",
-      lat: 51.5279, lng: -0.0947 },
-    { name: "Britannia Leisure Centre (Hackney fringe)", units: 481, completion: "2027",
-      status: "Under construction", note: "Large regeneration ~1 km east; big medium-term supply pulse.",
-      lat: 51.5352, lng: -0.0821 },
-    { name: "Colville Estate regeneration (later phases)", units: 140, completion: "2028",
-      status: "Approved", note: "Council-led estate renewal adding market & affordable homes.",
-      lat: 51.5364, lng: -0.0838 },
+    { name: "Land on Wimbourne Street", units: 59, completion: "~2025", status: "Under construction",
+      note: "6–8 storey residential building, 59 units. Permitted 2021 (Hackney 2020/1667). ~80 m — direct competing stock.",
+      lat: 51.53442, lng: -0.08875 },
+    { name: "Holborn Studios, 49–50 Eagle Wharf Road", units: 50, completion: "~2026", status: "Under construction",
+      note: "Mixed-use redevelopment retaining the industrial chimney. Conditions stage 2022 (Islington P2021/3239).",
+      lat: 51.53419, lng: -0.093 },
+    { name: "48–48a Eagle Wharf Road", units: 139, completion: "~2027", status: "Approved",
+      note: "Self-storage site redeveloped to mixed-use, 2–7 storeys. Conditions stage 2022 (Hackney 2021/0680).",
+      lat: 51.53407, lng: -0.09263 },
+    { name: "Colville Estate (Penn Street, later phases)", units: 209, completion: "~2027", status: "Under construction",
+      note: "Council-led estate regeneration, later phases. Permitted (Hackney 2019/0038). Adds market & affordable homes.",
+      lat: 51.53622, lng: -0.08536 },
+    { name: "Britannia Leisure Centre / Bridge Academy", units: 481, completion: "~2027", status: "Under construction",
+      note: "Hybrid scheme — 481 homes plus a school and leisure centre. Permitted (Hackney 2019/3143). Big supply pulse ~450 m E.",
+      lat: 51.5353, lng: -0.08363 },
   ],
 };
 

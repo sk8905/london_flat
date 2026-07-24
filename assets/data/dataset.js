@@ -10,7 +10,7 @@
 
 export const META = {
   asOf: "2026-06-30",
-  build: "v39 · 2026-07-24", // bump on each change so the footer confirms the live build
+  build: "v40 · 2026-07-24", // bump on each change so the footer confirms the live build
   currency: "GBP",
   disclaimer:
     "This tool is an informational model, not financial, tax, mortgage or legal advice. " +
