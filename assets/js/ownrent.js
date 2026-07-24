@@ -20,7 +20,7 @@
 import {
   monthlyPayment, balanceAfter, monthsBetween, valueMultiplier, sellingCosts,
   ymIndex, ymToISO,
-} from "./finance.js?v=41";
+} from "./finance.js?v=42";
 
 // Net proceeds if the flat were sold on `dateISO` (cash in hand after clearing the
 // mortgage, ERC while fixed, and selling costs; CGT 0 for a primary residence).
