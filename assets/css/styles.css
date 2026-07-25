@@ -127,13 +127,13 @@ h1, h2, h3 { letter-spacing: -0.005em; }
 
 /* ---------- content ---------- */
 .content { padding: 22px 22px 90px; }
-.page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 22px; padding-bottom: 16px; border-bottom: 1px solid var(--line); }
-.page-title { margin: 0; font-size: 19px; }
-.page-sub { font-size: 12.5px; color: var(--muted); margin-top: 3px; }
-.topbar-right { display: flex; gap: 8px; align-items: center; flex: 0 0 auto; flex-wrap: wrap; justify-content: flex-end; }
+.page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+.page-title { margin: 0; font-size: 18px; }
+.page-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.topbar-right { display: flex; gap: 7px; align-items: center; flex: 0 0 auto; flex-wrap: wrap; justify-content: flex-end; }
 .badge {
-  font-size: 12.5px; font-weight: 600; padding: 6px 12px; border-radius: 999px; white-space: nowrap;
-  background: #fff; color: var(--brand-ink); border: 1px solid var(--line); box-shadow: var(--shadow-sm);
+  font-size: 12px; font-weight: 600; padding: 5px 11px; border-radius: 999px; white-space: nowrap;
+  background: #fff; color: var(--brand-ink); border: 1px solid var(--line);
 }
 .badge.muted { color: var(--muted); font-weight: 500; }
 /* rate badges are links to their source, with a day-over-day change */
@@ -238,9 +238,9 @@ a.badge:hover { text-decoration: none; border-color: var(--brand); color: var(--
 .calc.mini td.num { font-size: 13.5px; }
 
 /* flat value header (replaces the boxed val-box) */
-.val-lead { border-left: 3px solid var(--brand); padding: 2px 0 4px 16px; margin-bottom: 18px; }
-.val-lead .val-head { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--brand); font-weight: 700; }
-.val-lead .val-main { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; margin: 3px 0 12px; color: var(--brand-ink); }
+.val-lead { border-left: 3px solid var(--brand); padding: 1px 0 2px 14px; margin-bottom: 10px; }
+.val-lead .val-head { font-size: 10.5px; text-transform: uppercase; letter-spacing: .05em; color: var(--brand); font-weight: 700; }
+.val-lead .val-main { font-size: 25px; font-weight: 800; letter-spacing: -0.02em; margin: 2px 0 6px; color: var(--brand-ink); }
 .val-lead .val-sub { font-size: 13px; font-weight: 400; color: var(--ink-soft); letter-spacing: 0; }
 .val-lead .cnote { color: var(--muted); font-weight: 400; text-transform: none; letter-spacing: 0; }
 .card-label { font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; font-weight: 600; }
@@ -316,6 +316,10 @@ a.badge:hover { text-decoration: none; border-color: var(--brand); color: var(--
 }
 .sticky-first thead th:first-child { z-index: 3; }
 .addr-cell { font-weight: 600; color: var(--ink); }
+.sort-th { cursor: pointer; user-select: none; }
+.sort-th:hover { color: var(--ink); }
+.sort-th.sorted { color: var(--ink); }
+.sort-ar { font-size: 8px; margin-left: 3px; color: var(--brand); vertical-align: middle; }
 .rank-badge { display: inline-grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; background: var(--line); color: var(--ink-soft); font-size: 9.5px; font-weight: 700; margin-right: 6px; vertical-align: middle; }
 
 /* stat rows (replace tiles) */
@@ -412,10 +416,13 @@ input[type="range"] { accent-color: var(--brand); height: 5px; }
   .nav { padding: 0 16px; }
   .id-line2, .idblock #id-status, .idblock .id-sep { display: none; }
   .content { padding: 16px 14px 88px; }
-  .page-head { flex-wrap: wrap; row-gap: 10px; }
-  .topbar-right { flex-basis: 100%; justify-content: flex-start; }
-  .page-title { font-size: 20px; }
-  .badge { font-size: 12px; padding: 5px 11px; }
+  .page-head { flex-wrap: wrap; row-gap: 6px; margin-bottom: 10px; padding-bottom: 8px; }
+  .page-sub { display: none; }
+  .topbar-right { flex-basis: 100%; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; justify-content: flex-start; }
+  .topbar-right::-webkit-scrollbar { display: none; }
+  .page-title { font-size: 18px; }
+  .badge { font-size: 11px; padding: 4px 9px; }
+  .panel { padding: 15px 15px; }
   .verdict-grid { grid-template-columns: 1fr; }
   .kpi-row { grid-template-columns: repeat(2, 1fr); }
   .dash-grid { grid-template-columns: 1fr; }
