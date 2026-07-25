@@ -2,13 +2,13 @@
 // app.js  —  Entry point: load data, run model, render the single page, wire UI
 // =============================================================================
 
-import * as DATA from "../data/dataset.js?v=42";
-import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=42";
-import * as C from "./charts.js?v=42";
-import { monthlyPayment, monthsBetween, ymIndex, ymToISO, breakEvenRecoupAll, interestPaidToDate } from "./finance.js?v=42";
-import { rentVsSell } from "./letting.js?v=42";
-import { rentVsBuy } from "./ownrent.js?v=42";
-import * as MKT from "./market.js?v=42";
+import * as DATA from "../data/dataset.js?v=43";
+import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=43";
+import * as C from "./charts.js?v=43";
+import { monthlyPayment, monthsBetween, ymIndex, ymToISO, breakEvenRecoupAll, interestPaidToDate } from "./finance.js?v=43";
+import { rentVsSell } from "./letting.js?v=43";
+import { rentVsBuy } from "./ownrent.js?v=43";
+import * as MKT from "./market.js?v=43";
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const gbp = (n) => (n < 0 ? "−" : "") + "£" + Math.abs(Math.round(n)).toLocaleString("en-GB");
@@ -638,39 +638,43 @@ function renderPaid(r) {
   const principalRepaid = Math.max(0, m.principal - balanceNow(r));
   const totalPaidSoFar = cashInAtPurchase + paymentsToDate; // all cash out of pocket to date
 
-  const valBox = v.compVal ? `
-    <div class="val-box">
-      <div class="val-head">Estimated current value — anchored to <strong>actual sold prices</strong></div>
-      <div class="val-main">${gbp(r.presentValue)} <span class="val-sub">≈ ${gbp(v.impliedPerSqm)}/m² · ${p.floorAreaSqm} m² (${p.bedrooms}-bed/${p.bathrooms}-bath, built ${p.buildYear})</span></div>
-      <div class="val-anchors">
-        <span><span class="anchor-num">A</span> Your purchase, trended by the Islington <strong>sold-price</strong> index: <strong>${gbp(v.indexVal)}</strong></span>
-        <span><span class="anchor-num">B</span> £/m² comparable from N1 <strong>Land Registry sales</strong> (${gbp(v.perSqm.median)}/m²): <strong>${gbp(v.compVal)}</strong> <span class="muted">(range ${gbp(v.compLow)}–${gbp(v.compHigh)})</span></span>
-        <span>For reference, you paid <strong>${gbp(p.purchasePrice)}</strong> = ${gbp(v.purchasePerSqm)}/m² in ${monthName(p.purchaseDate)}</span>
-      </div>
+  const months = monthsBetween(p.purchaseDate, DATA.META.asOf);
+  const cnote = (t) => t ? ` <span class="cnote">${t}</span>` : "";
+  const row = (label, val, note, cls) => `<tr${cls ? ` class="${cls}"` : ""}><td>${label}${cnote(note)}</td><td class="num">${val}</td></tr>`;
+
+  const valLead = v.compVal ? `
+    <div class="val-lead">
+      <div class="val-head">Estimated current value${cnote("anchored to actual sold prices")}</div>
+      <div class="val-main">${gbp(r.presentValue)} <span class="val-sub">≈ ${gbp(v.impliedPerSqm)}/m² · ${p.floorAreaSqm} m² · ${p.bedrooms}-bed/${p.bathrooms}-bath, built ${p.buildYear}</span></div>
+      <table class="calc mini">
+        ${row("A · purchase trended by Islington sold-price index", gbp(v.indexVal))}
+        ${row("B · £/m² comparable from N1 Land Registry sales", gbp(v.compVal), gbp(v.perSqm.median) + "/m² · range " + gbp(v.compLow) + "–" + gbp(v.compHigh))}
+        ${row("For reference — you paid", gbp(p.purchasePrice), gbp(v.purchasePerSqm) + "/m² · " + monthName(p.purchaseDate))}
+      </table>
     </div>` : "";
 
-  host.innerHTML = valBox + `
+  host.innerHTML = valLead + `
     <h3 class="panel-h">What we've paid so far</h3>
-    <div class="cards">
-      ${card("Purchase price", gbp(p.purchasePrice), monthName(p.purchaseDate) + " · " + p.postcode)}
-      ${card("Deposit", gbp(deposit), (100 - m.ltv * 100).toFixed(0) + "% of price")}
-      ${card("Stamp Duty (SDLT)", gbp(sdlt), "paid at purchase")}
-      ${card("Other buying costs", gbp(buyCosts), "legal, survey, etc.")}
-      ${card("Cash in at purchase", gbp(cashInAtPurchase), "deposit + SDLT + buying costs", "gold")}
-      ${card("Mortgage payments to date", gbp(paymentsToDate), monthsBetween(p.purchaseDate, DATA.META.asOf) + " months @ " + gbp(payNow) + "/mo")}
-      ${card("— of which interest", gbp(interestPaid), "gone (not recoverable)")}
-      ${card("— of which principal", gbp(principalRepaid), "back to you as equity")}
-      ${card("Total paid so far", gbp(totalPaidSoFar), "all cash out of pocket to date", "gold")}
-    </div>
-    <h3 class="panel-h" style="margin-top:22px">What the mortgage is costing</h3>
-    <div class="cards">
-      ${card("Mortgage balance now", gbp(balanceNow(r)), "outstanding")}
-      ${card("Monthly payment", gbp(payNow), (io ? "interest-only" : "capital & interest") + " @ " + pct(m.ratePct))}
-      ${card("Rate / fix ends", pct(m.ratePct), "fixed until " + monthName(m.fixEndDate))}
-      ${card("Post-fix payment", gbp(r.holdingCost.after), signed(r.holdingCost.deltaMonthly, (x) => gbp(x)) + "/mo @ ~" + pct(m.remortgageRatePctAssumed))}
-      ${card("Est. value now", gbp(r.presentValue), valueDelta(r.presentValue - p.purchasePrice))}
-      ${card("Est. equity now", gbp(equityNow), "value − outstanding balance")}
-    </div>
+    <table class="calc">
+      ${row("Purchase price", gbp(p.purchasePrice), monthName(p.purchaseDate) + " · " + p.postcode)}
+      ${row("Deposit", gbp(deposit), (100 - m.ltv * 100).toFixed(0) + "% of price")}
+      ${row("Stamp Duty (SDLT)", gbp(sdlt), "paid at purchase")}
+      ${row("Other buying costs", gbp(buyCosts), "legal, survey, etc.")}
+      ${row("Cash in at purchase", gbp(cashInAtPurchase), "deposit + SDLT + costs", "sub")}
+      ${row("Mortgage payments to date", gbp(paymentsToDate), months + " mo @ " + gbp(payNow) + "/mo")}
+      ${row("of which interest", gbp(interestPaid), "gone, not recoverable", "minor")}
+      ${row("of which principal", gbp(principalRepaid), "back to you as equity", "minor")}
+      ${row("Total paid so far", gbp(totalPaidSoFar), "all cash out of pocket to date", "total")}
+    </table>
+    <h3 class="panel-h" style="margin-top:20px">What the mortgage is costing</h3>
+    <table class="calc">
+      ${row("Mortgage balance now", gbp(balanceNow(r)), "outstanding")}
+      ${row("Monthly payment", gbp(payNow), (io ? "interest-only" : "capital & interest") + " @ " + pct(m.ratePct))}
+      ${row("Rate / fix ends", pct(m.ratePct), "fixed until " + monthName(m.fixEndDate))}
+      ${row("Post-fix payment", gbp(r.holdingCost.after), signed(r.holdingCost.deltaMonthly, (x) => gbp(x)) + "/mo @ ~" + pct(m.remortgageRatePctAssumed))}
+      ${row("Est. value now", gbp(r.presentValue), valueDelta(r.presentValue - p.purchasePrice))}
+      ${row("Est. equity now", gbp(equityNow), "value − outstanding balance", "sub")}
+    </table>
     <p class="muted small">${p.isPrimaryResidence
       ? "CGT: this is your main residence, so a sale qualifies for Private Residence Relief — <strong>normally no Capital Gains Tax</strong> at any sale date."
       : "CGT: marked as <strong>not your main residence</strong> — a sale may be liable to Capital Gains Tax (see Sell vs let for the partial-relief estimate)."}
@@ -946,14 +950,6 @@ function fmtDayMon(iso) {
 function renderLocalMarket(r) {
   const p = r.inputs.property;
 
-  // curated-vs-live banner
-  const note = $("#lm-source-note");
-  if (note) {
-    note.innerHTML = MKT.isCurated()
-      ? "Curated snapshot from HM Land Registry, the EPC register and local listing/planning records — pending the live Homedata feed."
-      : "Live from the Homedata feed.";
-  }
-
   const stats = MKT.salesStats();          // sold set within radius, enriched + summarised
   const sales = stats.rows;
   const listings = MKT.deriveListings(MKT.RADIUS_KM, DATA.META.asOf);
@@ -961,10 +957,25 @@ function renderLocalMarket(r) {
   const avgLpm = lpm.length ? Math.round(lpm.reduce((s, x) => s + x.count, 0) / lpm.length) : 0;
   const yourPsm = p.floorAreaSqm ? Math.round(p.purchasePrice / p.floorAreaSqm) : null;
 
+  // Period the completed-sales KPIs actually cover (soldDate range) — noted so the
+  // "last 12 months?" question is answered explicitly.
+  const soldDates = sales.map((s) => s.soldDate).filter(Boolean).sort();
+  const salesPeriod = soldDates.length
+    ? monthName(soldDates[0]) + " – " + monthName(soldDates[soldDates.length - 1])
+    : "";
+
+  // source / period banner
+  const note = $("#lm-source-note");
+  if (note) {
+    note.innerHTML = `Sold prices from HM Land Registry, live listings &amp; rents from Homedata, HPI from ONS/HMLR${
+      salesPeriod ? `. <strong>Completed sales below span ${salesPeriod}</strong>; listings are live now` : ""
+    }. New-listings trend &amp; forecasts remain curated.`;
+  }
+
   // ---- KPIs ----
   const kpis = $("#lm-kpis");
   if (kpis) kpis.innerHTML = [
-    kpi("Sales (1 km)", String(stats.count), "completed, in radius"),
+    kpi("Sales (1 km)", String(stats.count), salesPeriod ? "completed · " + salesPeriod : "completed, in radius"),
     kpi("Median £/m²", stats.medianPerSqm ? gbp(stats.medianPerSqm) : "—",
       yourPsm && stats.medianPerSqm ? "you paid " + gbp(yourPsm) + "/m²" : "sold prices"),
     kpi("Median days on market", stats.medianDaysOnMarket != null ? Math.round(stats.medianDaysOnMarket) + " days" : "—", "list → sold"),
