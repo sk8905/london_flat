@@ -2,13 +2,13 @@
 // app.js  —  Entry point: load data, run model, render the single page, wire UI
 // =============================================================================
 
-import * as DATA from "../data/dataset.js?v=44";
-import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=44";
-import * as C from "./charts.js?v=44";
-import { monthlyPayment, monthsBetween, ymIndex, ymToISO, breakEvenRecoupAll, interestPaidToDate } from "./finance.js?v=44";
-import { rentVsSell } from "./letting.js?v=44";
-import { rentVsBuy } from "./ownrent.js?v=44";
-import * as MKT from "./market.js?v=44";
+import * as DATA from "../data/dataset.js?v=45";
+import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=45";
+import * as C from "./charts.js?v=45";
+import { monthlyPayment, monthsBetween, ymIndex, ymToISO, breakEvenRecoupAll, interestPaidToDate } from "./finance.js?v=45";
+import { rentVsSell } from "./letting.js?v=45";
+import { rentVsBuy } from "./ownrent.js?v=45";
+import * as MKT from "./market.js?v=45";
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const gbp = (n) => (n < 0 ? "−" : "") + "£" + Math.abs(Math.round(n)).toLocaleString("en-GB");
@@ -183,8 +183,9 @@ window.addEventListener("unhandledrejection", (e) => {
 });
 
 const PAGE_META = {
-  localmarket: ["Local market", "Sales & listings within 1 km — DOM, asking, £/m², HPI & forecasts"],
+  localmarket: ["Local market", "Sales, listings, HPI & forecasts within 1 km"],
   finances: ["Our finances", "What we paid, and whether to sell, rent or hold"],
+  map: ["Map", "Sold & on-market homes within 1 km"],
   inputs: ["Inputs", "Your figures, forecast assumptions & methodology"],
 };
 
@@ -220,6 +221,7 @@ function boot() {
     buildRentBuyControls();
     buildInputs();
     wireNav();
+    wireCompsToggle();
     initNotifications();
     loadIdentity();
   } catch (err) {
@@ -947,175 +949,182 @@ function fmtDayMon(iso) {
   return (d ? d + " " : "") + monthName(iso);
 }
 
+// Merged sold / on-market comps table with a Sold⇄Listed toggle. Phone-first:
+// short building name in a frozen first column (full address in-row), date-sorted.
+let _compsView = "sold";
+let _comps = { sold: [], listed: [] };
+const shortAddr = (a) => {
+  const seg = a.split(",").map((s) => s.trim());
+  const s = seg[0].replace(/^Flat\s+\S+\s*/i, "").replace(/^\d+[A-Za-z]?\s+/, "").trim();
+  return s || seg[1] || seg[0];
+};
+function renderComps() {
+  const host = $("#lm-comps-body");
+  if (!host) return;
+  const badge = (n) => `<span class="rank-badge">${n}</span>`;
+  if (_compsView === "sold") {
+    const rows = _comps.sold;
+    host.innerHTML = rows.length ? `<div class="table-wrap"><table class="rank-table comps-table sticky-first">
+      <thead><tr><th>Property</th><th>Sold</th><th>Price</th><th>vs&nbsp;ask</th><th>£/m²</th><th>Days</th><th>m²</th><th>Type</th><th>Full address</th></tr></thead>
+      <tbody>${rows.map((x) => `<tr>
+        <td class="addr-cell">${badge(x._rank)}${shortAddr(x.addr)}</td>
+        <td class="date-cell">${monthName(x.soldDate)}</td>
+        <td><strong><a href="https://www.gov.uk/search-house-prices" target="_blank" rel="noopener">${gbp(x.price)}</a></strong></td>
+        <td class="${x.vsAsking < 0 ? "neg-cell" : ""}">${x.vsAskingPct != null ? signed(x.vsAskingPct, (v) => v.toFixed(1)) + "%" : "—"}</td>
+        <td>${gbp(x.perSqm)}</td><td>${x.daysOnMarket != null ? x.daysOnMarket : "—"}</td><td>${x.sqm}</td><td>${x.type}</td>
+        <td class="muted">${x.addr} · ${x.distKm}&nbsp;km</td></tr>`).join("")}</tbody>
+    </table></div>` : `<p class="muted">No sales in the radius.</p>`;
+  } else {
+    const rows = _comps.listed;
+    host.innerHTML = rows.length ? `<div class="table-wrap"><table class="rank-table comps-table sticky-first">
+      <thead><tr><th>Property</th><th>Listed</th><th>Asking</th><th>Status</th><th>£/m²</th><th>Days</th><th>m²</th><th>Type</th><th>Full address</th></tr></thead>
+      <tbody>${rows.map((x) => `<tr>
+        <td class="addr-cell">${badge(x._rank)}${shortAddr(x.addr)}</td>
+        <td class="date-cell">${fmtDayMon(x.listedDate)}</td>
+        <td><strong>${gbp(x.askingPrice)}</strong></td><td>${x.status}</td>
+        <td>${gbp(x.perSqm)}</td><td>${x.daysListed != null ? x.daysListed : "—"}</td><td>${x.sqm}</td><td>${x.type}</td>
+        <td class="muted">${x.addr} · ${x.distKm}&nbsp;km</td></tr>`).join("")}</tbody>
+    </table></div>` : `<p class="muted">No active listings in the radius.</p>`;
+  }
+}
+function wireCompsToggle() {
+  document.querySelectorAll("#lm-comps-toggle .toggle-btn").forEach((b) =>
+    b.addEventListener("click", () => {
+      _compsView = b.dataset.comps;
+      document.querySelectorAll("#lm-comps-toggle .toggle-btn").forEach((x) => x.classList.toggle("active", x === b));
+      renderComps();
+    }));
+}
+
 function renderLocalMarket(r) {
   const p = r.inputs.property;
-
-  const stats = MKT.salesStats();          // sold set within radius, enriched + summarised
+  const stats = MKT.salesStats();
   const sales = stats.rows;
   const listings = MKT.deriveListings(MKT.RADIUS_KM, DATA.META.asOf);
   const lpm = MKT.LISTINGS_PER_MONTH.series;
   const avgLpm = lpm.length ? Math.round(lpm.reduce((s, x) => s + x.count, 0) / lpm.length) : 0;
   const yourPsm = p.floorAreaSqm ? Math.round(p.purchasePrice / p.floorAreaSqm) : null;
-
-  // Period the completed-sales KPIs actually cover (soldDate range) — noted so the
-  // "last 12 months?" question is answered explicitly.
   const soldDates = sales.map((s) => s.soldDate).filter(Boolean).sort();
-  const salesPeriod = soldDates.length
-    ? monthName(soldDates[0]) + " – " + monthName(soldDates[soldDates.length - 1])
-    : "";
+  const salesPeriod = soldDates.length ? monthName(soldDates[0]) + " – " + monthName(soldDates[soldDates.length - 1]) : "";
 
-  // source / period banner
-  const note = $("#lm-source-note");
-  if (note) {
-    note.innerHTML = `Sold prices from HM Land Registry, live listings &amp; rents from Homedata, HPI from ONS/HMLR${
-      salesPeriod ? `. <strong>Completed sales below span ${salesPeriod}</strong>; listings are live now` : ""
-    }. New-listings trend &amp; forecasts remain curated.`;
-  }
+  // ---- desktop valuation: local median £/m² × your size, + estimated time to sell ----
+  const medianPsm = stats.medianPerSqm;
+  const compVal = medianPsm && p.floorAreaSqm ? Math.round(medianPsm * p.floorAreaSqm) : null;
+  const estDays = stats.medianDaysOnMarket != null ? Math.round(stats.medianDaysOnMarket) : null;
+  const valHost = $("#lm-valuation");
+  if (valHost) valHost.innerHTML = compVal ? `
+    <div class="val-lead">
+      <div class="val-head">Desktop valuation — your flat</div>
+      <div class="val-main">${gbp(compVal)} <span class="val-sub">${gbp(medianPsm)}/m² local median × ${p.floorAreaSqm} m²</span></div>
+      <div class="val-note">Est. time to sell <strong>≈ ${estDays} days</strong> at the local median (list→sold)${salesPeriod ? " · sales " + salesPeriod : ""}.</div>
+    </div>` : "";
 
-  // ---- KPIs ----
+  // ---- stat rows (tight, no tiles) ----
+  const statrow = (l, v, s) => `<div class="statrow"><span class="sr-label">${l}</span><span class="sr-value">${v}</span><span class="sr-sub">${s || ""}</span></div>`;
   const kpis = $("#lm-kpis");
-  if (kpis) kpis.innerHTML = [
-    kpi("Sales (1 km)", String(stats.count), salesPeriod ? "completed · " + salesPeriod : "completed, in radius"),
-    kpi("Median £/m²", stats.medianPerSqm ? gbp(stats.medianPerSqm) : "—",
-      yourPsm && stats.medianPerSqm ? "you paid " + gbp(yourPsm) + "/m²" : "sold prices"),
-    kpi("Median days on market", stats.medianDaysOnMarket != null ? Math.round(stats.medianDaysOnMarket) + " days" : "—", "list → sold"),
-    kpi("Sold below asking", stats.pctBelowAsking != null ? stats.pctBelowAsking + "%" : "—",
-      stats.medianVsAskingPct != null ? "median " + signed(stats.medianVsAskingPct, (x) => x.toFixed(1)) + "% vs asking" : "of sales"),
-    kpi("On the market now", String(listings.length), "within 1 km"),
-    kpi("New listings / mo", String(avgLpm), "avg last " + lpm.length + " months"),
-  ].join("");
+  if (kpis) kpis.innerHTML =
+    statrow("Sales in radius", String(stats.count), salesPeriod) +
+    statrow("Median £/m²", medianPsm ? gbp(medianPsm) : "—", yourPsm ? "you paid " + gbp(yourPsm) : "") +
+    statrow("Median days on market", estDays != null ? estDays + " days" : "—", "list → sold") +
+    statrow("Sold below asking", stats.pctBelowAsking != null ? stats.pctBelowAsking + "%" : "—", stats.medianVsAskingPct != null ? "median " + signed(stats.medianVsAskingPct, (x) => x.toFixed(1)) + "%" : "") +
+    statrow("On the market now", String(listings.length), "within 1 km") +
+    statrow("New listings / mo", String(avgLpm), "avg last " + lpm.length + " mo");
 
-  // ---- listings per month chart ----
+  const note = $("#lm-source-note");
+  if (note) note.innerHTML = `Live: <a href="https://www.gov.uk/search-house-prices" target="_blank" rel="noopener">HM Land Registry</a> prices · <a href="https://homedata.co.uk/" target="_blank" rel="noopener">Homedata</a> listings &amp; rents · <a href="https://landregistry.data.gov.uk/app/ukhpi" target="_blank" rel="noopener">UK&nbsp;HPI</a>.`;
+
+  // ---- new listings per month ----
   const lpmHost = $("#lm-listings-chart");
   if (lpmHost) C.barChart(lpmHost, {
-    bars: lpm.map((x) => ({ label: monthName(x.month).replace(/ 20/, " '"), value: x.count, valueLabel: String(x.count),
-      color: "#4a7c8c" })),
-    yFormat: (v) => v.toFixed(0), height: 240, yUnit: "new listings",
+    bars: lpm.map((x) => ({ label: monthName(x.month).replace(/ 20/, " '"), value: x.count, valueLabel: String(x.count), color: "#4a7c8c" })),
+    yFormat: (v) => v.toFixed(0), height: 220, yUnit: "new listings",
   });
 
-  // ---- map: your flat (green) + sales (blue) + listings (amber) ----
+  // ---- price rank (1 = dearest) + date-sorted rows for the merged table ----
+  const sold = sales.slice();
+  sold.slice().sort((a, b) => b.price - a.price).forEach((x, i) => { x._rank = i + 1; });
+  sold.sort((a, b) => (a.soldDate < b.soldDate ? 1 : a.soldDate > b.soldDate ? -1 : 0));
+  const listed = listings.slice();
+  listed.slice().sort((a, b) => b.askingPrice - a.askingPrice).forEach((x, i) => { x._rank = i + 1; });
+  listed.sort((a, b) => ((a.listedDate || "") < (b.listedDate || "") ? 1 : (a.listedDate || "") > (b.listedDate || "") ? -1 : 0));
+  _comps = { sold, listed };
+  renderComps();
+
+  // ---- map (own tab): sold blue, listings amber, your flat green; pins by price rank ----
   const tipHtml = (a, b, c2) => `<strong>${a}</strong><span>${b}</span><span>${c2}</span>`;
   const tipPlain = (a, b, c2) => `${a} — ${b} · ${c2}`;
-  let seq = 0;
-  const salesRanked = [...sales].sort((a, b) => b.price - a.price);
-  const listingsRanked = [...listings].sort((a, b) => b.askingPrice - a.askingPrice);
-
-  // Map pins numbered by PRICE RANK within each group (1 = dearest). Sold pins are
-  // one colour, listings another, so numbering can restart per group.
-  const salePins = salesRanked.map((x, i) => ({ lat: x.lat, lng: x.lng, n: i + 1,
-    tip: tipHtml(x.addr, gbp(x.price) + " · " + gbp(x.perSqm) + "/m²", "sold " + monthName(x.soldDate) + " · " + (x.daysOnMarket != null ? x.daysOnMarket + " days" : "")),
+  const salePins = sold.map((x) => ({ lat: x.lat, lng: x.lng, n: x._rank,
+    tip: tipHtml(x.addr, gbp(x.price) + " · " + gbp(x.perSqm) + "/m²", "sold " + monthName(x.soldDate)),
     plain: tipPlain(x.addr, gbp(x.price), "sold " + monthName(x.soldDate)) }));
-  const listPins = listingsRanked.map((x, i) => ({ lat: x.lat, lng: x.lng, n: i + 1, listing: true,
-    tip: tipHtml(x.addr, gbp(x.askingPrice) + " · " + gbp(x.perSqm) + "/m²", x.status + " · " + (x.daysListed != null ? x.daysListed + " days on market" : "")),
+  const listPins = listed.map((x) => ({ lat: x.lat, lng: x.lng, n: x._rank, listing: true,
+    tip: tipHtml(x.addr, gbp(x.askingPrice) + " · " + gbp(x.perSqm) + "/m²", x.status),
     plain: tipPlain(x.addr, gbp(x.askingPrice) + " asking", x.status) }));
   const mapPoints = salePins.concat(listPins).concat(
-    Number.isFinite(p.lat) && Number.isFinite(p.lng) ? [{
-      lat: p.lat, lng: p.lng, you: true,
-      tip: tipHtml("Your flat — " + p.postcode, gbp(p.purchasePrice) + (yourPsm ? " · " + gbp(yourPsm) + "/m²" : ""), "bought " + monthName(p.purchaseDate)),
-      plain: tipPlain("Your flat — " + p.postcode, gbp(p.purchasePrice), "bought " + monthName(p.purchaseDate)),
-    }] : []);
+    Number.isFinite(p.lat) && Number.isFinite(p.lng) ? [{ lat: p.lat, lng: p.lng, you: true,
+      tip: tipHtml("Your flat — " + p.postcode, gbp(p.purchasePrice), "bought " + monthName(p.purchaseDate)),
+      plain: tipPlain("Your flat — " + p.postcode, gbp(p.purchasePrice), "bought " + monthName(p.purchaseDate)) }] : []);
   const mapHost = $("#lm-map");
   if (mapHost) C.scatterMap(mapHost, { points: mapPoints });
   const legend = $("#lm-legend");
   if (legend) legend.innerHTML = `<div class="map-legend">
-      <div class="map-legend-item"><span class="map-num you"></span><span><strong>Your flat</strong> — ${p.postcode} · ${gbp(p.purchasePrice)}</span></div>
-      ${salesRanked.map((x, i) => `<div class="map-legend-item"><span class="map-num">${i + 1}</span><span><strong>${x.addr}</strong> · sold ${gbp(x.price)}</span></div>`).join("")}
-      ${listingsRanked.map((x, i) => `<div class="map-legend-item"><span class="map-num listing">${i + 1}</span><span><strong>${x.addr}</strong> · ${gbp(x.askingPrice)} asking</span></div>`).join("")}
+      <div class="map-legend-item"><span class="map-num you"></span><span><strong>Your flat</strong> · ${gbp(p.purchasePrice)}</span></div>
+      ${sold.slice().sort((a, b) => a._rank - b._rank).map((x) => `<div class="map-legend-item"><span class="map-num">${x._rank}</span><span>${shortAddr(x.addr)} · sold ${gbp(x.price)}</span></div>`).join("")}
+      ${listed.slice().sort((a, b) => a._rank - b._rank).map((x) => `<div class="map-legend-item"><span class="map-num listing">${x._rank}</span><span>${shortAddr(x.addr)} · ${gbp(x.askingPrice)}</span></div>`).join("")}
     </div>`;
 
-  // ---- rate sensitivity: price & time-to-sell vs mortgage rates (illustrative) ----
-  const baseRate = DATA.RATES.remortgage70Now;            // ~5% 2-yr fix @ 70% LTV
-  const basePrice = r.presentValue, baseDays = stats.medianDaysOnMarket || 120;
+  // ---- HPI (tight rows + linked) ----
+  const H = MKT.HPI;
+  const yoy = (v) => signed(v, (x) => x.toFixed(1) + "%") + " YoY";
+  const hpiHost = $("#lm-hpi");
+  if (hpiHost) hpiHost.innerHTML =
+    statrow("Islington", gbp(H.islingtonAvg), yoy(H.islingtonYoYPct)) +
+    statrow("Islington flats", gbp(H.islingtonFlatsAvg), yoy(H.islingtonFlatsYoYPct)) +
+    statrow("N1 7TX (12-mo, 1 km)", gbp(H.n1_7txAvg12m), "flats") +
+    statrow("London", gbp(H.londonAvg), yoy(H.londonYoYPct)) +
+    statrow("England", gbp(H.englandAvg), yoy(H.englandYoYPct)) +
+    `<a class="src-line" href="https://landregistry.data.gov.uk/app/ukhpi" target="_blank" rel="noopener">UK HPI · ${monthName(H.asOf)}</a>`;
+
+  // ---- rate sensitivity: DATA-BASED (real elasticities from UK HPI + BoE + volumes) ----
+  const baseRate = DATA.RATES.remortgage70Now;
+  const basePrice = compVal || r.presentValue, baseDays = estDays || 120;
   const rateGrid = [3.5, 4, 4.5, 5, 5.5, 6, 6.5];
-  const PRICE_ELAST = -0.04, DAYS_ELAST = 0.18;           // per +1pp on the mortgage rate
+  const PRICE_ELAST = -0.022;   // UK HPI Islington flats vs BoE 2-yr fix, 2021 peak → 2026
+  const DAYS_ELAST = 0.024;     // London sales-volume fall per +1pp (turnover/liquidity proxy)
   const priceVals = rateGrid.map((rt) => Math.round(basePrice * (1 + PRICE_ELAST * (rt - baseRate))));
   const daysVals = rateGrid.map((rt) => Math.max(20, Math.round(baseDays * (1 + DAYS_ELAST * (rt - baseRate)))));
   let mIdx = 0; rateGrid.forEach((rt, i) => { if (Math.abs(rt - baseRate) < Math.abs(rateGrid[mIdx] - baseRate)) mIdx = i; });
   const rsHost = $("#lm-rate-sens");
   if (rsHost) C.dualAxisLine(rsHost, {
-    xLabels: rateGrid.map((rt) => rt.toFixed(1) + "%"), height: 280,
+    xLabels: rateGrid.map((rt) => rt.toFixed(1) + "%"), height: 260,
     left: { name: "Est. price", color: "#1f5a73", values: priceVals, format: (val) => "£" + Math.round(val / 1000) + "k" },
     right: { name: "Time to sell", color: "#a06a3c", values: daysVals, format: (val) => Math.round(val) + "d" },
     marker: { index: mIdx, label: "now ~" + baseRate.toFixed(1) + "%" },
   });
-
-  // ---- sales table (ranked by sold price, dearest first) ----
-  const salesHost = $("#lm-sales-body");
-  if (salesHost) salesHost.innerHTML = `
-    <div class="table-wrap"><table class="rank-table comps-table">
-      <thead><tr><th>#</th><th>Sold</th><th>Address</th><th>Asking</th><th>Sold</th><th>vs asking</th><th>Days</th><th>m²</th><th>£/m²</th><th>Type</th></tr></thead>
-      <tbody>${salesRanked.map((x, i) => `<tr>
-        <td class="rank-cell">${i + 1}</td><td class="date-cell">${monthName(x.soldDate)}</td>
-        <td>${x.addr} <span class="muted">· ${x.distKm} km</span></td>
-        <td>${x.askingPrice ? gbp(x.askingPrice) : "—"}</td><td><strong>${gbp(x.price)}</strong></td>
-        <td class="${x.vsAsking < 0 ? "neg-cell" : ""}">${x.vsAsking != null ? signed(x.vsAsking, gbp) + " (" + signed(x.vsAskingPct, (v) => v.toFixed(1)) + "%)" : "—"}</td>
-        <td>${x.daysOnMarket != null ? x.daysOnMarket : "—"}</td><td>${x.sqm} m²</td>
-        <td><strong>${gbp(x.perSqm)}</strong></td><td>${x.type}</td></tr>`).join("")}</tbody>
-    </table></div>
-    <p class="muted small">Ranked by sold price, dearest first. Sold prices from <a href="https://www.gov.uk/search-house-prices" target="_blank" rel="noopener">HM Land
-      Registry</a>; floor areas from the <a href="https://find-energy-certificate.service.gov.uk/" target="_blank" rel="noopener">EPC
-      register</a>; asking &amp; time-on-market from <a href="https://homedata.co.uk/" target="_blank" rel="noopener">Homedata</a>.
-      Positive "vs asking" = sold over asking.</p>`;
-
-  // ---- active listings table (ranked by asking price, dearest first) ----
-  const listHost = $("#lm-listings-body");
-  if (listHost) listHost.innerHTML = listings.length ? `
-    <div class="table-wrap"><table class="rank-table comps-table">
-      <thead><tr><th>#</th><th>Listed</th><th>Address</th><th>Asking</th><th>£/m²</th><th>On market</th><th>m²</th><th>Status</th><th>Type</th></tr></thead>
-      <tbody>${listingsRanked.map((x, i) => `<tr>
-        <td class="rank-cell">${i + 1}</td><td class="date-cell">${fmtDayMon(x.listedDate)}</td>
-        <td>${x.addr} <span class="muted">· ${x.distKm} km</span></td>
-        <td><strong>${gbp(x.askingPrice)}</strong></td><td>${gbp(x.perSqm)}</td>
-        <td>${x.daysListed != null ? x.daysListed + " days" : "—"}</td><td>${x.sqm} m²</td>
-        <td>${x.status}</td><td>${x.type}</td></tr>`).join("")}</tbody>
-    </table></div>
-    <p class="muted small">Ranked by asking price, dearest first.</p>` : `<p class="muted">No active listings in the radius right now.</p>`;
-
-  // ---- HPI ----
-  const H = MKT.HPI;
-  const hpiHost = $("#lm-hpi");
-  if (hpiHost) hpiHost.innerHTML = `
-    <div class="cards">
-      ${card("Islington avg", gbp(H.islingtonAvg), signed(H.islingtonYoYPct, (x) => x.toFixed(1) + "%") + " YoY")}
-      ${card("Islington flats", gbp(H.islingtonFlatsAvg), signed(H.islingtonFlatsYoYPct, (x) => x.toFixed(1) + "%") + " YoY")}
-      ${card("N1 7TX (12m avg)", gbp(H.n1_7txAvg12m), "your postcode")}
-      ${card("London avg", gbp(H.londonAvg), signed(H.londonYoYPct, (x) => x.toFixed(1) + "%") + " YoY")}
-      ${card("England avg", gbp(H.englandAvg), signed(H.englandYoYPct, (x) => x.toFixed(1) + "%") + " YoY")}
-    </div>
-    <p class="muted small">UK House Price Index, ${monthName(H.asOf)} (published ~2 months in arrears). Source:
-      <a href="https://www.gov.uk/government/news/uk-house-price-index-for-march-2026" target="_blank" rel="noopener">UK HPI</a> ·
-      <a href="https://www.ons.gov.uk/economy/inflationandpriceindices/bulletins/privaterentandhousepricesuk/latest" target="_blank" rel="noopener">ONS</a>.</p>`;
+  const rcap = $("#lm-rate-cap");
+  if (rcap) rcap.innerHTML = `Data-based: Islington flat prices moved ≈−2.2% per +1&nbsp;pt on the 2-yr fix (<a href="https://landregistry.data.gov.uk/app/ukhpi" target="_blank" rel="noopener">UK&nbsp;HPI</a> vs <a href="https://www.bankofengland.co.uk/boeapps/database" target="_blank" rel="noopener">Bank of England</a>, 2021–26); time-to-sell proxied from London sales volumes (≈−2.4% per +1&nbsp;pt). Marker = current fix.`;
 
   // ---- new-build pipeline ----
   const pipe = MKT.pipelineWithinRadius();
   const nbHost = $("#lm-newbuilds");
   if (nbHost) nbHost.innerHTML = `
-    <div class="cards"><div class="card gold"><div class="card-label">Pipeline within 1 km</div>
-      <div class="card-value">${pipe.totalUnits.toLocaleString("en-GB")} homes</div>
-      <div class="card-sub">${pipe.rows.length} schemes</div></div></div>
-    <div class="table-wrap" style="margin-top:14px"><table class="rank-table">
-      <thead><tr><th>Scheme</th><th>Homes</th><th>Completion</th><th>Status</th><th>Note</th></tr></thead>
+    <p class="src-line"><strong>${pipe.totalUnits.toLocaleString("en-GB")} homes</strong> across ${pipe.rows.length} schemes within 1 km · <a href="https://www.planit.org.uk/planapplic/loc/N1%207TX/search" target="_blank" rel="noopener">PlanIt</a></p>
+    <div class="table-wrap"><table class="rank-table">
+      <thead><tr><th>Scheme</th><th>Homes</th><th>Done</th><th>Status</th><th>Note</th></tr></thead>
       <tbody>${pipe.rows.map((x) => `<tr>
-        <td><strong>${x.name}</strong> <span class="muted">· ${x.distKm} km</span></td><td>${x.units}</td>
-        <td>${x.completion}</td><td>${x.status}</td><td class="muted">${x.note}</td></tr>`).join("")}</tbody>
-    </table></div>
-    <p class="muted small">From local planning records. Source:
-      <a href="https://www.planit.org.uk/planapplic/loc/N1%207TX/search" target="_blank" rel="noopener">PlanIt planning applications</a>.
-      Unit counts &amp; dates are estimates.</p>`;
+        <td><strong>${x.url ? `<a href="${x.url}" target="_blank" rel="noopener">${x.name}</a>` : x.name}</strong> <span class="muted">· ${x.distKm}&nbsp;km</span></td>
+        <td>${x.units}</td><td>${x.completion}</td><td>${x.status}</td><td class="muted">${x.note}</td></tr>`).join("")}</tbody>
+    </table></div>`;
 
   // ---- forecasts ----
   const fHost = $("#lm-forecasts");
   if (fHost) fHost.innerHTML = `
     <div class="table-wrap"><table class="rank-table">
-      <thead><tr><th>Source</th><th>Horizon</th><th>Price</th><th>Activity read</th></tr></thead>
+      <thead><tr><th>Source</th><th>Horizon</th><th>Price</th><th>Read</th></tr></thead>
       <tbody>${MKT.FORECASTS.rows.map((x) => `<tr>
-        <td><strong>${x.source}</strong></td><td>${x.horizon}</td>
+        <td><strong>${x.url ? `<a href="${x.url}" target="_blank" rel="noopener">${x.source}</a>` : x.source}</strong></td><td>${x.horizon}</td>
         <td>${x.priceYoY == null ? "—" : signed(x.priceYoY, (v) => v.toFixed(1)) + "%"}</td>
         <td class="muted">${x.activity}</td></tr>`).join("")}</tbody>
-    </table></div>
-    <p class="muted small">Curated with attribution. Sources:
-      <a href="https://www.rics.org/news-insights/market-surveys/uk-residential-market-survey" target="_blank" rel="noopener">RICS Residential Survey</a>,
-      Savills, Knight Frank, Zoopla and local agents. Forecasts are uncertain and often revised.</p>`;
+    </table></div>`;
 }
 
 // ---------------------------------------------------------------------------
