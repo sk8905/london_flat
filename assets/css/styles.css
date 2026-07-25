@@ -51,13 +51,14 @@ h1, h2, h3 { letter-spacing: -0.005em; }
 
 /* ---------- top navigation (light, editorial) ---------- */
 .topnav { background: var(--panel); color: var(--ink); position: sticky; top: 0; z-index: 30; border-bottom: 1px solid var(--line); }
-.topnav-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 26px; }
-.brand { display: flex; align-items: center; gap: 12px; }
+.topnav-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 8px 26px; }
+.brand { display: flex; align-items: center; gap: 10px; }
 .brand-mark {
-  width: 38px; height: 38px; border-radius: 8px; display: grid; place-items: center; font-size: 19px;
+  width: 30px; height: 30px; border-radius: 7px; display: grid; place-items: center; font-size: 16px;
   background: var(--brand); color: #fff; flex: 0 0 auto;
 }
-.brand-title { font-size: 16px; color: var(--ink); }
+.brand-mark svg { width: 17px; height: 17px; }
+.brand-title { font-size: 15px; color: var(--ink); line-height: 1.15; }
 .brand-sub { font-size: 11.5px; color: var(--muted); letter-spacing: .03em; text-transform: uppercase; }
 
 /* Navigation — a top bar inside the sticky header on desktop, a fixed bottom
@@ -412,7 +413,7 @@ input[type="range"] { accent-color: var(--brand); height: 5px; }
 /* ---------- responsive ---------- */
 @media (max-width: 980px) {
   .wrap { padding: 0 16px; }
-  .topnav-top { padding: 11px 16px; }
+  .topnav-top { padding: 6px 16px; }
   .nav { padding: 0 16px; }
   .id-line2, .idblock #id-status, .idblock .id-sep { display: none; }
   .content { padding: 16px 14px 40px; }

@@ -2,13 +2,13 @@
 // app.js  —  Entry point: load data, run model, render the single page, wire UI
 // =============================================================================
 
-import * as DATA from "../data/dataset.js?v=47";
-import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=47";
-import * as C from "./charts.js?v=47";
-import { monthlyPayment, monthsBetween, ymIndex, ymToISO, breakEvenRecoupAll, interestPaidToDate } from "./finance.js?v=47";
-import { rentVsSell } from "./letting.js?v=47";
-import { rentVsBuy } from "./ownrent.js?v=47";
-import * as MKT from "./market.js?v=47";
+import * as DATA from "../data/dataset.js?v=48";
+import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=48";
+import * as C from "./charts.js?v=48";
+import { monthlyPayment, monthsBetween, ymIndex, ymToISO, breakEvenRecoupAll, interestPaidToDate } from "./finance.js?v=48";
+import { rentVsSell } from "./letting.js?v=48";
+import { rentVsBuy } from "./ownrent.js?v=48";
+import * as MKT from "./market.js?v=48";
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const gbp = (n) => (n < 0 ? "−" : "") + "£" + Math.abs(Math.round(n)).toLocaleString("en-GB");
@@ -296,7 +296,7 @@ function fmtNotifDate(iso) {
 function nativeNotify(fresh) {
   if (!("Notification" in window) || Notification.permission !== "granted") return;
   try {
-    new Notification(fresh.length === 1 ? "Flat Forecaster" : "Flat Forecaster — " + fresh.length + " updates",
+    new Notification(fresh.length === 1 ? "Bracklyn Street" : "Bracklyn Street — " + fresh.length + " updates",
       { body: fresh.slice(0, 3).map((n) => n.text).join("\n") });
   } catch (_) {}
 }
