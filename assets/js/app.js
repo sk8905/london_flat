@@ -2,13 +2,13 @@
 // app.js  —  Entry point: load data, run model, render the single page, wire UI
 // =============================================================================
 
-import * as DATA from "../data/dataset.js?v=45";
-import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=45";
-import * as C from "./charts.js?v=45";
-import { monthlyPayment, monthsBetween, ymIndex, ymToISO, breakEvenRecoupAll, interestPaidToDate } from "./finance.js?v=45";
-import { rentVsSell } from "./letting.js?v=45";
-import { rentVsBuy } from "./ownrent.js?v=45";
-import * as MKT from "./market.js?v=45";
+import * as DATA from "../data/dataset.js?v=47";
+import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=47";
+import * as C from "./charts.js?v=47";
+import { monthlyPayment, monthsBetween, ymIndex, ymToISO, breakEvenRecoupAll, interestPaidToDate } from "./finance.js?v=47";
+import { rentVsSell } from "./letting.js?v=47";
+import { rentVsBuy } from "./ownrent.js?v=47";
+import * as MKT from "./market.js?v=47";
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const gbp = (n) => (n < 0 ? "−" : "") + "£" + Math.abs(Math.round(n)).toLocaleString("en-GB");
@@ -953,38 +953,68 @@ function fmtDayMon(iso) {
 // short building name in a frozen first column (full address in-row), date-sorted.
 let _compsView = "sold";
 let _comps = { sold: [], listed: [] };
+const _compsSort = { sold: { key: "soldDate", dir: "desc" }, listed: { key: "listedDate", dir: "desc" } };
+const _nbSort = { key: "units", dir: "desc" };
+const _fcSort = { key: "priceYoY", dir: "desc" };
 const shortAddr = (a) => {
   const seg = a.split(",").map((s) => s.trim());
   const s = seg[0].replace(/^Flat\s+\S+\s*/i, "").replace(/^\d+[A-Za-z]?\s+/, "").trim();
   return s || seg[1] || seg[0];
 };
+
+// Generic click-to-sort table. cols: [{key,label,get,num,cell,tdcls}]. `state`
+// {key,dir} is mutated on header click; opts.rerender re-invokes the caller.
+function sortableTable(host, cols, rows, state, opts) {
+  if (!host) return;
+  const col = cols.find((c) => c.key === state.key) || cols[0];
+  const dir = state.dir === "asc" ? 1 : -1;
+  const sorted = rows.slice().sort((a, b) => {
+    let va = col.get(a), vb = col.get(b);
+    if (col.num) return ((va == null ? -Infinity : va) - (vb == null ? -Infinity : vb)) * dir;
+    return String(va == null ? "" : va).localeCompare(String(vb == null ? "" : vb)) * dir;
+  });
+  const ar = (c) => c.key === state.key ? `<span class="sort-ar">${state.dir === "asc" ? "▲" : "▼"}</span>` : "";
+  host.innerHTML = `<div class="table-wrap"><table class="rank-table comps-table ${(opts && opts.cls) || ""}">
+    <thead><tr>${cols.map((c) => `<th class="sort-th${c.key === state.key ? " sorted" : ""}" data-k="${c.key}">${c.label}${ar(c)}</th>`).join("")}</tr></thead>
+    <tbody>${sorted.map((x) => `<tr>${cols.map((c) => `<td class="${c.tdcls ? c.tdcls(x) : ""}">${c.cell(x)}</td>`).join("")}</tr>`).join("")}</tbody>
+  </table></div>`;
+  host.querySelectorAll(".sort-th").forEach((th) => th.addEventListener("click", () => {
+    const k = th.dataset.k, c = cols.find((cc) => cc.key === k);
+    if (state.key === k) state.dir = state.dir === "asc" ? "desc" : "asc";
+    else { state.key = k; state.dir = c.num ? "desc" : "asc"; }
+    opts.rerender();
+  }));
+}
+
 function renderComps() {
   const host = $("#lm-comps-body");
   if (!host) return;
   const badge = (n) => `<span class="rank-badge">${n}</span>`;
+  const addrCol = { key: "addr", label: "Property", get: (x) => shortAddr(x.addr), tdcls: () => "addr-cell", cell: (x) => badge(x._rank) + shortAddr(x.addr) };
+  const common = [
+    { key: "perSqm", label: "£/m²", num: true, get: (x) => x.perSqm, cell: (x) => gbp(x.perSqm) },
+    { key: "sqm", label: "m²", num: true, get: (x) => x.sqm, cell: (x) => x.sqm },
+    { key: "type", label: "Type", get: (x) => x.type, cell: (x) => x.type },
+    { key: "full", label: "Full address", get: (x) => x.addr, tdcls: () => "muted", cell: (x) => `${x.addr} · ${x.distKm}&nbsp;km` },
+  ];
   if (_compsView === "sold") {
-    const rows = _comps.sold;
-    host.innerHTML = rows.length ? `<div class="table-wrap"><table class="rank-table comps-table sticky-first">
-      <thead><tr><th>Property</th><th>Sold</th><th>Price</th><th>vs&nbsp;ask</th><th>£/m²</th><th>Days</th><th>m²</th><th>Type</th><th>Full address</th></tr></thead>
-      <tbody>${rows.map((x) => `<tr>
-        <td class="addr-cell">${badge(x._rank)}${shortAddr(x.addr)}</td>
-        <td class="date-cell">${monthName(x.soldDate)}</td>
-        <td><strong><a href="https://www.gov.uk/search-house-prices" target="_blank" rel="noopener">${gbp(x.price)}</a></strong></td>
-        <td class="${x.vsAsking < 0 ? "neg-cell" : ""}">${x.vsAskingPct != null ? signed(x.vsAskingPct, (v) => v.toFixed(1)) + "%" : "—"}</td>
-        <td>${gbp(x.perSqm)}</td><td>${x.daysOnMarket != null ? x.daysOnMarket : "—"}</td><td>${x.sqm}</td><td>${x.type}</td>
-        <td class="muted">${x.addr} · ${x.distKm}&nbsp;km</td></tr>`).join("")}</tbody>
-    </table></div>` : `<p class="muted">No sales in the radius.</p>`;
+    const cols = [addrCol,
+      { key: "soldDate", label: "Sold", get: (x) => x.soldDate, tdcls: () => "date-cell", cell: (x) => monthName(x.soldDate) },
+      { key: "price", label: "Price", num: true, get: (x) => x.price, cell: (x) => `<strong><a href="https://www.gov.uk/search-house-prices" target="_blank" rel="noopener">${gbp(x.price)}</a></strong>` },
+      { key: "vsAskingPct", label: "vs&nbsp;ask", num: true, get: (x) => x.vsAskingPct, tdcls: (x) => x.vsAsking < 0 ? "neg-cell" : "", cell: (x) => x.vsAskingPct != null ? signed(x.vsAskingPct, (v) => v.toFixed(1)) + "%" : "—" },
+      { key: "daysOnMarket", label: "Days", num: true, get: (x) => x.daysOnMarket, cell: (x) => x.daysOnMarket != null ? x.daysOnMarket : "—" },
+      ...common];
+    if (_comps.sold.length) sortableTable(host, cols, _comps.sold, _compsSort.sold, { cls: "sticky-first", rerender: renderComps });
+    else host.innerHTML = `<p class="muted">No sales in the radius.</p>`;
   } else {
-    const rows = _comps.listed;
-    host.innerHTML = rows.length ? `<div class="table-wrap"><table class="rank-table comps-table sticky-first">
-      <thead><tr><th>Property</th><th>Listed</th><th>Asking</th><th>Status</th><th>£/m²</th><th>Days</th><th>m²</th><th>Type</th><th>Full address</th></tr></thead>
-      <tbody>${rows.map((x) => `<tr>
-        <td class="addr-cell">${badge(x._rank)}${shortAddr(x.addr)}</td>
-        <td class="date-cell">${fmtDayMon(x.listedDate)}</td>
-        <td><strong>${gbp(x.askingPrice)}</strong></td><td>${x.status}</td>
-        <td>${gbp(x.perSqm)}</td><td>${x.daysListed != null ? x.daysListed : "—"}</td><td>${x.sqm}</td><td>${x.type}</td>
-        <td class="muted">${x.addr} · ${x.distKm}&nbsp;km</td></tr>`).join("")}</tbody>
-    </table></div>` : `<p class="muted">No active listings in the radius.</p>`;
+    const cols = [addrCol,
+      { key: "listedDate", label: "Listed", get: (x) => x.listedDate, tdcls: () => "date-cell", cell: (x) => fmtDayMon(x.listedDate) },
+      { key: "askingPrice", label: "Asking", num: true, get: (x) => x.askingPrice, cell: (x) => `<strong>${gbp(x.askingPrice)}</strong>` },
+      { key: "status", label: "Status", get: (x) => x.status, cell: (x) => x.status },
+      { key: "daysListed", label: "Days", num: true, get: (x) => x.daysListed, cell: (x) => x.daysListed != null ? x.daysListed : "—" },
+      ...common];
+    if (_comps.listed.length) sortableTable(host, cols, _comps.listed, _compsSort.listed, { cls: "sticky-first", rerender: renderComps });
+    else host.innerHTML = `<p class="muted">No active listings in the radius.</p>`;
   }
 }
 function wireCompsToggle() {
@@ -1103,28 +1133,35 @@ function renderLocalMarket(r) {
   const rcap = $("#lm-rate-cap");
   if (rcap) rcap.innerHTML = `Data-based: Islington flat prices moved ≈−2.2% per +1&nbsp;pt on the 2-yr fix (<a href="https://landregistry.data.gov.uk/app/ukhpi" target="_blank" rel="noopener">UK&nbsp;HPI</a> vs <a href="https://www.bankofengland.co.uk/boeapps/database" target="_blank" rel="noopener">Bank of England</a>, 2021–26); time-to-sell proxied from London sales volumes (≈−2.4% per +1&nbsp;pt). Marker = current fix.`;
 
-  // ---- new-build pipeline ----
+  // ---- new-build pipeline (sortable) ----
   const pipe = MKT.pipelineWithinRadius();
   const nbHost = $("#lm-newbuilds");
-  if (nbHost) nbHost.innerHTML = `
-    <p class="src-line"><strong>${pipe.totalUnits.toLocaleString("en-GB")} homes</strong> across ${pipe.rows.length} schemes within 1 km · <a href="https://www.planit.org.uk/planapplic/loc/N1%207TX/search" target="_blank" rel="noopener">PlanIt</a></p>
-    <div class="table-wrap"><table class="rank-table">
-      <thead><tr><th>Scheme</th><th>Homes</th><th>Done</th><th>Status</th><th>Note</th></tr></thead>
-      <tbody>${pipe.rows.map((x) => `<tr>
-        <td><strong>${x.url ? `<a href="${x.url}" target="_blank" rel="noopener">${x.name}</a>` : x.name}</strong> <span class="muted">· ${x.distKm}&nbsp;km</span></td>
-        <td>${x.units}</td><td>${x.completion}</td><td>${x.status}</td><td class="muted">${x.note}</td></tr>`).join("")}</tbody>
-    </table></div>`;
+  if (nbHost) {
+    nbHost.innerHTML = `<p class="src-line"><strong>${pipe.totalUnits.toLocaleString("en-GB")} homes</strong> across ${pipe.rows.length} schemes within 1 km · <a href="https://www.planit.org.uk/planapplic/loc/N1%207TX/search" target="_blank" rel="noopener">PlanIt</a></p><div id="lm-nb-table"></div>`;
+    const nbCols = [
+      { key: "name", label: "Scheme", get: (x) => x.name, cell: (x) => `<strong>${x.url ? `<a href="${x.url}" target="_blank" rel="noopener">${x.name}</a>` : x.name}</strong> <span class="muted">· ${x.distKm}&nbsp;km</span>` },
+      { key: "units", label: "Homes", num: true, get: (x) => x.units, cell: (x) => x.units },
+      { key: "completion", label: "Done", get: (x) => x.completion, cell: (x) => x.completion },
+      { key: "status", label: "Status", get: (x) => x.status, cell: (x) => x.status },
+      { key: "note", label: "Note", get: (x) => x.note, tdcls: () => "muted", cell: (x) => x.note },
+    ];
+    const renderNb = () => sortableTable($("#lm-nb-table"), nbCols, pipe.rows, _nbSort, { rerender: renderNb });
+    renderNb();
+  }
 
-  // ---- forecasts ----
+  // ---- forecasts (sortable) ----
   const fHost = $("#lm-forecasts");
-  if (fHost) fHost.innerHTML = `
-    <div class="table-wrap"><table class="rank-table">
-      <thead><tr><th>Source</th><th>Horizon</th><th>Price</th><th>Read</th></tr></thead>
-      <tbody>${MKT.FORECASTS.rows.map((x) => `<tr>
-        <td><strong>${x.url ? `<a href="${x.url}" target="_blank" rel="noopener">${x.source}</a>` : x.source}</strong></td><td>${x.horizon}</td>
-        <td>${x.priceYoY == null ? "—" : signed(x.priceYoY, (v) => v.toFixed(1)) + "%"}</td>
-        <td class="muted">${x.activity}</td></tr>`).join("")}</tbody>
-    </table></div>`;
+  if (fHost) {
+    fHost.innerHTML = `<div id="lm-fc-table"></div>`;
+    const fcCols = [
+      { key: "source", label: "Source", get: (x) => x.source, cell: (x) => `<strong>${x.url ? `<a href="${x.url}" target="_blank" rel="noopener">${x.source}</a>` : x.source}</strong>` },
+      { key: "horizon", label: "Horizon", get: (x) => x.horizon, cell: (x) => x.horizon },
+      { key: "priceYoY", label: "Price", num: true, get: (x) => x.priceYoY, cell: (x) => x.priceYoY == null ? "—" : signed(x.priceYoY, (v) => v.toFixed(1)) + "%" },
+      { key: "activity", label: "Read", get: (x) => x.activity, tdcls: () => "muted", cell: (x) => x.activity },
+    ];
+    const renderFc = () => sortableTable($("#lm-fc-table"), fcCols, MKT.FORECASTS.rows, _fcSort, { rerender: renderFc });
+    renderFc();
+  }
 }
 
 // ---------------------------------------------------------------------------
