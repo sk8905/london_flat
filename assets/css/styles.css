@@ -219,7 +219,7 @@ a.badge:hover { text-decoration: none; border-color: var(--brand); color: var(--
 
 /* ---------- spreadsheet-style calculation tables ---------- */
 .calc { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
-.calc td { padding: 7px 0; border-bottom: 1px solid var(--line-soft); vertical-align: baseline; }
+.calc td { padding: 5px 0; border-bottom: 1px solid var(--line-soft); vertical-align: baseline; }
 .calc td:first-child { color: var(--ink-soft); padding-right: 14px; }
 .calc td.num { text-align: right; font-weight: 600; color: var(--ink); white-space: nowrap; }
 .calc .cnote { color: var(--muted); font-weight: 400; font-size: 12px; }
@@ -300,7 +300,9 @@ a.badge:hover { text-decoration: none; border-color: var(--brand); color: var(--
 /* ---------- tables ---------- */
 .table-wrap { overflow-x: auto; margin-top: 6px; }
 .rank-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
-.rank-table th, .rank-table td { text-align: left; padding: 11px 12px; border-bottom: 1px solid var(--line-soft); }
+.rank-table th, .rank-table td { text-align: left; padding: 5px 9px; border-bottom: 1px solid var(--line-soft); line-height: 1.35; }
+.rank-table td.rank-cell { text-align: center; font-weight: 700; color: var(--muted); width: 1%; padding-right: 6px; }
+.rank-table td.date-cell { font-weight: 700; color: var(--ink); white-space: nowrap; }
 .rank-table th { font-size: 11px; text-transform: uppercase; letter-spacing: .03em; color: var(--muted); font-weight: 700; }
 .rank-table td:nth-child(n+3), .rank-table th:nth-child(n+3) { text-align: right; font-variant-numeric: tabular-nums; }
 .rank-table td:first-child, .rank-table th:first-child { text-align: left; }
