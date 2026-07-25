@@ -154,6 +154,64 @@ export function lineChart(container, opts) {
 }
 
 // ---------------------------------------------------------------------------
+// Dual-axis line chart: one shared X, two independent Y scales (left + right),
+// each coloured to its series. opts: { xLabels:[], height,
+//   left:{name,color,values:[],format}, right:{name,color,values:[],format},
+//   marker:{index,label} }
+// ---------------------------------------------------------------------------
+export function dualAxisLine(container, opts) {
+  const W = chartW(container), H = opts.height || 280;
+  const m = { t: 16, r: 64, b: 44, l: 66 };
+  const iw = W - m.l - m.r, ih = H - m.t - m.b;
+  const svg = svgRoot(container, W, H);
+
+  const n = opts.xLabels.length;
+  const xAt = (i) => m.l + (n === 1 ? iw / 2 : (i / (n - 1)) * iw);
+  const scale = (vals) => { const t = niceTicks(Math.min(...vals), Math.max(...vals), 5); return { min: t[0], max: t[t.length - 1], ticks: t }; };
+  const L = scale(opts.left.values), R = scale(opts.right.values);
+  const yL = (v) => m.t + ih - ((v - L.min) / (L.max - L.min)) * ih;
+  const yR = (v) => m.t + ih - ((v - R.min) / (R.max - R.min)) * ih;
+  const fmtL = opts.left.format || String, fmtR = opts.right.format || String;
+
+  // gridlines from the left scale; coloured left-axis labels
+  L.ticks.forEach((t) => {
+    el("line", { x1: m.l, y1: yL(t), x2: W - m.r, y2: yL(t), class: "grid" }, svg);
+    const tx = el("text", { x: m.l - 8, y: yL(t) + 4, class: "axis-y" }, svg);
+    tx.setAttribute("fill", opts.left.color); tx.textContent = fmtL(t);
+  });
+  // right-axis labels
+  R.ticks.forEach((t) => {
+    const tx = el("text", { x: W - m.r + 8, y: yR(t) + 4, class: "axis-y", style: "text-anchor:start" }, svg);
+    tx.setAttribute("fill", opts.right.color); tx.textContent = fmtR(t);
+  });
+  // x labels
+  const stepX = Math.ceil(n / 8);
+  opts.xLabels.forEach((lab, i) => {
+    const isLast = i === n - 1;
+    if (i % stepX !== 0 && !isLast) return;
+    const anchor = i === 0 ? "start" : isLast ? "end" : "middle";
+    const x = i === 0 ? m.l : isLast ? W - m.r : xAt(i);
+    const tx = el("text", { x, y: H - 14, class: "axis-x", style: "text-anchor:" + anchor }, svg);
+    tx.textContent = lab;
+  });
+  // current-rate marker
+  if (opts.marker && opts.marker.index != null) {
+    const mi = opts.marker.index;
+    el("line", { x1: xAt(mi), y1: m.t, x2: xAt(mi), y2: m.t + ih, class: "marker-line" }, svg);
+    const t = el("text", { x: xAt(mi) + 4, y: m.t + 12, class: "marker-label" }, svg);
+    t.textContent = opts.marker.label || "";
+  }
+  const drawSeries = (vals, yFn, color) => {
+    const d = vals.map((v, i) => `${i === 0 ? "M" : "L"}${xAt(i)},${yFn(v)}`).join(" ");
+    el("path", { d, fill: "none", stroke: color, "stroke-width": 2.5, "stroke-linejoin": "round", "stroke-linecap": "round" }, svg);
+    if (vals.length <= 14) vals.forEach((v, i) => el("circle", { cx: xAt(i), cy: yFn(v), r: 3, fill: color }, svg));
+  };
+  drawSeries(opts.left.values, yL, opts.left.color);
+  drawSeries(opts.right.values, yR, opts.right.color);
+  drawLegend(container, [{ name: opts.left.name, color: opts.left.color }, { name: opts.right.name, color: opts.right.color }]);
+}
+
+// ---------------------------------------------------------------------------
 // Vertical bar chart. opts: { bars:[{label,value,color,sub}], yFormat, height,
 //                             baseline (default 0) }
 // ---------------------------------------------------------------------------
