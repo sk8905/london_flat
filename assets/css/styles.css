@@ -324,6 +324,9 @@ a.badge:hover { text-decoration: none; border-color: var(--brand); color: var(--
 .sort-th:hover { color: var(--ink); }
 .sort-th.sorted { color: var(--ink); }
 .sort-ar { font-size: 8px; margin-left: 3px; color: var(--brand); vertical-align: middle; }
+/* new-build & forecast tables: left-align every column */
+#lm-nb-table .rank-table th, #lm-nb-table .rank-table td,
+#lm-fc-table .rank-table th, #lm-fc-table .rank-table td { text-align: left; }
 .rank-badge { display: inline-grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; background: var(--line); color: var(--ink-soft); font-size: 9.5px; font-weight: 700; margin-right: 6px; vertical-align: middle; }
 
 /* stat rows (replace tiles) */
