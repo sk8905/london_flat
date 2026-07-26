@@ -35,11 +35,11 @@
   --mono: ui-monospace, "SF Mono", "Roboto Mono", Menlo, monospace;
 }
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 body {
   margin: 0; background: var(--bg); color: var(--ink);
   font-family: var(--font); line-height: 1.55; -webkit-font-smoothing: antialiased;
-  font-size: 13.5px; font-feature-settings: "tnum" 1;
+  font-size: 13.5px; font-feature-settings: "tnum" 1; -webkit-text-size-adjust: 100%; text-size-adjust: 100%;
 }
 a { color: var(--brand); text-decoration: none; }
 a:hover { text-decoration: underline; }

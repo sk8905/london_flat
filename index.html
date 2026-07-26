@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow" />
   <title>Bracklyn Street</title>
-  <link rel="stylesheet" href="assets/css/styles.css?v=53" />
+  <link rel="stylesheet" href="assets/css/styles.css?v=54" />
 </head>
 <body>
 
@@ -58,7 +58,7 @@
     <div class="page-head">
       <div>
         <h1 class="page-title" id="page-title">Local market</h1>
-        <div class="page-sub" id="page-sub">Sales & listings within 1 km — DOM, asking, £/m², HPI & forecasts</div>
+        <div class="page-sub" id="page-sub">Sales & listings within 2 km — DOM, asking, £/m², HPI & forecasts</div>
       </div>
       <div class="topbar-right">
         <a class="badge" id="live-rate" href="https://www.bankofengland.co.uk/monetary-policy/the-interest-rate-bank-rate" target="_blank" rel="noopener" title="Bank of England base rate — click for source">—</a>
@@ -67,7 +67,7 @@
       </div>
     </div>
 
-      <!-- ================= LOCAL MARKET (within 1 km) ================= -->
+      <!-- ================= LOCAL MARKET (within 2 km) ================= -->
       <section class="tab active" id="tab-localmarket">
         <div class="panel">
           <div id="lm-valuation" class="loading">Loading…</div>
@@ -76,7 +76,7 @@
         </div>
 
         <div class="panel">
-          <h3 class="panel-h">Sales &amp; listings (1&nbsp;km)</h3>
+          <h3 class="panel-h">Sales &amp; listings (2&nbsp;km)</h3>
           <div class="toggle" id="lm-comps-toggle">
             <button type="button" class="toggle-btn active" data-comps="sold">Recently sold</button>
             <button type="button" class="toggle-btn" data-comps="listed">On the market</button>
@@ -155,7 +155,7 @@
           <div id="rb-summary" class="loading">Loading…</div>
         </div>
         <div class="panel">
-          <h3 class="panel-h">2-bed rent nearby (1&nbsp;km) over time</h3>
+          <h3 class="panel-h">2-bed rent nearby (2&nbsp;km) over time</h3>
           <div id="rb-rent-chart"></div>
           <p class="chart-cap" id="rb-rent-cap"></p>
         </div>
@@ -166,7 +166,7 @@
         <div class="panel">
           <h3 class="panel-h">Adjust</h3>
           <div id="rb-controls" class="loading">Loading…</div>
-          <p class="muted small">Rent defaults to the average 2-bed within 1 km. Owning cost excludes principal (it builds
+          <p class="muted small">Rent defaults to the average 2-bed within 2 km. Owning cost excludes principal (it builds
             equity) and nets off price growth.</p>
         </div>
 
@@ -207,9 +207,10 @@
         <div class="panel">
           <h2>Methodology &amp; sources</h2>
           <p><strong>Local market</strong> data (sales, listings, days-on-market, sold-vs-asking, £/m², rents and the
-            new-build pipeline) is filtered to a strict 1 km radius of the N1 7TX centroid, from live
+            new-build pipeline) is filtered to a strict 2 km radius of the N1 7TX centroid, from live
             <a href="https://homedata.co.uk/" target="_blank" rel="noopener">Homedata</a>, HM Land Registry, the EPC
-            register, ONS and PlanIt — with a curated fallback where a live source isn't available.</p>
+            register, ONS and PlanIt — with a curated fallback where a live source isn't available. Council,
+            ex-council and shared-ownership flats are excluded so the comps read a private 2-bed.</p>
           <p class="muted small">Figures are a mix of live pulls and forward-looking estimates; some will go stale. Full
             sources are linked throughout.</p>
           <p class="disclaimer"><strong>Not advice.</strong> An informational model, not financial, tax, mortgage or
@@ -223,6 +224,6 @@
       </footer>
   </main>
 
-<script type="module" src="assets/js/app.js?v=53"></script>
+<script type="module" src="assets/js/app.js?v=54"></script>
 </body>
 </html>

@@ -183,9 +183,9 @@ window.addEventListener("unhandledrejection", (e) => {
 });
 
 const PAGE_META = {
-  localmarket: ["Local market", "Sales, listings, HPI & forecasts within 1 km"],
+  localmarket: ["Local market", "Sales, listings, HPI & forecasts within 2 km"],
   finances: ["Our finances", "What we paid, and whether to sell, rent or hold"],
-  map: ["Map", "Sold & on-market homes within 1 km"],
+  map: ["Map", "Sold & on-market homes within 2 km"],
   inputs: ["Inputs", "Your figures, forecast assumptions & methodology"],
 };
 
@@ -942,7 +942,7 @@ function nearestBase(series, dateISO) {
 }
 
 // ---------------------------------------------------------------------------
-// SECTION 1 — Local market (within 1 km of N1 7TX)
+// SECTION 1 — Local market (within 2 km of N1 7TX)
 // ---------------------------------------------------------------------------
 function fmtDayMon(iso) {
   if (!iso) return "—";
@@ -959,7 +959,13 @@ const _nbSort = { key: "units", dir: "desc" };
 const _fcSort = { key: "priceYoY", dir: "desc" };
 const shortAddr = (a) => {
   const seg = a.split(",").map((s) => s.trim());
-  const s = seg[0].replace(/^Flat\s+\S+\s*/i, "").replace(/^\d+[A-Za-z]?\s+/, "").trim();
+  const s = seg[0]
+    // drop floor/position descriptors that aren't a building name ("Top Floor
+    // Flat, 30 Duncan Terrace" → fall through to the street)
+    .replace(/^(?:Top|Ground|First|Second|Third|Lower(?: Ground)?|Upper|Raised(?: Ground)?|Garden|Basement)\s+(?:Floor\s+)?Flat\b\s*/i, "")
+    .replace(/^Flat\s+\S+\s*/i, "")
+    .replace(/^Unit\s+\S+\s*/i, "")
+    .replace(/^\d+[A-Za-z]?\s+/, "").trim();
   return s || seg[1] || seg[0];
 };
 // Single distinctive word for the tightest first column: the first real name word,
@@ -1108,7 +1114,7 @@ function renderLocalMarket(r) {
     statrow("Median £/m²", medianPsm ? gbp(medianPsm) : "—", yourPsm ? "you paid " + gbp(yourPsm) : "") +
     statrow("Median days on market", estDays != null ? estDays + " days" : "—", "list → sold") +
     statrow("Sold below asking", stats.pctBelowAsking != null ? stats.pctBelowAsking + "%" : "—", stats.medianVsAskingPct != null ? "median " + signed(stats.medianVsAskingPct, (x) => x.toFixed(1)) + "%" : "") +
-    statrow("On the market now", String(listings.length), "within 1 km") +
+    statrow("On the market now", String(listings.length), "within 2 km") +
     statrow("New listings / mo", String(avgLpm), "avg last " + lpm.length + " mo");
 
   const note = $("#lm-source-note");
@@ -1160,7 +1166,7 @@ function renderLocalMarket(r) {
   if (hpiHost) hpiHost.innerHTML = `<div class="statrows sr-2">` +
     statrow("Islington", gbp(H.islingtonAvg), yoy(H.islingtonYoYPct)) +
     statrow("Islington flats", gbp(H.islingtonFlatsAvg), yoy(H.islingtonFlatsYoYPct)) +
-    statrow("N1 7TX 12-mo", gbp(H.n1_7txAvg12m), "1 km flats") +
+    statrow("N1 7TX 12-mo", gbp(H.n1_7txAvg12m), "2 km flats") +
     statrow("London", gbp(H.londonAvg), yoy(H.londonYoYPct)) +
     statrow("England", gbp(H.englandAvg), yoy(H.englandYoYPct)) +
     `</div><a class="src-line" href="https://landregistry.data.gov.uk/app/ukhpi" target="_blank" rel="noopener">UK HPI · ${monthName(H.asOf)}</a>`;
@@ -1180,9 +1186,10 @@ function renderLocalMarket(r) {
   // holds ~5% and edges up by 2030 — this is the market path, not an assumption.
   // deltas vs now: 2028 ≈ +0.0pp, 2030 ≈ +0.2pp (fwd 2y swap 4.02→4.02→4.24%).
   const OIS = DATA.RATES.oisFix2yForecast || { asOf: "2026-06", d28: 0.0, d30: 0.2 };
-  const r28 = Math.round((baseRate + OIS.d28) * 100) / 100;
   const r30 = Math.round((baseRate + OIS.d30) * 100) / 100;
-  const fcPath = [{ label: "'26", rate: baseRate }, { label: "'28", rate: r28 }, { label: "'30", rate: r30 }];
+  // Two clear points: now (curve is flat through ~2028) and 2030. Showing the
+  // near-identical 2028 point too just stacks a second dot on "now", so omit it.
+  const fcPath = [{ label: "now", rate: baseRate }, { label: "'30", rate: r30 }];
   _rateOpts = {
     xLabels: rateGrid.map((rt) => rt.toFixed(1) + "%"), xValues: rateGrid, height: 260,
     left: { name: "Est. price", color: "#1f5a73", values: priceVals, format: (val) => "£" + Math.round(val / 1000) + "k" },
@@ -1197,7 +1204,7 @@ function renderLocalMarket(r) {
   const pipe = MKT.pipelineWithinRadius();
   const nbHost = $("#lm-newbuilds");
   if (nbHost) {
-    nbHost.innerHTML = `<p class="src-line"><strong>${pipe.totalUnits.toLocaleString("en-GB")} homes</strong> across ${pipe.rows.length} schemes within 1 km · <a href="https://www.planit.org.uk/planapplic/loc/N1%207TX/search" target="_blank" rel="noopener">PlanIt</a></p><div id="lm-nb-table"></div>`;
+    nbHost.innerHTML = `<p class="src-line"><strong>${pipe.totalUnits.toLocaleString("en-GB")} homes</strong> across ${pipe.rows.length} schemes within 2 km · <a href="https://www.planit.org.uk/planapplic/loc/N1%207TX/search" target="_blank" rel="noopener">PlanIt</a></p><div id="lm-nb-table"></div>`;
     const nbCols = [
       { key: "name", label: "Scheme", get: (x) => x.short || x.name, cell: (x) => `<strong>${x.url ? `<a href="${x.url}" target="_blank" rel="noopener">${x.short || x.name}</a>` : (x.short || x.name)}</strong> <span class="muted">· ${x.distKm}&nbsp;km</span>` },
       { key: "units", label: "Homes", num: true, get: (x) => x.units, cell: (x) => x.units },
@@ -1404,7 +1411,7 @@ function renderRentBuy(r) {
       ${card("Opportunity cost of equity", gbp(M.oppCostEquity) + "/mo", "on " + gbp(res.equityNow) + " @ " + pct(state.rentbuy.opportunityRate))}
       ${card("Less expected growth", (M.appreciation >= 0 ? "−" : "+") + gbp(Math.abs(M.appreciation)) + "/mo", "value change this year")}
       ${card("= Owning cost", gbp(M.ownEconomic) + "/mo", "economic monthly", "gold")}
-      ${card("Rent for equivalent", gbp(M.rent) + "/mo", "avg 2-bed within 1 km")}
+      ${card("Rent for equivalent", gbp(M.rent) + "/mo", "avg 2-bed within 2 km")}
     </div>
 
     <div class="verdict-kicker" style="margin-top:20px">Wealth after ${horizonLabel} — keep owning vs sell &amp; rent</div>
@@ -1432,12 +1439,12 @@ function renderRentBuy(r) {
   const rc = $("#rb-rent-chart");
   if (rc) C.lineChart(rc, {
     height: 260,
-    series: [{ name: "Avg 2-bed rent (1 km)", color: "#1f5a73",
+    series: [{ name: "Avg 2-bed rent (2 km)", color: "#1f5a73",
       points: MKT.RENT.series.map((s) => ({ x: monthName(s.month), y: s.rent })) }],
     yFormat: (v) => "£" + Math.round(v).toLocaleString("en-GB"), yUnit: "£/month",
   });
   const cap = $("#rb-rent-cap");
-  if (cap) cap.innerHTML = `Average advertised rent for a 2-bed within 1 km: <strong>${gbp(MKT.RENT.currentAvg2bed)}/mo</strong>
+  if (cap) cap.innerHTML = `Average advertised rent for a 2-bed within 2 km: <strong>${gbp(MKT.RENT.currentAvg2bed)}/mo</strong>
     (${signed(MKT.RENT.yoYPct, (x) => x.toFixed(1))}% YoY). Source:
     <a href="https://www.rightmove.co.uk/property-to-rent/Islington.html" target="_blank" rel="noopener">Rightmove</a> ·
     <a href="https://www.ons.gov.uk/economy/inflationandpriceindices/bulletins/privaterentandhousepricesuk/latest" target="_blank" rel="noopener">ONS</a>.`;
