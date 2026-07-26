@@ -2,13 +2,13 @@
 // app.js  —  Entry point: load data, run model, render the single page, wire UI
 // =============================================================================
 
-import * as DATA from "../data/dataset.js?v=51";
-import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=51";
-import * as C from "./charts.js?v=51";
-import { monthlyPayment, monthsBetween, ymIndex, ymToISO, breakEvenRecoupAll, interestPaidToDate } from "./finance.js?v=51";
-import { rentVsSell } from "./letting.js?v=51";
-import { rentVsBuy } from "./ownrent.js?v=51";
-import * as MKT from "./market.js?v=51";
+import * as DATA from "../data/dataset.js?v=52";
+import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=52";
+import * as C from "./charts.js?v=52";
+import { monthlyPayment, monthsBetween, ymIndex, ymToISO, breakEvenRecoupAll, interestPaidToDate } from "./finance.js?v=52";
+import { rentVsSell } from "./letting.js?v=52";
+import { rentVsBuy } from "./ownrent.js?v=52";
+import * as MKT from "./market.js?v=52";
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const gbp = (n) => (n < 0 ? "−" : "") + "£" + Math.abs(Math.round(n)).toLocaleString("en-GB");
@@ -962,6 +962,23 @@ const shortAddr = (a) => {
   const s = seg[0].replace(/^Flat\s+\S+\s*/i, "").replace(/^\d+[A-Za-z]?\s+/, "").trim();
   return s || seg[1] || seg[0];
 };
+// Single distinctive word for the tightest first column: the first real name word,
+// skipping house numbers and generic street/building/directional words (so
+// "26 Gainsborough Studios West" → "Gainsborough", "The Cooper Building" → "Cooper").
+const ADDR_GENERIC = new Set(["the", "flat", "apartment", "apartments", "court", "house", "building", "buildings",
+  "studios", "studio", "road", "street", "avenue", "close", "tower", "towers", "square", "walk", "terrace",
+  "gardens", "garden", "place", "lane", "row", "mews", "point", "north", "south", "east", "west", "london",
+  "hackney", "islington"]);
+const oneWord = (a) => {
+  const words = shortAddr(a).split(/\s+/).filter(Boolean);
+  for (const w of words) {
+    if (/^\d/.test(w)) continue;
+    const lw = w.toLowerCase().replace(/[^a-z]/g, "");
+    if (!lw || ADDR_GENERIC.has(lw)) continue;
+    return w.replace(/[.,]$/, "");
+  }
+  return words.find((w) => !/^\d+$/.test(w)) || words[0] || a;
+};
 
 // Generic click-to-sort table. cols: [{key,label,get,num,cell,tdcls}]. `state`
 // {key,dir} is mutated on header click; opts.rerender re-invokes the caller.
@@ -991,7 +1008,7 @@ function renderComps() {
   const host = $("#lm-comps-body");
   if (!host) return;
   const badge = (n) => `<span class="rank-badge">${n}</span>`;
-  const addrCol = { key: "addr", label: "Property", get: (x) => shortAddr(x.addr), tdcls: () => "addr-cell", cell: (x) => badge(x._rank) + shortAddr(x.addr) };
+  const addrCol = { key: "addr", label: "Property", get: (x) => oneWord(x.addr), tdcls: () => "addr-cell", cell: (x) => badge(x._rank) + oneWord(x.addr) };
   const common = [
     { key: "perSqm", label: "£/m²", num: true, get: (x) => x.perSqm, cell: (x) => gbp(x.perSqm) },
     { key: "sqm", label: "m²", num: true, get: (x) => x.sqm, cell: (x) => x.sqm },
@@ -1129,8 +1146,8 @@ function renderLocalMarket(r) {
   const legend = $("#lm-legend");
   if (legend) legend.innerHTML = `<div class="map-legend">
       <div class="map-legend-item"><span class="map-num you"></span><span><strong>Your flat</strong> · ${gbp(p.purchasePrice)}${yourPsm ? " · " + gbp(yourPsm) + "/m²" : ""}</span></div>
-      ${sold.slice().sort((a, b) => a._rank - b._rank).map((x) => `<div class="map-legend-item"><span class="map-num">${x._rank}</span><span>${shortAddr(x.addr)} · sold ${gbp(x.price)}${x.perSqm ? " · " + gbp(x.perSqm) + "/m²" : ""}</span></div>`).join("")}
-      ${listed.slice().sort((a, b) => a._rank - b._rank).map((x) => `<div class="map-legend-item"><span class="map-num listing">${x._rank}</span><span>${shortAddr(x.addr)} · ${gbp(x.askingPrice)}${x.perSqm ? " · " + gbp(x.perSqm) + "/m²" : ""}</span></div>`).join("")}
+      ${sold.slice().sort((a, b) => a._rank - b._rank).map((x) => `<div class="map-legend-item"><span class="map-num">${x._rank}</span><span>${oneWord(x.addr)} · sold ${gbp(x.price)}${x.perSqm ? " · " + gbp(x.perSqm) + "/m²" : ""}</span></div>`).join("")}
+      ${listed.slice().sort((a, b) => a._rank - b._rank).map((x) => `<div class="map-legend-item"><span class="map-num listing">${x._rank}</span><span>${oneWord(x.addr)} · ${gbp(x.askingPrice)}${x.perSqm ? " · " + gbp(x.perSqm) + "/m²" : ""}</span></div>`).join("")}
     </div>`;
 
   // ---- HPI (tight rows + linked) ----
