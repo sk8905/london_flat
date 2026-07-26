@@ -1125,6 +1125,7 @@ function renderLocalMarket(r) {
   if (lpmHost) C.barChart(lpmHost, {
     bars: lpm.map((x) => ({ label: monthName(x.month).replace(/ 20/, " '"), value: x.count, valueLabel: String(x.count), color: "#4a7c8c" })),
     yFormat: (v) => v.toFixed(0), height: 220, yUnit: "new listings",
+    xTicks: true, labelEvery: 3, // a notch every month, date label once a quarter
   });
 
   // ---- price rank (1 = dearest) + date-sorted rows for the merged table ----

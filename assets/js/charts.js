@@ -280,8 +280,18 @@ export function barChart(container, opts) {
   const slot = iw / n;
   const bw = Math.min(116, slot * 0.62);
   // Thin x-labels so they never overlap: keep roughly one label per ~46px, and
-  // always show the last bar's label.
+  // always show the last bar's label. Or, if `labelEvery` is set, label strictly
+  // every Nth bar (e.g. a monthly series labelled once a quarter).
   const labelStep = Math.max(1, Math.round(46 / slot));
+  const labelEvery = opts.labelEvery || null;
+  // optional per-bar axis notches (e.g. a tick for every month)
+  if (opts.xTicks) {
+    const yb = yAt(base);
+    opts.bars.forEach((b, i) => {
+      const cx = m.l + slot * i + slot / 2;
+      el("line", { x1: cx, y1: yb, x2: cx, y2: yb + 5, stroke: "var(--muted)", "stroke-width": 1, opacity: 0.55 }, svg);
+    });
+  }
   opts.bars.forEach((b, i) => {
     const cx = m.l + slot * i + slot / 2;
     const y0 = yAt(base), y1 = yAt(b.value);
@@ -291,7 +301,8 @@ export function barChart(container, opts) {
     }, svg);
     const vt = el("text", { x: cx, y: Math.min(y0, y1) - 6, class: "bar-value" }, svg);
     vt.textContent = b.valueLabel || yFormat(b.value);
-    if (i % labelStep === 0 || i === n - 1) {
+    const showLabel = labelEvery ? (i % labelEvery === 0) : (i % labelStep === 0 || i === n - 1);
+    if (showLabel) {
       const lt = el("text", { x: cx, y: H - 30, class: "bar-label" }, svg);
       lt.textContent = b.label;
     }
