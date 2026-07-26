@@ -226,12 +226,13 @@ export function dualAxisLine(container, opts) {
     const dline = opts.forecast.map((fc) => `${fx(fc.rate)},${yR(lerp(opts.right.values, fc.rate))}`);
     el("polyline", { points: pline.join(" "), fill: "none", stroke: opts.left.color, "stroke-width": 1.5, "stroke-dasharray": "2 3", opacity: 0.7 }, svg);
     el("polyline", { points: dline.join(" "), fill: "none", stroke: opts.right.color, "stroke-width": 1.5, "stroke-dasharray": "2 3", opacity: 0.7 }, svg);
-    opts.forecast.forEach((fc) => {
+    opts.forecast.forEach((fc, k) => {
       const x = fx(fc.rate);
       const py = yL(lerp(opts.left.values, fc.rate));
       el("circle", { cx: x, cy: py, r: 4, fill: "#fff", stroke: opts.left.color, "stroke-width": 2 }, svg);
       el("circle", { cx: x, cy: yR(lerp(opts.right.values, fc.rate)), r: 4, fill: "#fff", stroke: opts.right.color, "stroke-width": 2 }, svg);
-      const t = el("text", { x, y: py - 9, class: "axis-x", style: "text-anchor:middle;font-weight:700" }, svg);
+      // stagger labels above/below so near-coincident dots (flat curve) stay legible
+      const t = el("text", { x, y: k % 2 === 0 ? py - 9 : py + 17, class: "axis-x", style: "text-anchor:middle;font-weight:700" }, svg);
       t.setAttribute("fill", opts.left.color);
       t.textContent = fc.label;
     });
