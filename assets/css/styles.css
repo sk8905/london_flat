@@ -67,13 +67,13 @@ h1, h2, h3 { letter-spacing: -0.005em; }
   display: flex; background: var(--panel); border-top: 1px solid var(--line-soft); z-index: 1000;
 }
 .nav-item {
-  flex: 1 1 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
-  min-height: 68px; padding: 10px 4px; box-sizing: border-box;
+  flex: 1 1 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 3px;
+  min-height: 68px; padding: 6px 4px 0; box-sizing: border-box;
   border: 0; border-top: 2px solid transparent; background: transparent;
   color: var(--muted); font-family: inherit; font-size: 13px; font-weight: 600; line-height: 1; cursor: pointer;
   transition: color .15s;
 }
-.nav-item svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; opacity: .8; }
+.nav-item svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; opacity: .8; }
 .nav-item.active { color: var(--ink); border-top-color: #000; }   /* darker text + 2px top line */
 .nav-item.active svg { opacity: 1; }
 @media (prefers-color-scheme: dark) { .nav-item.active { border-top-color: var(--accent); } }
