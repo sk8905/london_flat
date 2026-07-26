@@ -10,7 +10,7 @@
 
 export const META = {
   asOf: "2026-06-30",
-  build: "v50 · 2026-07-24", // bump on each change so the footer confirms the live build
+  build: "v51 · 2026-07-24", // bump on each change so the footer confirms the live build
   currency: "GBP",
   disclaimer:
     "This tool is an informational model, not financial, tax, mortgage or legal advice. " +
@@ -254,6 +254,13 @@ export const RATES = {
   // interpolated between the published 60% and 75% LTV series. Snapshot fallback:
   remortgage70Now: 5.02,
   remortgage70AsOf: "2026-06",
+  // Forecast 2-yr-fix path from the Bank of England OIS instantaneous forward
+  // curve (month-end 2026-06, statistics/yield-curves). Change vs the current fix,
+  // in percentage points, at ~2028 and ~2030: the 2-yr swap forward starting in T
+  // years (avg instantaneous fwd over [T,T+2]) moves 4.02% (now) → 4.02% (2028) →
+  // 4.24% (2030), i.e. broadly flat then edging up — so the fix holds ~5%, ~5.2%
+  // by 2030. Refresh from the monthly OIS spreadsheet.
+  oisFix2yForecast: { asOf: "BoE OIS, Jun 2026", d28: 0.0, d30: 0.2 },
   // Previous CALENDAR-DAY values, so each badge can show a day-over-day % change.
   // The daily 08:00 routine rolls "*Now" into "*Prev" before writing the new value;
   // the Worker also supplies the prior day's figure for the live series.

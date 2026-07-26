@@ -2,13 +2,13 @@
 // app.js  —  Entry point: load data, run model, render the single page, wire UI
 // =============================================================================
 
-import * as DATA from "../data/dataset.js?v=50";
-import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=50";
-import * as C from "./charts.js?v=50";
-import { monthlyPayment, monthsBetween, ymIndex, ymToISO, breakEvenRecoupAll, interestPaidToDate } from "./finance.js?v=50";
-import { rentVsSell } from "./letting.js?v=50";
-import { rentVsBuy } from "./ownrent.js?v=50";
-import * as MKT from "./market.js?v=50";
+import * as DATA from "../data/dataset.js?v=51";
+import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=51";
+import * as C from "./charts.js?v=51";
+import { monthlyPayment, monthsBetween, ymIndex, ymToISO, breakEvenRecoupAll, interestPaidToDate } from "./finance.js?v=51";
+import { rentVsSell } from "./letting.js?v=51";
+import { rentVsBuy } from "./ownrent.js?v=51";
+import * as MKT from "./market.js?v=51";
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const gbp = (n) => (n < 0 ? "−" : "") + "£" + Math.abs(Math.round(n)).toLocaleString("en-GB");
@@ -1154,11 +1154,14 @@ function renderLocalMarket(r) {
   const priceVals = rateGrid.map((rt) => Math.round(basePrice * (1 + PRICE_ELAST * (rt - baseRate))));
   const daysVals = rateGrid.map((rt) => Math.max(20, Math.round(baseDays * (1 + DAYS_ELAST * (rt - baseRate)))));
   let mIdx = 0; rateGrid.forEach((rt, i) => { if (Math.abs(rt - baseRate) < Math.abs(rateGrid[mIdx] - baseRate)) mIdx = i; });
-  // Swap-implied forward path: the 2-yr fix eases toward the current 2-yr SONIA
-  // swap as the market prices lower future Bank Rate. Indicative, not a promise.
-  const swap = DATA.RATES.swap2yrNow;
-  const r28 = Math.round((baseRate - (baseRate - swap) * 0.45) * 10) / 10;
-  const r30 = Math.round((baseRate - (baseRate - swap) * 0.65) * 10) / 10;
+  // Forecast 2-yr-fix path from the BoE OIS instantaneous forward curve (month-end
+  // 2026-06): 2-yr swap forward starting in T years + the current fix-vs-swap
+  // spread (~1.04pp). The curve prices SONIA broadly flat near ~4%, so the fix
+  // holds ~5% and edges up by 2030 — this is the market path, not an assumption.
+  // deltas vs now: 2028 ≈ +0.0pp, 2030 ≈ +0.2pp (fwd 2y swap 4.02→4.02→4.24%).
+  const OIS = DATA.RATES.oisFix2yForecast || { asOf: "2026-06", d28: 0.0, d30: 0.2 };
+  const r28 = Math.round((baseRate + OIS.d28) * 100) / 100;
+  const r30 = Math.round((baseRate + OIS.d30) * 100) / 100;
   const fcPath = [{ label: "'26", rate: baseRate }, { label: "'28", rate: r28 }, { label: "'30", rate: r30 }];
   _rateOpts = {
     xLabels: rateGrid.map((rt) => rt.toFixed(1) + "%"), xValues: rateGrid, height: 260,
@@ -1168,7 +1171,7 @@ function renderLocalMarket(r) {
   };
   renderRateChart();
   const rcap = $("#lm-rate-cap");
-  if (rcap) rcap.innerHTML = `Data-based: Islington flat prices moved ≈−2.2% per +1&nbsp;pt on the 2-yr fix (<a href="https://landregistry.data.gov.uk/app/ukhpi" target="_blank" rel="noopener">UK&nbsp;HPI</a> vs <a href="https://www.bankofengland.co.uk/boeapps/database" target="_blank" rel="noopener">Bank of England</a>, 2021–26); time-to-sell proxied from London sales volumes. <strong>Rate forecast</strong> (dots): 2-yr fix easing to ~${r30}% by 2030, implied by the ${swap}% 2-yr <a href="https://www.bankofengland.co.uk/statistics/yield-curves" target="_blank" rel="noopener">SONIA swap</a> — indicative.`;
+  if (rcap) rcap.innerHTML = `Data-based: Islington flat prices moved ≈−2.2% per +1&nbsp;pt on the 2-yr fix (<a href="https://landregistry.data.gov.uk/app/ukhpi" target="_blank" rel="noopener">UK&nbsp;HPI</a> vs <a href="https://www.bankofengland.co.uk/boeapps/database" target="_blank" rel="noopener">Bank of England</a>, 2021–26); time-to-sell proxied from London sales volumes. <strong>Rate forecast</strong> (dots): from the <a href="https://www.bankofengland.co.uk/statistics/yield-curves" target="_blank" rel="noopener">BoE OIS forward curve</a> (${OIS.asOf}) — the 2-yr fix holds ~${baseRate.toFixed(1)}% and edges to ~${r30.toFixed(1)}% by 2030, so little rate-driven price relief.`;
 
   // ---- new-build pipeline (sortable) ----
   const pipe = MKT.pipelineWithinRadius();
