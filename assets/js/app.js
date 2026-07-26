@@ -2,13 +2,13 @@
 // app.js  —  Entry point: load data, run model, render the single page, wire UI
 // =============================================================================
 
-import * as DATA from "../data/dataset.js?v=52";
-import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=52";
-import * as C from "./charts.js?v=52";
-import { monthlyPayment, monthsBetween, ymIndex, ymToISO, breakEvenRecoupAll, interestPaidToDate } from "./finance.js?v=52";
-import { rentVsSell } from "./letting.js?v=52";
-import { rentVsBuy } from "./ownrent.js?v=52";
-import * as MKT from "./market.js?v=52";
+import * as DATA from "../data/dataset.js?v=53";
+import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=53";
+import * as C from "./charts.js?v=53";
+import { monthlyPayment, monthsBetween, ymIndex, ymToISO, breakEvenRecoupAll, interestPaidToDate } from "./finance.js?v=53";
+import { rentVsSell } from "./letting.js?v=53";
+import { rentVsBuy } from "./ownrent.js?v=53";
+import * as MKT from "./market.js?v=53";
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const gbp = (n) => (n < 0 ? "−" : "") + "£" + Math.abs(Math.round(n)).toLocaleString("en-GB");
@@ -971,13 +971,16 @@ const ADDR_GENERIC = new Set(["the", "flat", "apartment", "apartments", "court",
   "hackney", "islington"]);
 const oneWord = (a) => {
   const words = shortAddr(a).split(/\s+/).filter(Boolean);
+  let res = null;
   for (const w of words) {
     if (/^\d/.test(w)) continue;
     const lw = w.toLowerCase().replace(/[^a-z]/g, "");
     if (!lw || ADDR_GENERIC.has(lw)) continue;
-    return w.replace(/[.,]$/, "");
+    res = w.replace(/[.,]$/, ""); break;
   }
-  return words.find((w) => !/^\d+$/.test(w)) || words[0] || a;
+  if (!res) res = words.find((w) => !/^\d+$/.test(w)) || words[0] || a;
+  if (res === "New" && /new north road/i.test(a)) return "NNR"; // no building name → abbreviate the street
+  return res;
 };
 
 // Generic click-to-sort table. cols: [{key,label,get,num,cell,tdcls}]. `state`
