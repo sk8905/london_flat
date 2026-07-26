@@ -2,13 +2,13 @@
 // app.js  —  Entry point: load data, run model, render the single page, wire UI
 // =============================================================================
 
-import * as DATA from "../data/dataset.js?v=49";
-import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=49";
-import * as C from "./charts.js?v=49";
-import { monthlyPayment, monthsBetween, ymIndex, ymToISO, breakEvenRecoupAll, interestPaidToDate } from "./finance.js?v=49";
-import { rentVsSell } from "./letting.js?v=49";
-import { rentVsBuy } from "./ownrent.js?v=49";
-import * as MKT from "./market.js?v=49";
+import * as DATA from "../data/dataset.js?v=50";
+import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=50";
+import * as C from "./charts.js?v=50";
+import { monthlyPayment, monthsBetween, ymIndex, ymToISO, breakEvenRecoupAll, interestPaidToDate } from "./finance.js?v=50";
+import { rentVsSell } from "./letting.js?v=50";
+import { rentVsBuy } from "./ownrent.js?v=50";
+import * as MKT from "./market.js?v=50";
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const gbp = (n) => (n < 0 ? "−" : "") + "£" + Math.abs(Math.round(n)).toLocaleString("en-GB");
@@ -1128,9 +1128,9 @@ function renderLocalMarket(r) {
   if (mapHost) C.scatterMap(mapHost, { points: mapPoints });
   const legend = $("#lm-legend");
   if (legend) legend.innerHTML = `<div class="map-legend">
-      <div class="map-legend-item"><span class="map-num you"></span><span><strong>Your flat</strong> · ${gbp(p.purchasePrice)}</span></div>
-      ${sold.slice().sort((a, b) => a._rank - b._rank).map((x) => `<div class="map-legend-item"><span class="map-num">${x._rank}</span><span>${shortAddr(x.addr)} · sold ${gbp(x.price)}</span></div>`).join("")}
-      ${listed.slice().sort((a, b) => a._rank - b._rank).map((x) => `<div class="map-legend-item"><span class="map-num listing">${x._rank}</span><span>${shortAddr(x.addr)} · ${gbp(x.askingPrice)}</span></div>`).join("")}
+      <div class="map-legend-item"><span class="map-num you"></span><span><strong>Your flat</strong> · ${gbp(p.purchasePrice)}${yourPsm ? " · " + gbp(yourPsm) + "/m²" : ""}</span></div>
+      ${sold.slice().sort((a, b) => a._rank - b._rank).map((x) => `<div class="map-legend-item"><span class="map-num">${x._rank}</span><span>${shortAddr(x.addr)} · sold ${gbp(x.price)}${x.perSqm ? " · " + gbp(x.perSqm) + "/m²" : ""}</span></div>`).join("")}
+      ${listed.slice().sort((a, b) => a._rank - b._rank).map((x) => `<div class="map-legend-item"><span class="map-num listing">${x._rank}</span><span>${shortAddr(x.addr)} · ${gbp(x.askingPrice)}${x.perSqm ? " · " + gbp(x.perSqm) + "/m²" : ""}</span></div>`).join("")}
     </div>`;
 
   // ---- HPI (tight rows + linked) ----
