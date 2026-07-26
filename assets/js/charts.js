@@ -184,8 +184,8 @@ export function dualAxisLine(container, opts) {
     const tx = el("text", { x: W - m.r + 8, y: yR(t) + 4, class: "axis-y", style: "text-anchor:start" }, svg);
     tx.setAttribute("fill", opts.right.color); tx.textContent = fmtR(t);
   });
-  // x labels
-  const stepX = Math.ceil(n / 8);
+  // x labels (thin to every other when crowded so they never overlap)
+  const stepX = n > 6 ? 2 : 1;
   opts.xLabels.forEach((lab, i) => {
     const isLast = i === n - 1;
     if (i % stepX !== 0 && !isLast) return;
@@ -208,6 +208,34 @@ export function dualAxisLine(container, opts) {
   };
   drawSeries(opts.left.values, yL, opts.left.color);
   drawSeries(opts.right.values, yR, opts.right.color);
+
+  // Optional forecast rate-path overlay: year-labelled markers placed along both
+  // curves at the swap-implied future mortgage rates, so you can read off the
+  // price & time-to-sell if rates follow that path. opts.xValues = numeric rates.
+  if (opts.forecast && opts.forecast.length && opts.xValues) {
+    const xv = opts.xValues, lo = xv[0], hi = xv[xv.length - 1];
+    const fx = (rate) => m.l + ((Math.max(lo, Math.min(hi, rate)) - lo) / (hi - lo)) * iw;
+    const lerp = (vals, rate) => {
+      const r = Math.max(lo, Math.min(hi, rate));
+      let pos = 0;
+      for (let i = 0; i < xv.length - 1; i++) { if (r >= xv[i] && r <= xv[i + 1]) { pos = i + (r - xv[i]) / (xv[i + 1] - xv[i]); break; } }
+      const i0 = Math.floor(pos), i1 = Math.min(vals.length - 1, i0 + 1), f = pos - i0;
+      return vals[i0] * (1 - f) + vals[i1] * f;
+    };
+    const pline = opts.forecast.map((fc) => `${fx(fc.rate)},${yL(lerp(opts.left.values, fc.rate))}`);
+    const dline = opts.forecast.map((fc) => `${fx(fc.rate)},${yR(lerp(opts.right.values, fc.rate))}`);
+    el("polyline", { points: pline.join(" "), fill: "none", stroke: opts.left.color, "stroke-width": 1.5, "stroke-dasharray": "2 3", opacity: 0.7 }, svg);
+    el("polyline", { points: dline.join(" "), fill: "none", stroke: opts.right.color, "stroke-width": 1.5, "stroke-dasharray": "2 3", opacity: 0.7 }, svg);
+    opts.forecast.forEach((fc) => {
+      const x = fx(fc.rate);
+      const py = yL(lerp(opts.left.values, fc.rate));
+      el("circle", { cx: x, cy: py, r: 4, fill: "#fff", stroke: opts.left.color, "stroke-width": 2 }, svg);
+      el("circle", { cx: x, cy: yR(lerp(opts.right.values, fc.rate)), r: 4, fill: "#fff", stroke: opts.right.color, "stroke-width": 2 }, svg);
+      const t = el("text", { x, y: py - 9, class: "axis-x", style: "text-anchor:middle;font-weight:700" }, svg);
+      t.setAttribute("fill", opts.left.color);
+      t.textContent = fc.label;
+    });
+  }
   drawLegend(container, [{ name: opts.left.name, color: opts.left.color }, { name: opts.right.name, color: opts.right.color }]);
 }
 
@@ -250,6 +278,9 @@ export function barChart(container, opts) {
   const n = opts.bars.length;
   const slot = iw / n;
   const bw = Math.min(116, slot * 0.62);
+  // Thin x-labels so they never overlap: keep roughly one label per ~46px, and
+  // always show the last bar's label.
+  const labelStep = Math.max(1, Math.round(46 / slot));
   opts.bars.forEach((b, i) => {
     const cx = m.l + slot * i + slot / 2;
     const y0 = yAt(base), y1 = yAt(b.value);
@@ -259,8 +290,10 @@ export function barChart(container, opts) {
     }, svg);
     const vt = el("text", { x: cx, y: Math.min(y0, y1) - 6, class: "bar-value" }, svg);
     vt.textContent = b.valueLabel || yFormat(b.value);
-    const lt = el("text", { x: cx, y: H - 30, class: "bar-label" }, svg);
-    lt.textContent = b.label;
+    if (i % labelStep === 0 || i === n - 1) {
+      const lt = el("text", { x: cx, y: H - 30, class: "bar-label" }, svg);
+      lt.textContent = b.label;
+    }
     if (b.sub) {
       const st = el("text", { x: cx, y: H - 14, class: "bar-sub" }, svg);
       st.textContent = b.sub;

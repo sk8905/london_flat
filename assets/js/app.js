@@ -2,13 +2,13 @@
 // app.js  —  Entry point: load data, run model, render the single page, wire UI
 // =============================================================================
 
-import * as DATA from "../data/dataset.js?v=48";
-import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=48";
-import * as C from "./charts.js?v=48";
-import { monthlyPayment, monthsBetween, ymIndex, ymToISO, breakEvenRecoupAll, interestPaidToDate } from "./finance.js?v=48";
-import { rentVsSell } from "./letting.js?v=48";
-import { rentVsBuy } from "./ownrent.js?v=48";
-import * as MKT from "./market.js?v=48";
+import * as DATA from "../data/dataset.js?v=49";
+import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=49";
+import * as C from "./charts.js?v=49";
+import { monthlyPayment, monthsBetween, ymIndex, ymToISO, breakEvenRecoupAll, interestPaidToDate } from "./finance.js?v=49";
+import { rentVsSell } from "./letting.js?v=49";
+import { rentVsBuy } from "./ownrent.js?v=49";
+import * as MKT from "./market.js?v=49";
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const gbp = (n) => (n < 0 ? "−" : "") + "£" + Math.abs(Math.round(n)).toLocaleString("en-GB");
@@ -222,6 +222,7 @@ function boot() {
     buildInputs();
     wireNav();
     wireCompsToggle();
+    wireRateToggle();
     initNotifications();
     loadIdentity();
   } catch (err) {
@@ -1026,6 +1027,27 @@ function wireCompsToggle() {
     }));
 }
 
+// Rate-sensitivity chart with an optional swap-implied forecast overlay.
+let _rateForecast = false;
+let _rateOpts = null;
+function renderRateChart() {
+  const host = $("#lm-rate-sens");
+  if (!host || !_rateOpts) return;
+  C.dualAxisLine(host, {
+    xLabels: _rateOpts.xLabels, xValues: _rateOpts.xValues, height: _rateOpts.height,
+    left: _rateOpts.left, right: _rateOpts.right, marker: _rateOpts.marker,
+    forecast: _rateForecast ? _rateOpts.fc : null,
+  });
+}
+function wireRateToggle() {
+  document.querySelectorAll("#lm-rate-toggle .toggle-btn").forEach((b) =>
+    b.addEventListener("click", () => {
+      _rateForecast = b.dataset.rate === "forecast";
+      document.querySelectorAll("#lm-rate-toggle .toggle-btn").forEach((x) => x.classList.toggle("active", x === b));
+      renderRateChart();
+    }));
+}
+
 function renderLocalMarket(r) {
   const p = r.inputs.property;
   const stats = MKT.salesStats();
@@ -1045,8 +1067,17 @@ function renderLocalMarket(r) {
   if (valHost) valHost.innerHTML = compVal ? `
     <div class="val-lead">
       <div class="val-head">Desktop valuation — your flat</div>
-      <div class="val-main">${gbp(compVal)} <span class="val-sub">${gbp(medianPsm)}/m² local median × ${p.floorAreaSqm} m²</span></div>
-      <div class="val-note">Est. time to sell <strong>≈ ${estDays} days</strong> at the local median (list→sold)${salesPeriod ? " · sales " + salesPeriod : ""}.</div>
+      <div class="val-cols">
+        <div class="val-col">
+          <div class="val-main">${gbp(compVal)}</div>
+          <div class="val-sub">${gbp(medianPsm)}/m² × ${p.floorAreaSqm} m²</div>
+        </div>
+        <div class="val-col">
+          <div class="val-main2">≈ ${estDays} days</div>
+          <div class="val-sub">est. time to sell (list→sold)</div>
+        </div>
+      </div>
+      <div class="val-note">Local median £/m² &amp; days-on-market${salesPeriod ? " · sales " + salesPeriod : ""}.</div>
     </div>` : "";
 
   // ---- stat rows (tight, no tiles) ----
@@ -1106,13 +1137,13 @@ function renderLocalMarket(r) {
   const H = MKT.HPI;
   const yoy = (v) => signed(v, (x) => x.toFixed(1) + "%") + " YoY";
   const hpiHost = $("#lm-hpi");
-  if (hpiHost) hpiHost.innerHTML =
+  if (hpiHost) hpiHost.innerHTML = `<div class="statrows sr-2">` +
     statrow("Islington", gbp(H.islingtonAvg), yoy(H.islingtonYoYPct)) +
     statrow("Islington flats", gbp(H.islingtonFlatsAvg), yoy(H.islingtonFlatsYoYPct)) +
-    statrow("N1 7TX (12-mo, 1 km)", gbp(H.n1_7txAvg12m), "flats") +
+    statrow("N1 7TX 12-mo", gbp(H.n1_7txAvg12m), "1 km flats") +
     statrow("London", gbp(H.londonAvg), yoy(H.londonYoYPct)) +
     statrow("England", gbp(H.englandAvg), yoy(H.englandYoYPct)) +
-    `<a class="src-line" href="https://landregistry.data.gov.uk/app/ukhpi" target="_blank" rel="noopener">UK HPI · ${monthName(H.asOf)}</a>`;
+    `</div><a class="src-line" href="https://landregistry.data.gov.uk/app/ukhpi" target="_blank" rel="noopener">UK HPI · ${monthName(H.asOf)}</a>`;
 
   // ---- rate sensitivity: DATA-BASED (real elasticities from UK HPI + BoE + volumes) ----
   const baseRate = DATA.RATES.remortgage70Now;
@@ -1123,15 +1154,21 @@ function renderLocalMarket(r) {
   const priceVals = rateGrid.map((rt) => Math.round(basePrice * (1 + PRICE_ELAST * (rt - baseRate))));
   const daysVals = rateGrid.map((rt) => Math.max(20, Math.round(baseDays * (1 + DAYS_ELAST * (rt - baseRate)))));
   let mIdx = 0; rateGrid.forEach((rt, i) => { if (Math.abs(rt - baseRate) < Math.abs(rateGrid[mIdx] - baseRate)) mIdx = i; });
-  const rsHost = $("#lm-rate-sens");
-  if (rsHost) C.dualAxisLine(rsHost, {
-    xLabels: rateGrid.map((rt) => rt.toFixed(1) + "%"), height: 260,
+  // Swap-implied forward path: the 2-yr fix eases toward the current 2-yr SONIA
+  // swap as the market prices lower future Bank Rate. Indicative, not a promise.
+  const swap = DATA.RATES.swap2yrNow;
+  const r28 = Math.round((baseRate - (baseRate - swap) * 0.45) * 10) / 10;
+  const r30 = Math.round((baseRate - (baseRate - swap) * 0.65) * 10) / 10;
+  const fcPath = [{ label: "'26", rate: baseRate }, { label: "'28", rate: r28 }, { label: "'30", rate: r30 }];
+  _rateOpts = {
+    xLabels: rateGrid.map((rt) => rt.toFixed(1) + "%"), xValues: rateGrid, height: 260,
     left: { name: "Est. price", color: "#1f5a73", values: priceVals, format: (val) => "£" + Math.round(val / 1000) + "k" },
     right: { name: "Time to sell", color: "#a06a3c", values: daysVals, format: (val) => Math.round(val) + "d" },
-    marker: { index: mIdx, label: "now ~" + baseRate.toFixed(1) + "%" },
-  });
+    marker: { index: mIdx, label: "now ~" + baseRate.toFixed(1) + "%" }, fc: fcPath,
+  };
+  renderRateChart();
   const rcap = $("#lm-rate-cap");
-  if (rcap) rcap.innerHTML = `Data-based: Islington flat prices moved ≈−2.2% per +1&nbsp;pt on the 2-yr fix (<a href="https://landregistry.data.gov.uk/app/ukhpi" target="_blank" rel="noopener">UK&nbsp;HPI</a> vs <a href="https://www.bankofengland.co.uk/boeapps/database" target="_blank" rel="noopener">Bank of England</a>, 2021–26); time-to-sell proxied from London sales volumes (≈−2.4% per +1&nbsp;pt). Marker = current fix.`;
+  if (rcap) rcap.innerHTML = `Data-based: Islington flat prices moved ≈−2.2% per +1&nbsp;pt on the 2-yr fix (<a href="https://landregistry.data.gov.uk/app/ukhpi" target="_blank" rel="noopener">UK&nbsp;HPI</a> vs <a href="https://www.bankofengland.co.uk/boeapps/database" target="_blank" rel="noopener">Bank of England</a>, 2021–26); time-to-sell proxied from London sales volumes. <strong>Rate forecast</strong> (dots): 2-yr fix easing to ~${r30}% by 2030, implied by the ${swap}% 2-yr <a href="https://www.bankofengland.co.uk/statistics/yield-curves" target="_blank" rel="noopener">SONIA swap</a> — indicative.`;
 
   // ---- new-build pipeline (sortable) ----
   const pipe = MKT.pipelineWithinRadius();
@@ -1139,7 +1176,7 @@ function renderLocalMarket(r) {
   if (nbHost) {
     nbHost.innerHTML = `<p class="src-line"><strong>${pipe.totalUnits.toLocaleString("en-GB")} homes</strong> across ${pipe.rows.length} schemes within 1 km · <a href="https://www.planit.org.uk/planapplic/loc/N1%207TX/search" target="_blank" rel="noopener">PlanIt</a></p><div id="lm-nb-table"></div>`;
     const nbCols = [
-      { key: "name", label: "Scheme", get: (x) => x.name, cell: (x) => `<strong>${x.url ? `<a href="${x.url}" target="_blank" rel="noopener">${x.name}</a>` : x.name}</strong> <span class="muted">· ${x.distKm}&nbsp;km</span>` },
+      { key: "name", label: "Scheme", get: (x) => x.short || x.name, cell: (x) => `<strong>${x.url ? `<a href="${x.url}" target="_blank" rel="noopener">${x.short || x.name}</a>` : (x.short || x.name)}</strong> <span class="muted">· ${x.distKm}&nbsp;km</span>` },
       { key: "units", label: "Homes", num: true, get: (x) => x.units, cell: (x) => x.units },
       { key: "completion", label: "Done", get: (x) => x.completion, cell: (x) => x.completion },
       { key: "status", label: "Status", get: (x) => x.status, cell: (x) => x.status },
@@ -1154,7 +1191,7 @@ function renderLocalMarket(r) {
   if (fHost) {
     fHost.innerHTML = `<div id="lm-fc-table"></div>`;
     const fcCols = [
-      { key: "source", label: "Source", get: (x) => x.source, cell: (x) => `<strong>${x.url ? `<a href="${x.url}" target="_blank" rel="noopener">${x.source}</a>` : x.source}</strong>` },
+      { key: "source", label: "Source", get: (x) => x.short || x.source, cell: (x) => `<strong>${x.url ? `<a href="${x.url}" target="_blank" rel="noopener">${x.short || x.source}</a>` : (x.short || x.source)}</strong>` },
       { key: "horizon", label: "Horizon", get: (x) => x.horizon, cell: (x) => x.horizon },
       { key: "priceYoY", label: "Price", num: true, get: (x) => x.priceYoY, cell: (x) => x.priceYoY == null ? "—" : signed(x.priceYoY, (v) => v.toFixed(1)) + "%" },
       { key: "activity", label: "Read", get: (x) => x.activity, tdcls: () => "muted", cell: (x) => x.activity },
