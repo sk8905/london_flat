@@ -20,12 +20,12 @@ const FALLBACK = {
   baseRateNow: 3.75,
   baseRateAsOf: "2026-06-17",
   baseRatePrev: 3.75,
-  swap2yrNow: 4.06,
-  swap2yrAsOf: "2026-06-26",
-  swap2yrPrev: 4.09,
-  remortgage70Now: 5.02,
+  swap2yrNow: 4.26,
+  swap2yrAsOf: "2026-07-22",
+  swap2yrPrev: 4.06,
+  remortgage70Now: 4.79,
   remortgage70AsOf: "2026-06",
-  remortgage70Prev: 5.02,
+  remortgage70Prev: 4.91,
 };
 
 // Bank of England Interactive Database (IADB) series we pull, all in one request:
