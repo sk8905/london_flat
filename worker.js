@@ -20,9 +20,13 @@ const FALLBACK = {
   baseRateNow: 3.75,
   baseRateAsOf: "2026-06-17",
   baseRatePrev: 3.75,
-  swap2yrNow: 4.06,
-  swap2yrAsOf: "2026-06-26",
-  swap2yrPrev: 4.09,
+  // swap2yrNow is never live-fetched below (no BoE swap series is queried) — this
+  // fallback IS the effective value, so keep it in step with dataset.js RATES.
+  swap2yrNow: 4.26,
+  swap2yrAsOf: "2026-07-22",
+  swap2yrPrev: 4.06,
+  // Unchanged 2026-07-27 — this session's egress policy blocked direct access to
+  // bankofengland.co.uk, so drift on this fallback could not be verified this cycle.
   remortgage70Now: 5.02,
   remortgage70AsOf: "2026-06",
   remortgage70Prev: 5.02,
