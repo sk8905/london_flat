@@ -1,0 +1,14 @@
+{
+  "name": "Bracklyn Street",
+  "short_name": "Bracklyn",
+  "description": "Local market & finances for a 2-bed flat at N1 7TX.",
+  "icons": [
+    { "src": "/assets/img/icon.svg", "type": "image/svg+xml", "sizes": "any", "purpose": "any" },
+    { "src": "/assets/img/icon-192.png", "type": "image/png", "sizes": "192x192" },
+    { "src": "/assets/img/icon-512.png", "type": "image/png", "sizes": "512x512" }
+  ],
+  "theme_color": "#1f5a73",
+  "background_color": "#eceef1",
+  "display": "standalone",
+  "start_url": "/"
+}
