@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Bracklyn Street">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#22617d"/>
+      <stop offset="1" stop-color="#17475c"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="64" height="64" rx="15" fill="url(#bg)"/>
+  <!-- apartment block, white with punched windows (evenodd) -->
+  <path fill="#ffffff" fill-rule="evenodd" d="
+    M14 27 h16 v23 h-16 z
+    M18 31 h3 v3 h-3 z  M23 31 h3 v3 h-3 z
+    M18 37 h3 v3 h-3 z  M23 37 h3 v3 h-3 z
+    M18 43 h3 v3 h-3 z  M23 43 h3 v3 h-3 z
+    M32 19 h18 v31 h-18 z
+    M36 23 h3 v3 h-3 z  M41 23 h3 v3 h-3 z  M45.5 23 h3 v3 h-3 z
+    M36 29 h3 v3 h-3 z  M41 29 h3 v3 h-3 z  M45.5 29 h3 v3 h-3 z
+    M36 35 h3 v3 h-3 z  M41 35 h3 v3 h-3 z  M45.5 35 h3 v3 h-3 z
+    M39.5 43 h5 v7 h-5 z
+  "/>
+  <!-- baseline -->
+  <rect x="12" y="50" width="40" height="2.4" rx="1.2" fill="#ffffff"/>
+  <!-- rising forecast line + arrow head -->
+  <path d="M15 24 L27 17 L38 20 L50 10" fill="none" stroke="#e6b483" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M43.5 9.5 L50.5 9 L50 16" fill="none" stroke="#e6b483" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
