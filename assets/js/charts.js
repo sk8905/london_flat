@@ -101,12 +101,15 @@ export function lineChart(container, opts) {
     tx.textContent = yFormat(t);
   });
 
-  // x labels (thin out if many). First label left-aligned, last right-aligned so
-  // they can't clip at the SVG edges (matters on narrow/mobile widths).
-  const stepX = Math.ceil(labels.length / 8);
+  // x labels: pick ~5 EVENLY spaced indices incl. first & last, so dense monthly
+  // series don't overlap on mobile and the last two never collide. First label is
+  // left-aligned, last right-aligned so they can't clip at the SVG edges.
+  const target = Math.min(opts.maxXLabels || 5, labels.length);
+  const showIdx = new Set();
+  for (let k = 0; k < target; k++) showIdx.add(Math.round((k * (labels.length - 1)) / (target - 1)));
   labels.forEach((lab, i) => {
+    if (!showIdx.has(i)) return;
     const isLast = i === labels.length - 1;
-    if (i % stepX !== 0 && !isLast) return;
     const anchor = i === 0 ? "start" : isLast ? "end" : "middle";
     const x = i === 0 ? m.l : isLast ? W - m.r : xAt(i);
     const tx = el("text", { x, y: H - 14, class: "axis-x", style: "text-anchor:" + anchor }, svg);
@@ -141,12 +144,15 @@ export function lineChart(container, opts) {
     }
   });
 
-  // markers (vertical lines at named x labels, e.g. fix-end)
+  // markers (vertical lines at named x labels, e.g. fix-end). Put the label on the
+  // left of the line when the line sits in the right third, so it can't clip.
   (opts.markers || []).forEach((mk) => {
     const i = labels.indexOf(mk.x);
     if (i < 0) return;
-    el("line", { x1: xAt(i), y1: m.t, x2: xAt(i), y2: m.t + ih, class: "marker-line" }, svg);
-    const t = el("text", { x: xAt(i) + 4, y: m.t + 12, class: "marker-label" }, svg);
+    const mx = xAt(i);
+    el("line", { x1: mx, y1: m.t, x2: mx, y2: m.t + ih, class: "marker-line" }, svg);
+    const rightSide = mx > m.l + iw * 0.6;
+    const t = el("text", { x: mx + (rightSide ? -4 : 4), y: m.t + 12, class: "marker-label", style: "text-anchor:" + (rightSide ? "end" : "start") }, svg);
     t.textContent = mk.label;
   });
 
@@ -299,8 +305,10 @@ export function barChart(container, opts) {
       x: cx - bw / 2, y: Math.min(y0, y1), width: bw, height: Math.abs(y1 - y0),
       rx: 4, fill: b.color || "#33566b",
     }, svg);
-    const vt = el("text", { x: cx, y: Math.min(y0, y1) - 6, class: "bar-value" }, svg);
-    vt.textContent = b.valueLabel || yFormat(b.value);
+    if (!opts.hideValues) {
+      const vt = el("text", { x: cx, y: Math.min(y0, y1) - 6, class: "bar-value" }, svg);
+      vt.textContent = b.valueLabel || yFormat(b.value);
+    }
     const showLabel = labelEvery ? (i % labelEvery === 0) : (i % labelStep === 0 || i === n - 1);
     if (showLabel) {
       const lt = el("text", { x: cx, y: H - 30, class: "bar-label" }, svg);

@@ -726,7 +726,7 @@ function renderBreakEven(r) {
          right now would leave you short of recouping all your cash — price growth or more principal repaid closes the gap.`
       : `Today's estimated value of <strong>${gbp(r.presentValue)}</strong> is already <strong>${gbp(-gapVsValue)} above</strong>
          the break-even, so a sale now would recoup all your cash with room to spare.`}</p>
-    <div class="table-wrap"><table class="rank-table">
+    <div class="table-wrap"><table class="rank-table kv">
       <thead><tr><th>To recoup (net proceeds must cover)</th><th>Amount</th></tr></thead>
       <tbody>
         <tr><td>Deposit</td><td>${gbp(c.deposit)}</td></tr>
@@ -736,7 +736,7 @@ function renderBreakEven(r) {
         <tr class="best-row"><td><strong>Total cash to recoup</strong></td><td><strong>${gbp(be.cashToRecoup)}</strong></td></tr>
       </tbody>
     </table></div>
-    <div class="table-wrap" style="margin-top:14px"><table class="rank-table">
+    <div class="table-wrap" style="margin-top:14px"><table class="rank-table kv">
       <thead><tr><th>Plus, the sale must also cover</th><th>Amount</th></tr></thead>
       <tbody>
         <tr><td>Outstanding mortgage</td><td>${gbp(c.outstanding)}</td></tr>
@@ -815,7 +815,7 @@ function renderSignal(r) {
       The black tick marks the net signal for that window. Weights:
       ${Object.entries(r.weights).map(([k, v]) => `${FACTOR_LABELS[k]} ${(v * 100).toFixed(0)}%`).join(" · ")}.</p>
     </div>
-    <div class="table-wrap"><table class="rank-table">
+    <div class="table-wrap"><table class="rank-table kv">
       <thead><tr><th>Window</th><th>Signal</th><th>Est. sale value</th><th>Net proceeds</th><th>Net profit*</th><th>ERC</th><th>Read</th></tr></thead>
       <tbody>${rows}</tbody>
     </table>
@@ -846,7 +846,7 @@ function renderProceeds(r) {
       <strong style="color:#a06a3c">bronze line</strong> is the <strong>recoup-all-cash break-even</strong> — the net
       proceeds needed to get every pound back (deposit + SDLT + buying costs + interest paid to that date); a bar above it
       means you've recouped all your cash. Scenario: <strong>${state.custom ? "Custom" : r.scenarioName}</strong>.</p></div>
-    <div class="table-wrap"><table class="rank-table">
+    <div class="table-wrap"><table class="rank-table kv">
       <thead><tr><th>Window</th><th>Sale value</th><th>Outstanding</th><th>ERC</th><th>Selling costs</th><th>CGT</th><th>Net proceeds</th><th>Less deposit + SDLT</th><th>Net profit</th></tr></thead>
       <tbody>${r.windows.map((w) => `<tr class="${w === r.best ? "best-row" : ""}">
         <td>${w.window.label}</td><td>${gbp(w.saleValue)}</td><td>${gbp(w.outstanding)}</td>
@@ -1202,7 +1202,7 @@ function renderLocalMarket(r) {
   const valHost = $("#lm-valuation");
   if (valHost) valHost.innerHTML = compVal ? `
     <div class="val-lead">
-      <div class="val-head">Desktop valuation — your flat <span class="conf-pill conf-${conf.cls}">${conf.label} confidence</span></div>
+      <div class="val-head">Desktop valuation — your flat <span class="conf-pill conf-${conf.cls}" title="Valuation confidence — from comp count &amp; £/m² spread">${conf.label}</span></div>
       <div class="val-cols">
         <div class="val-col">
           <div class="val-main">${gbp(compVal)}</div>
@@ -1235,14 +1235,14 @@ function renderLocalMarket(r) {
   const H0 = MKT.HPI;
   const spk = [];
   const kpiRow = (label, value, sub, trend) => {
-    let right = "";
+    let trendHtml = "";
     if (trend && trend.series && trend.series.length >= 2) {
       const tm = trendMeta(trend.dir, trend.goodIsUp);
       const sid = "spk-" + trend.id;
       spk.push({ id: sid, values: trend.series, color: tm.color });
-      right = `<span class="kpi-trend"><span class="spark" id="${sid}"></span><span class="tr-arrow" style="color:${tm.color}">${tm.arrow}</span></span>`;
+      trendHtml = `<span class="kpi-trend"><span class="spark" id="${sid}"></span><span class="tr-arrow" style="color:${tm.color}">${tm.arrow}</span></span>`;
     }
-    return `<div class="statrow"><span class="sr-label">${label}</span><span class="sr-value">${value}${right}</span><span class="sr-sub">${sub || ""}</span></div>`;
+    return `<div class="statrow kpi-stat"><span class="sr-label">${label}</span><span class="sr-value">${value}</span><span class="sr-sub"><span class="sr-sub-txt">${sub || ""}</span>${trendHtml}</span></div>`;
   };
   const group = (title, rows) => `<div class="kpi-group"><div class="kpi-group-h">${title}</div><div class="statrows">${rows}</div></div>`;
   const kpis = $("#lm-kpis");
@@ -1299,9 +1299,9 @@ function renderLocalMarket(r) {
   if (seasHost && S) {
     const maxIdx = Math.max(...S.monthIndex);
     C.barChart(seasHost, {
-      bars: S.monthIndex.map((v, i) => ({ label: MONTHS[i], value: Math.round(v * 100), valueLabel: "",
+      bars: S.monthIndex.map((v, i) => ({ label: MONTHS[i], value: Math.round(v * 100),
         color: v >= maxIdx - 0.03 ? "#2f7d57" : (v >= 1.0 ? "#4a7c8c" : "#c3ccd3") })),
-      yFormat: (v) => String(v), height: 190, yUnit: "demand index", labelEvery: 1, xTicks: true, baseline: 80,
+      yFormat: (v) => String(v), height: 180, yUnit: "demand index", labelEvery: 1, xTicks: true, baseline: 80, hideValues: true,
     });
     const best3 = S.monthIndex.map((v, i) => ({ m: MONTHS[i], v })).sort((a, b) => b.v - a.v).slice(0, 3).map((x) => x.m);
     const scap = $("#lm-seasonality-cap");
@@ -1506,7 +1506,7 @@ function renderLetting(r) {
   const tHost = $("#letting-table");
   const s = res.sale;
   tHost.innerHTML = `
-    <div class="table-wrap"><table class="rank-table">
+    <div class="table-wrap"><table class="rank-table kv">
       <thead><tr><th>Period</th><th>Gross rent*</th><th>Running costs</th><th>Interest</th><th>Principal†</th><th>Income tax</th><th>Net cash flow</th></tr></thead>
       <tbody>${res.yearsTable.map((y) => `<tr>
         <td>${letPeriodLabel(y.label, y.months)}</td><td>${gbp(y.grossRent)}</td><td>${gbp(y.opex)}</td>
@@ -1648,7 +1648,7 @@ function renderRentBuy(r) {
   // year-by-year table
   const tbl = $("#rb-table");
   if (tbl) tbl.innerHTML = `
-    <div class="table-wrap"><table class="rank-table">
+    <div class="table-wrap"><table class="rank-table kv">
       <thead><tr><th>Period</th><th>Rent paid</th><th>Own — interest</th><th>Own — principal†</th><th>Service+upkeep</th><th>Own cash out</th><th>Rent − own cash</th></tr></thead>
       <tbody>${res.yearsTable.map((y) => {
         const diff = y.rent - y.ownCash;
