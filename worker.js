@@ -50,12 +50,19 @@ export default {
     if (!env || !env.ASSETS) return new Response("Not found", { status: 404 });
 
     const res = await env.ASSETS.fetch(request);
-    // HTML must revalidate every load so a new deploy's ?v= module references are
-    // picked up immediately. (Cloudflare's [assets] binding ignores the Pages-only
-    // _headers file, so we set this here.) Versioned JS/CSS/SVG can cache normally.
-    const ct = res.headers.get("content-type") || "";
-    if (ct.includes("text/html")) {
-      const h = new Headers(res.headers);
+    // Never serve a stale HTML/CSS/JS after a deploy — this is what bites iOS
+    // "Add to Home Screen" web apps, which pin old files hard. `no-cache` lets the
+    // browser keep the file but forces it to revalidate with the origin on every
+    // load; paired with the ETag the assets binding sets automatically, the common
+    // case is a cheap 304 (no re-download). This is automatic — it does NOT depend
+    // on manual ?v= query bumps. Images, fonts, SVG and the manifest keep their
+    // default caching. (Cloudflare's [assets] binding ignores the Pages-only
+    // _headers file, so we set this here.)
+    const ct = (res.headers.get("content-type") || "").toLowerCase();
+    const mustRevalidate =
+      ct.includes("text/html") || ct.includes("text/css") || ct.includes("javascript");
+    if (mustRevalidate) {
+      const h = new Headers(res.headers); // preserves the ETag for 304s
       h.set("Cache-Control", "no-cache, must-revalidate");
       return new Response(res.body, { status: res.status, statusText: res.statusText, headers: h });
     }
