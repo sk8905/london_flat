@@ -70,7 +70,7 @@ h1, h2, h3 { letter-spacing: -0.005em; }
 }
 .nav-item {
   flex: 1 1 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 2px;
-  min-height: 42px; padding: 0 4px; box-sizing: border-box;
+  min-height: 64px; padding: 0 4px; box-sizing: border-box;
   border: 0; border-top: 2px solid transparent; background: transparent;
   color: var(--muted); font-family: inherit; font-size: .58rem; font-weight: 600; line-height: 1; cursor: pointer;
   transition: color .15s;
@@ -459,7 +459,7 @@ input[type="range"] { accent-color: var(--brand); height: 5px; }
     border-top: 1px solid var(--line); box-shadow: 0 -1px 10px rgba(20, 30, 45, .07);
     padding: 6px 0 calc(6px + env(safe-area-inset-bottom, 0));
   }
-  .content { padding-bottom: calc(66px + env(safe-area-inset-bottom, 0)); }
+  .content { padding-bottom: calc(88px + env(safe-area-inset-bottom, 0)); }
 }
 @media (max-width: 520px) {
   .kpi-value { font-size: 21px; }
