@@ -454,6 +454,19 @@ function renderRateBadges() {
     "Average 2-year fixed remortgage at ~70% LTV · " + R.remortgage70AsOf + " — click for source", dayDelta(R.remortgage70Now, R.remortgage70Prev));
   if (R.swap2yrNow != null) setRateBadge("live-swap", pct(R.swap2yrNow) + " swap",
     "2-year GBP interest-rate swap (SONIA) · " + R.swap2yrAsOf + " — click for source", dayDelta(R.swap2yrNow, R.swap2yrPrev));
+  // 4th chip: Islington flats year-on-year (UK HPI) — the headline "market up/down"
+  // number. The YoY IS the value (not a hidden delta) so it stays visible on phones.
+  const H = MKT.HPI;
+  const hpiEl = $("#live-hpi");
+  if (hpiEl && H && Number.isFinite(H.islingtonFlatsYoYPct)) {
+    const y = H.islingtonFlatsYoYPct;
+    const flat = Math.abs(y) < 0.05;
+    const color = flat ? "var(--muted)" : (y > 0 ? "var(--pos)" : "var(--neg)");
+    const arrow = flat ? "" : (y > 0 ? "▲ " : "▼ ");
+    hpiEl.title = "Islington flats — year-on-year price change (UK HPI · " + monthName(H.asOf) + ") — click for source";
+    hpiEl.innerHTML =
+      `<span class="badge-label"><span style="color:${color};font-weight:700">${arrow}${Math.abs(y).toFixed(1)}%</span> <span style="color:var(--muted)">flats</span></span>`;
+  }
 }
 
 // ISO dates from any successful live fetch, folded into the "Latest item" line.
