@@ -34,7 +34,9 @@
   --serif: var(--font);
   --mono: ui-monospace, "SF Mono", "Roboto Mono", Menlo, monospace;
 }
-* { box-sizing: border-box; }
+/* touch-action: manipulation kills double-tap-to-zoom everywhere (headers, nav,
+   buttons, content) while keeping scroll and pinch-zoom for accessibility. */
+* { box-sizing: border-box; touch-action: manipulation; }
 html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 body {
   margin: 0; background: var(--bg); color: var(--ink);
