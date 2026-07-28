@@ -67,14 +67,14 @@ h1, h2, h3 { letter-spacing: -0.005em; }
   display: flex; background: var(--panel); border-top: 1px solid var(--line-soft); z-index: 1000;
 }
 .nav-item {
-  flex: 1 1 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 3px;
-  min-height: 68px; padding: 6px 4px 0; box-sizing: border-box;
-  border: 0; border-top: 2px solid transparent; background: transparent;
-  color: var(--muted); font-family: inherit; font-size: 13px; font-weight: 600; line-height: 1; cursor: pointer;
+  flex: 1 1 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 6px;
+  min-height: 70px; padding: 11px 4px 0; box-sizing: border-box;
+  border: 0; border-top: 3px solid transparent; background: transparent;
+  color: var(--muted); font-family: inherit; font-size: 14px; font-weight: 600; line-height: 1; cursor: pointer;
   transition: color .15s;
 }
-.nav-item svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; opacity: .8; }
-.nav-item.active { color: var(--ink); border-top-color: #000; }   /* darker text + 2px top line */
+.nav-item svg { width: 27px; height: 27px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; opacity: .85; }
+.nav-item.active { color: var(--ink); border-top-color: #000; font-weight: 700; }   /* bold dark text + 3px top line */
 .nav-item.active svg { opacity: 1; }
 @media (prefers-color-scheme: dark) { .nav-item.active { border-top-color: var(--accent); } }
 @media (min-width: 761px) {
@@ -457,7 +457,7 @@ input[type="range"] { accent-color: var(--brand); height: 5px; }
     border-top: 1px solid var(--line); box-shadow: 0 -1px 10px rgba(20, 30, 45, .07);
     padding-bottom: env(safe-area-inset-bottom, 0);
   }
-  .content { padding-bottom: calc(82px + env(safe-area-inset-bottom, 0)); }
+  .content { padding-bottom: calc(84px + env(safe-area-inset-bottom, 0)); }
 }
 @media (max-width: 520px) {
   .kpi-value { font-size: 21px; }
