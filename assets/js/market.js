@@ -445,6 +445,42 @@ export function pipelineWithinRadius(km = RADIUS_KM) {
   return { rows, totalUnits: rows.reduce((s, r) => s + (r.units || 0), 0) };
 }
 
+// Quarterly trend series from the SOLD set: median £/m², days-on-market and
+// sold-vs-asking %, oldest → newest, plus the latest-minus-first direction for a
+// trend arrow. Small local sample, so it's a direction hint, not a precise index.
+export function salesTrends(km = RADIUS_KM) {
+  const rows = deriveSales(km).filter((r) => r.soldDate);
+  const qkey = (iso) => iso.slice(0, 4) + "Q" + (Math.floor((parseInt(iso.slice(5, 7), 10) - 1) / 3) + 1);
+  const buckets = new Map();
+  for (const r of rows) {
+    const k = qkey(r.soldDate);
+    if (!buckets.has(k)) buckets.set(k, []);
+    buckets.get(k).push(r);
+  }
+  const keys = [...buckets.keys()].sort();
+  const seriesFor = (fn) =>
+    keys.map((k) => ({ q: k, v: median(buckets.get(k).map(fn).filter(Number.isFinite)), n: buckets.get(k).length }))
+      .filter((p) => Number.isFinite(p.v));
+  const psm = seriesFor((r) => r.perSqm);
+  const dom = seriesFor((r) => r.daysOnMarket);
+  const vsAsk = seriesFor((r) => r.vsAskingPct);
+  const dir = (s) => (s.length < 2 ? 0 : s[s.length - 1].v - s[0].v);
+  return { psm, dom, vsAsk, dir: { psm: dir(psm), dom: dir(dom), vsAsk: dir(vsAsk) } };
+}
+
+// Months-of-supply (absorption) = active listings ÷ monthly sales rate. Both come
+// from the SAME 2 km council-filtered feed, so the sampling fraction largely
+// cancels and the ratio is meaningful even though the absolute counts are partial.
+// A balanced market is ~5–6 months; higher = slower / more of a buyer's market.
+export function monthsOfSupply(km = RADIUS_KM, todayISO) {
+  const today = todayISO || SALES.asOf;
+  const active = withinRadius(LISTINGS.rows, km).length;
+  const cutoff = String(parseInt(today.slice(0, 4), 10) - 1) + today.slice(4); // one year back
+  const trailing = deriveSales(km).filter((r) => r.soldDate && r.soldDate >= cutoff).length;
+  const perMonth = trailing / 12;
+  return { active, trailing12mSold: trailing, salesPerMonth: perMonth, months: perMonth > 0 ? active / perMonth : null };
+}
+
 // -----------------------------------------------------------------------------
 // HOMEDATA ADAPTER — merge a live payload (same shape as the constants above)
 // into the exported datasets, so the rest of the app keeps reading `market.js`.

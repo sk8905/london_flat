@@ -598,3 +598,21 @@ function drawLegend(container, items) {
   });
   container.appendChild(legend);
 }
+
+// ---------------------------------------------------------------------------
+// Sparkline — a tiny axis-free trend line for inline KPI use. `values` run
+// oldest → newest; the last point gets a dot. Colour signals good/bad direction.
+// ---------------------------------------------------------------------------
+export function sparkline(container, values, opts = {}) {
+  const W = opts.width || 62, H = opts.height || 18, pad = 2;
+  const vals = (values || []).filter(Number.isFinite);
+  const svg = svgRoot(container, W, H);
+  if (vals.length < 2) return;
+  const min = Math.min(...vals), max = Math.max(...vals), span = max - min;
+  const x = (i) => pad + (i / (vals.length - 1)) * (W - 2 * pad);
+  const y = (v) => H - pad - (span < 1e-9 ? 0.5 : (v - min) / span) * (H - 2 * pad);
+  const color = opts.color || "#4a7c8c";
+  const d = vals.map((v, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
+  el("path", { d, fill: "none", stroke: color, "stroke-width": 1.5, "stroke-linecap": "round", "stroke-linejoin": "round" }, svg);
+  el("circle", { cx: x(vals.length - 1).toFixed(1), cy: y(vals[vals.length - 1]).toFixed(1), r: 2.1, fill: color }, svg);
+}

@@ -93,9 +93,14 @@
 
       <!-- ================= LOCAL MARKET (within 2 km) ================= -->
       <section class="tab active" id="tab-localmarket">
+        <!-- sell-timing verdict -->
+        <div class="panel" id="lm-verdict-panel">
+          <div id="lm-verdict" class="loading">Loading…</div>
+        </div>
+
         <div class="panel">
           <div id="lm-valuation" class="loading">Loading…</div>
-          <div id="lm-kpis" class="statrows"></div>
+          <div id="lm-kpis"></div>
           <p class="src-line" id="lm-source-note"></p>
         </div>
 
@@ -105,12 +110,26 @@
             <button type="button" class="toggle-btn active" data-comps="sold">Recently sold</button>
             <button type="button" class="toggle-btn" data-comps="listed">On the market</button>
           </div>
+          <div id="lm-comp-filters" class="comp-filters"></div>
           <div id="lm-comps-body" class="loading">Loading…</div>
+        </div>
+
+        <div class="panel">
+          <h3 class="panel-h">When to list — projected proceeds</h3>
+          <div id="lm-proceeds-chart"></div>
+          <p class="chart-cap" id="lm-proceeds-cap"></p>
+        </div>
+
+        <div class="panel">
+          <h3 class="panel-h">Best months to list (seasonality)</h3>
+          <div id="lm-seasonality"></div>
+          <p class="chart-cap" id="lm-seasonality-cap"></p>
         </div>
 
         <div class="panel">
           <h3 class="panel-h">New listings / month (2-bed)</h3>
           <div id="lm-listings-chart"></div>
+          <p class="chart-cap" id="lm-listings-cap"></p>
         </div>
 
         <div class="panel">

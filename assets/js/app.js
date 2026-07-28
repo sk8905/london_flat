@@ -5,7 +5,7 @@
 import * as DATA from "../data/dataset.js?v=53";
 import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=53";
 import * as C from "./charts.js?v=53";
-import { monthlyPayment, monthsBetween, ymIndex, ymToISO, breakEvenRecoupAll, interestPaidToDate } from "./finance.js?v=53";
+import { monthlyPayment, monthsBetween, ymIndex, ymToISO, breakEvenRecoupAll, interestPaidToDate, economicsForWindow } from "./finance.js?v=53";
 import { rentVsSell } from "./letting.js?v=53";
 import { rentVsBuy } from "./ownrent.js?v=53";
 import * as MKT from "./market.js?v=53";
@@ -1087,9 +1087,97 @@ function wireRateToggle() {
     }));
 }
 
+// ---- comp-quality filters (recompute the valuation from a chosen comp set) ----
+let _compFilters = { newBuild: false, similar: false, noOutliers: false };
+let _lastLmResult = null;
+
+// Apply the active comp filters to a derived-sales array (each row has type, sqm,
+// perSqm). `you` is your floor area for the "similar size" band.
+function applyCompFilters(rows, youSqm) {
+  let out = rows.slice();
+  if (_compFilters.newBuild) out = out.filter((x) => /new build/i.test(x.type || ""));
+  if (_compFilters.similar && youSqm) out = out.filter((x) => x.sqm && Math.abs(x.sqm - youSqm) / youSqm <= 0.25);
+  if (_compFilters.noOutliers) {
+    const psm = out.map((x) => x.perSqm).filter(Number.isFinite).sort((a, b) => a - b);
+    if (psm.length >= 4) {
+      const q = (f) => psm[Math.floor((psm.length - 1) * f)];
+      const q1 = q(0.25), q3 = q(0.75), iqr = q3 - q1;
+      out = out.filter((x) => !Number.isFinite(x.perSqm) || (x.perSqm >= q1 - 1.5 * iqr && x.perSqm <= q3 + 1.5 * iqr));
+    }
+  }
+  return out;
+}
+
+// Median helper for the filtered valuation.
+function _median(a) {
+  const s = a.filter(Number.isFinite).slice().sort((x, y) => x - y);
+  if (!s.length) return null;
+  const n = s.length;
+  return n % 2 ? s[(n - 1) / 2] : (s[n / 2 - 1] + s[n / 2]) / 2;
+}
+
+// Trend arrow + colour. `goodIsUp` flips the colour meaning (e.g. rising DOM is bad).
+function trendMeta(dir, goodIsUp) {
+  if (Math.abs(dir) < 1e-9) return { arrow: "→", cls: "flat", color: "var(--muted)" };
+  const up = dir > 0;
+  const good = goodIsUp ? up : !up;
+  return { arrow: up ? "↑" : "↓", cls: good ? "up" : "down", color: good ? "var(--pos)" : "var(--neg)" };
+}
+
+// Sell-timing verdict at the top of Local market — a compact read of the composite
+// model (the same engine the Finances tab uses for the full sell-vs-hold).
+function renderTimingVerdict(r) {
+  const host = $("#lm-verdict");
+  if (!host) return;
+  if (!r.best) { host.innerHTML = ""; return; }
+  const best = r.best, sig = signalLabel(best.composite), next = r.ranked[1];
+  const drivers = Object.entries(best.contributions)
+    .sort((a, b) => Math.abs(b[1]) - Math.abs(a[1])).slice(0, 2)
+    .map(([k, v]) => `${FACTOR_LABELS[k] || k} ${v >= 0 ? "+" : "−"}${Math.abs(Math.round(v))}`);
+  host.innerHTML = `
+    <div class="verdict-kicker">Best time to sell — model read</div>
+    <div class="lm-verdict-head">
+      <div class="lm-verdict-window">${best.window.label}</div>
+      <span class="pill pill-${sig.tone}">${sig.label} · ${signed(best.composite)}</span>
+    </div>
+    <p class="lm-verdict-lead">Projected sale value <strong>${gbp(best.saleValue)}</strong> → net proceeds
+      <strong>${gbp(best.net)}</strong>. Top drivers: ${drivers.join(" · ")}.
+      Next best: <strong>${next.window.label}</strong> (${signed(next.composite)}).</p>
+    <div class="src-line muted">Model, not advice — blends price trajectory, financing/ERC, seasonality &amp; policy across candidate sell windows. Full sell-vs-hold in <strong>Finances</strong>.</div>`;
+}
+
+// Wire the comp-quality filter chips once (delegated — the container persists even
+// though its chips are re-rendered each pass).
+function wireCompFilters() {
+  const cf = $("#lm-comp-filters");
+  if (!cf || cf._wired) return;
+  cf._wired = true;
+  cf.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-cf]");
+    if (!b) return;
+    _compFilters[b.dataset.cf] = !_compFilters[b.dataset.cf];
+    if (_lastLmResult) renderLocalMarket(_lastLmResult);
+  });
+}
+
 function renderLocalMarket(r) {
+  _lastLmResult = r;
   const p = r.inputs.property;
-  const stats = MKT.salesStats();
+  const allStats = MKT.salesStats();
+  // filtered sold set drives the valuation + comps table
+  const filteredSold = applyCompFilters(allStats.rows, p.floorAreaSqm);
+  const stats = {
+    ...allStats,
+    rows: filteredSold,
+    count: filteredSold.length,
+    medianPerSqm: _median(filteredSold.map((x) => x.perSqm)),
+    medianDaysOnMarket: _median(filteredSold.map((x) => x.daysOnMarket)),
+    medianVsAskingPct: _median(filteredSold.map((x) => x.vsAskingPct)),
+    pctBelowAsking: (() => {
+      const wa = filteredSold.filter((x) => Number.isFinite(x.vsAsking));
+      return wa.length ? Math.round(wa.filter((x) => x.vsAsking < 0).length / wa.length * 100) : null;
+    })(),
+  };
   const sales = stats.rows;
   const listings = MKT.deriveListings(MKT.RADIUS_KM, DATA.META.asOf);
   const lpm = MKT.LISTINGS_PER_MONTH.series;
@@ -1098,40 +1186,127 @@ function renderLocalMarket(r) {
   const soldDates = sales.map((s) => s.soldDate).filter(Boolean).sort();
   const salesPeriod = soldDates.length ? monthName(soldDates[0]) + " – " + monthName(soldDates[soldDates.length - 1]) : "";
 
-  // ---- desktop valuation: local median £/m² × your size, + estimated time to sell ----
+  // ---- sell-timing verdict (reuses the composite model — see Finances) ----
+  renderTimingVerdict(r);
+
+  // ---- desktop valuation with a confidence read (comp count + £/m² spread) ----
   const medianPsm = stats.medianPerSqm;
   const compVal = medianPsm && p.floorAreaSqm ? Math.round(medianPsm * p.floorAreaSqm) : null;
   const estDays = stats.medianDaysOnMarket != null ? Math.round(stats.medianDaysOnMarket) : null;
+  const psmArr = sales.map((x) => x.perSqm).filter(Number.isFinite);
+  const psmMed = _median(psmArr) || 1;
+  const spreadPct = psmArr.length >= 2 ? (Math.max(...psmArr) - Math.min(...psmArr)) / psmMed : 1;
+  const conf = (stats.count >= 8 && spreadPct < 0.6) ? { label: "High", cls: "pos" }
+    : (stats.count >= 4 && spreadPct < 0.95) ? { label: "Medium", cls: "neu" }
+    : { label: "Low", cls: "neg" };
   const valHost = $("#lm-valuation");
   if (valHost) valHost.innerHTML = compVal ? `
     <div class="val-lead">
-      <div class="val-head">Desktop valuation — your flat</div>
+      <div class="val-head">Desktop valuation — your flat <span class="conf-pill conf-${conf.cls}">${conf.label} confidence</span></div>
       <div class="val-cols">
         <div class="val-col">
           <div class="val-main">${gbp(compVal)}</div>
-          <div class="val-sub">${gbp(medianPsm)}/m² × ${p.floorAreaSqm} m²</div>
+          <div class="val-sub">${gbp(medianPsm)}/m² × ${p.floorAreaSqm} m² · ${stats.count} comps</div>
         </div>
         <div class="val-col">
           <div class="val-main2">≈ ${estDays} days</div>
           <div class="val-sub">est. time to sell (list→sold)</div>
         </div>
       </div>
-      <div class="val-note">Local median £/m² &amp; days-on-market${salesPeriod ? " · sales " + salesPeriod : ""}.</div>
-    </div>` : "";
+      <div class="val-note">Local median £/m² &amp; days-on-market${salesPeriod ? " · sales " + salesPeriod : ""}. Confidence from comp count &amp; £/m² spread.</div>
+    </div>`
+    : `<div class="val-lead"><div class="val-head">Desktop valuation — your flat</div><div class="val-note">No sold comps match the current filters — clear one below.</div></div>`;
 
-  // ---- stat rows (tight, no tiles) ----
+  // ---- comp-quality filter chips (recompute the valuation from a chosen set) ----
+  const cf = $("#lm-comp-filters");
+  if (cf) {
+    const chip = (key, label) => `<button type="button" class="filter-chip${_compFilters[key] ? " on" : ""}" data-cf="${key}">${label}</button>`;
+    cf.innerHTML = chip("newBuild", "New-build only") + chip("similar", "Similar size ±25%") + chip("noOutliers", "Drop £/m² outliers")
+      + `<span class="filter-note">${stats.count} of ${allStats.count} comps</span>`;
+  }
+  wireCompFilters();
+
+  // simple stat row (used by the clustered KPIs and the HPI block)
   const statrow = (l, v, s) => `<div class="statrow"><span class="sr-label">${l}</span><span class="sr-value">${v}</span><span class="sr-sub">${s || ""}</span></div>`;
+
+  // ---- clustered KPIs: Price / Speed / Supply, with trend arrows + sparklines ----
+  const trends = MKT.salesTrends();
+  const mos = MKT.monthsOfSupply(MKT.RADIUS_KM, DATA.META.asOf);
+  const H0 = MKT.HPI;
+  const spk = [];
+  const kpiRow = (label, value, sub, trend) => {
+    let right = "";
+    if (trend && trend.series && trend.series.length >= 2) {
+      const tm = trendMeta(trend.dir, trend.goodIsUp);
+      const sid = "spk-" + trend.id;
+      spk.push({ id: sid, values: trend.series, color: tm.color });
+      right = `<span class="kpi-trend"><span class="spark" id="${sid}"></span><span class="tr-arrow" style="color:${tm.color}">${tm.arrow}</span></span>`;
+    }
+    return `<div class="statrow"><span class="sr-label">${label}</span><span class="sr-value">${value}${right}</span><span class="sr-sub">${sub || ""}</span></div>`;
+  };
+  const group = (title, rows) => `<div class="kpi-group"><div class="kpi-group-h">${title}</div><div class="statrows">${rows}</div></div>`;
   const kpis = $("#lm-kpis");
   if (kpis) kpis.innerHTML =
-    statrow("Sales in radius", String(stats.count), salesPeriod) +
-    statrow("Median £/m²", medianPsm ? gbp(medianPsm) : "—", yourPsm ? "you paid " + gbp(yourPsm) : "") +
-    statrow("Median days on market", estDays != null ? estDays + " days" : "—", "list → sold") +
-    statrow("Sold below asking", stats.pctBelowAsking != null ? stats.pctBelowAsking + "%" : "—", stats.medianVsAskingPct != null ? "median " + signed(stats.medianVsAskingPct, (x) => x.toFixed(1)) + "%" : "") +
-    statrow("On the market now", String(listings.length), "within 2 km") +
-    statrow("New listings / mo", String(avgLpm), "avg last " + lpm.length + " mo");
+    group("Price",
+      kpiRow("Median £/m²", medianPsm ? gbp(medianPsm) : "—", yourPsm ? "you paid " + gbp(yourPsm) : "", { id: "psm", dir: trends.dir.psm, goodIsUp: true, series: trends.psm.map((x) => x.v) }) +
+      kpiRow("Islington flats", H0 ? gbp(H0.islingtonFlatsAvg) : "—", H0 ? signed(H0.islingtonFlatsYoYPct, (x) => x.toFixed(1) + "%") + " YoY" : "")) +
+    group("Speed",
+      kpiRow("Median days on market", estDays != null ? estDays + " days" : "—", "list → sold", { id: "dom", dir: trends.dir.dom, goodIsUp: false, series: trends.dom.map((x) => x.v) }) +
+      kpiRow("Sold below asking", stats.pctBelowAsking != null ? stats.pctBelowAsking + "%" : "—", stats.medianVsAskingPct != null ? "median " + signed(stats.medianVsAskingPct, (x) => x.toFixed(1)) + "%" : "", { id: "vsask", dir: trends.dir.vsAsk, goodIsUp: true, series: trends.vsAsk.map((x) => x.v) })) +
+    group("Supply",
+      kpiRow("On the market now", String(listings.length), "within 2 km") +
+      kpiRow("New listings / mo", String(avgLpm), "avg last " + lpm.length + " mo") +
+      kpiRow("Months of supply", mos.months != null ? "~" + Math.round(mos.months) + " mo" : "—", mos.months != null ? (mos.months > 6 ? "slow · buyer's market" : mos.months < 4 ? "tight · seller's" : "balanced") + " · indicative" : "indicative"));
+  spk.forEach((s) => { const e = $("#" + s.id); if (e) C.sparkline(e, s.values, { color: s.color }); });
 
   const note = $("#lm-source-note");
-  if (note) note.innerHTML = `Live: <a href="https://www.gov.uk/search-house-prices" target="_blank" rel="noopener">HM Land Registry</a> prices · <a href="https://homedata.co.uk/" target="_blank" rel="noopener">Homedata</a> listings &amp; rents · <a href="https://landregistry.data.gov.uk/app/ukhpi" target="_blank" rel="noopener">UK&nbsp;HPI</a>.`;
+  if (note) note.innerHTML = `Live: <a href="https://www.gov.uk/search-house-prices" target="_blank" rel="noopener">HM Land Registry</a> prices · <a href="https://homedata.co.uk/" target="_blank" rel="noopener">Homedata</a> listings &amp; rents · <a href="https://landregistry.data.gov.uk/app/ukhpi" target="_blank" rel="noopener">UK&nbsp;HPI</a>. <span class="asof">Comps &amp; listings as of ${MKT.SALES.asOf} · HPI ${monthName(MKT.HPI.asOf)}.</span>`;
+
+  // ---- projected net-proceeds curve (scenario band) + best window ----
+  const procHost = $("#lm-proceeds-chart");
+  if (procHost && r.best) {
+    const P = r.inputs.property, M = r.inputs.mortgage, cfg = r.inputs.sellingCfg;
+    const startIdx = ymIndex(DATA.META.asOf), OUT = 30;
+    const netAt = (gby, iso) => economicsForWindow({ property: P, mortgage: M, sellingCfg: cfg, presentValue: r.presentValue, presentISO: DATA.META.asOf, growthByYear: gby, windowDate: iso }).net;
+    const labels = [], base = [], lo = [], hi = [];
+    for (let k = 0; k <= OUT; k += 1) {
+      const iso = ymToISO(startIdx + k);
+      labels.push(monthName(iso).replace(/ 20/, " '"));
+      base.push(Math.round(netAt(DATA.FORECAST.scenarios.base, iso)));
+      lo.push(Math.round(netAt(DATA.FORECAST.scenarios.pessimistic, iso)));
+      hi.push(Math.round(netAt(DATA.FORECAST.scenarios.optimistic, iso)));
+    }
+    const cashIn = (P.purchasePrice - M.principal) + (P.sdltPaid || 0) + (P.otherBuyCosts || 0);
+    const bestIdx = Math.max(0, Math.min(OUT, ymIndex(r.best.window.date) - startIdx));
+    C.lineChart(procHost, {
+      series: [{ name: "Net proceeds (base)", color: "#2f7d57", points: labels.map((l, i) => ({ x: l, y: base[i] })), dots: false }],
+      band: { lower: lo, upper: hi, color: "#2f7d57" },
+      markers: [{ x: labels[bestIdx], label: "best window" }],
+      yRef: cashIn, yRefLabel: "you put in " + gbp(cashIn),
+      yFormat: (v) => "£" + Math.round(v / 1000) + "k", height: 250, yUnit: "£ net proceeds",
+    });
+    const pcap = $("#lm-proceeds-cap");
+    if (pcap) {
+      const diff = base[bestIdx] - base[0];
+      pcap.innerHTML = `Cash in hand after clearing the mortgage, ERC &amp; selling costs, month by month; shaded band = bear→bull growth. `
+        + `Model's best window is <strong>${r.best.window.label}</strong> (~${gbp(base[bestIdx])}${bestIdx > 0 ? ", " + (diff >= 0 ? "+" : "") + gbp(diff) + " vs selling now" : ""}).`;
+    }
+  }
+
+  // ---- seasonality: best months to list (Rightmove demand index) ----
+  const seasHost = $("#lm-seasonality");
+  const S = DATA.SEASONALITY;
+  if (seasHost && S) {
+    const maxIdx = Math.max(...S.monthIndex);
+    C.barChart(seasHost, {
+      bars: S.monthIndex.map((v, i) => ({ label: MONTHS[i], value: Math.round(v * 100), valueLabel: "",
+        color: v >= maxIdx - 0.03 ? "#2f7d57" : (v >= 1.0 ? "#4a7c8c" : "#c3ccd3") })),
+      yFormat: (v) => String(v), height: 190, yUnit: "demand index", labelEvery: 1, xTicks: true, baseline: 80,
+    });
+    const best3 = S.monthIndex.map((v, i) => ({ m: MONTHS[i], v })).sort((a, b) => b.v - a.v).slice(0, 3).map((x) => x.m);
+    const scap = $("#lm-seasonality-cap");
+    if (scap) scap.innerHTML = `Strongest listing months: <strong>${best3.join(", ")}</strong> — spring peaks as buyers return; December is weakest. Demand strength, not a price guarantee · <a href="https://www.rightmove.co.uk/guides/seller/preparing-to-sell/is-now-the-right-time-to-sell/" target="_blank" rel="noopener">Rightmove</a>.`;
+  }
 
   // ---- new listings per month ----
   const lpmHost = $("#lm-listings-chart");
@@ -1140,6 +1315,13 @@ function renderLocalMarket(r) {
     yFormat: (v) => v.toFixed(0), height: 220, yUnit: "new listings",
     xTicks: true, labelEvery: 3, // a notch every month, date label once a quarter
   });
+  const lcap = $("#lm-listings-cap");
+  if (lcap) {
+    const first3 = lpm.slice(0, 3).reduce((s, x) => s + x.count, 0) / 3;
+    const last3 = lpm.slice(-3).reduce((s, x) => s + x.count, 0) / 3;
+    const dir = last3 > first3 * 1.1 ? "rising" : last3 < first3 * 0.9 ? "easing" : "steady";
+    lcap.innerHTML = `New 2-bed supply is <strong>${dir}</strong> (${Math.round(first3)}→${Math.round(last3)}/mo over the window). More new listings = more competition when you sell.`;
+  }
 
   // ---- price rank (1 = dearest) + date-sorted rows for the merged table ----
   const sold = sales.slice();
@@ -1233,7 +1415,7 @@ function renderLocalMarket(r) {
   // ---- forecasts (sortable) ----
   const fHost = $("#lm-forecasts");
   if (fHost) {
-    fHost.innerHTML = `<div id="lm-fc-table"></div>`;
+    fHost.innerHTML = `<div id="lm-fc-table"></div><p class="src-line asof">Third-party analyst views (editorial, not a local measurement) · as of ${monthName(MKT.FORECASTS.asOf)}.</p>`;
     const fcCols = [
       { key: "source", label: "Source", get: (x) => x.short || x.source, cell: (x) => `<strong>${x.url ? `<a href="${x.url}" target="_blank" rel="noopener">${x.short || x.source}</a>` : (x.short || x.source)}</strong>` },
       { key: "horizon", label: "Horizon", get: (x) => x.horizon, cell: (x) => x.horizon },

@@ -351,6 +351,29 @@ a.badge:hover { text-decoration: none; border-color: var(--brand); color: var(--
 .sr-sub:empty { display: none; }
 .statrows.sr-2 { gap: 0 16px; }
 
+/* ---- Local-market: verdict, KPI clusters, sparklines, comp filters ---- */
+#lm-verdict-panel { border-top: 3px solid var(--brand); }
+.lm-verdict-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin: 2px 0 4px; }
+.lm-verdict-window { font-family: var(--font); font-weight: 700; font-size: 22px; letter-spacing: -0.01em; color: var(--ink); }
+.lm-verdict-lead { font-size: 13.5px; color: var(--ink-soft); margin: 4px 0 8px; }
+.kpi-group { margin-top: 10px; }
+.kpi-group:first-child { margin-top: 2px; }
+.kpi-group-h { text-transform: uppercase; letter-spacing: .06em; font-size: 10.5px; font-weight: 700; color: var(--muted); margin-bottom: 2px; }
+.kpi-trend { display: inline-flex; align-items: center; gap: 5px; margin-left: 8px; vertical-align: middle; }
+.kpi-trend .spark { display: inline-block; width: 62px; height: 18px; line-height: 0; }
+.kpi-trend .spark svg { vertical-align: middle; }
+.tr-arrow { font-size: 13px; font-weight: 800; line-height: 1; }
+.conf-pill { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; padding: 2px 8px; border-radius: 999px; margin-left: 8px; vertical-align: middle; }
+.conf-pos { background: var(--pos-bg); color: var(--pos); }
+.conf-neu { background: var(--line-soft); color: var(--ink-soft); }
+.conf-neg { background: var(--neg-bg); color: var(--neg); }
+.comp-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 2px 0 10px; }
+.filter-chip { font: inherit; font-size: 11.5px; font-weight: 600; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); background: #fff; color: var(--ink-soft); cursor: pointer; transition: all .12s; }
+.filter-chip:hover { border-color: var(--brand); color: var(--brand-dark); }
+.filter-chip.on { background: var(--brand); border-color: var(--brand); color: #fff; }
+.filter-note { font-size: 11px; color: var(--muted); margin-left: auto; }
+.asof { color: var(--muted); }
+
 /* segmented toggle */
 .toggle { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; padding: 2px; margin-bottom: 12px; gap: 2px; }
 .toggle-btn { border: 0; background: transparent; color: var(--ink-soft); font: inherit; font-size: 12.5px; font-weight: 600; padding: 6px 15px; border-radius: 999px; cursor: pointer; }
