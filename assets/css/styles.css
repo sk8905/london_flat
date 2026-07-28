@@ -439,10 +439,12 @@ input[type="range"] { accent-color: var(--brand); height: 5px; }
   .content { padding: 16px 14px 40px; }
   .page-head { flex-wrap: wrap; row-gap: 6px; margin-bottom: 10px; padding-bottom: 8px; }
   .page-sub { display: none; }
-  .topbar-right { flex-basis: 100%; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; justify-content: flex-start; }
-  .topbar-right::-webkit-scrollbar { display: none; }
+  /* all three rate chips fit on one row (no horizontal scroll): short labels,
+     even spread, and the daily delta hidden on phones. */
+  .topbar-right { flex-basis: 100%; flex-wrap: nowrap; justify-content: space-between; gap: 6px; }
+  .topbar-right .badge-delta { display: none; }
   .page-title { font-size: 18px; }
-  .badge { font-size: 11px; padding: 4px 9px; }
+  .badge { font-size: 11px; padding: 4px 9px; white-space: nowrap; }
   .panel { padding: 15px 15px; }
   .verdict-grid { grid-template-columns: 1fr; }
   .kpi-row { grid-template-columns: repeat(2, 1fr); }

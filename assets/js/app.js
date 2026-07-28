@@ -448,11 +448,11 @@ function dayDelta(now, prev) {
 // Render all three rate badges: source-linked label + day-over-day % change.
 function renderRateBadges() {
   const R = DATA.RATES;
-  setRateBadge("live-rate", pct(R.baseRateNow) + " base rate",
+  setRateBadge("live-rate", pct(R.baseRateNow) + " base",
     "Bank of England base rate · " + R.baseRateAsOf + " — click for source", dayDelta(R.baseRateNow, R.baseRatePrev));
-  setRateBadge("live-remo", pct(R.remortgage70Now) + " remortgage",
+  setRateBadge("live-remo", pct(R.remortgage70Now) + " fix",
     "Average 2-year fixed remortgage at ~70% LTV · " + R.remortgage70AsOf + " — click for source", dayDelta(R.remortgage70Now, R.remortgage70Prev));
-  if (R.swap2yrNow != null) setRateBadge("live-swap", pct(R.swap2yrNow) + " 2yr swap",
+  if (R.swap2yrNow != null) setRateBadge("live-swap", pct(R.swap2yrNow) + " swap",
     "2-year GBP interest-rate swap (SONIA) · " + R.swap2yrAsOf + " — click for source", dayDelta(R.swap2yrNow, R.swap2yrPrev));
 }
 
