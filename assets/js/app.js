@@ -237,7 +237,7 @@ function notifySignature() {
   return {
     baseRate: r.baseRateNow, baseRateAsOf: r.baseRateAsOf,
     swap: r.swap2yrNow, swapAsOf: r.swap2yrAsOf,
-    comps: DATA.COMPS.rows.map((x) => ({ key: x.addr + "|" + x.date + "|" + x.price, addr: x.addr, price: x.price, date: x.date })),
+    comps: (MKT.SALES.rows || []).map((x) => ({ key: x.addr + "|" + x.soldDate + "|" + x.price, addr: x.addr, price: x.price, date: x.soldDate })),
   };
 }
 function loadNotifLog() { try { return JSON.parse(localStorage.getItem(NOTIF_LOG_KEY)) || []; } catch (_) { return []; } }
@@ -377,7 +377,7 @@ function renderFreshness() {
   const l = $("#id-latest");
   if (l) {
     const dates = [
-      ...(DATA.COMPS.rows || []).map((x) => x.date),
+      ...(MKT.SALES.rows || []).map((x) => x.soldDate),
       DATA.RATES.baseRateAsOf, DATA.RATES.swap2yrAsOf, DATA.RATES.remortgage70AsOf,
       ..._liveDates,
     ].filter(Boolean);
@@ -575,7 +575,7 @@ function renderBreakEven(r) {
   if (!host) return;
   const p = r.inputs.property, m = r.inputs.mortgage;
   const be = breakEvenRecoupAll({
-    property: p, mortgage: m, sellingCfg: r.inputs.sellingCfg, saleDateISO: DATA.META.asOf,
+    property: p, mortgage: m, sellingCfg: r.inputs.sellingCfg, saleDateISO: DATA.META.asOf, cgtCfg: r.cgtCfg,
   });
   const c = be.components;
   const gapVsValue = be.breakEvenPrice - r.presentValue;
@@ -685,7 +685,7 @@ function renderProceeds(r) {
       <thead><tr><th>Window</th><th>Sale value</th><th>Outstanding</th><th>ERC</th><th>Selling costs</th><th>CGT</th><th>Net proceeds</th><th>Less deposit + SDLT</th><th>Net profit</th></tr></thead>
       <tbody>${r.windows.map((w) => `<tr class="${w === r.best ? "best-row" : ""}">
         <td>${w.window.label}</td><td>${gbp(w.saleValue)}</td><td>${gbp(w.outstanding)}</td>
-        <td>${w.erc > 0 ? gbp(w.erc) : "—"}</td><td>${gbp(w.costs.total)}</td><td>£0</td>
+        <td>${w.erc > 0 ? gbp(w.erc) : "—"}</td><td>${gbp(w.costs.total)}</td><td>${w.cgt > 0 ? gbp(w.cgt) : "—"}</td>
         <td>${gbp(w.net)}</td><td class="muted">−${gbp(cashIn)}</td>
         <td class="${w.net - cashIn >= 0 ? "" : "neg-cell"}"><strong>${gbp(w.net - cashIn)}</strong></td></tr>`).join("")}</tbody>
     </table>
@@ -854,14 +854,6 @@ function applyCompFilters(rows, youSqm) {
   return out;
 }
 
-// Median helper for the filtered valuation.
-function _median(a) {
-  const s = a.filter(Number.isFinite).slice().sort((x, y) => x - y);
-  if (!s.length) return null;
-  const n = s.length;
-  return n % 2 ? s[(n - 1) / 2] : (s[n / 2 - 1] + s[n / 2]) / 2;
-}
-
 // Trend arrow + colour. `goodIsUp` flips the colour meaning (e.g. rising DOM is bad).
 function trendMeta(dir, goodIsUp) {
   if (Math.abs(dir) < 1e-9) return { arrow: "→", cls: "flat", color: "var(--muted)" };
@@ -916,9 +908,9 @@ function renderLocalMarket(r) {
     ...allStats,
     rows: filteredSold,
     count: filteredSold.length,
-    medianPerSqm: _median(filteredSold.map((x) => x.perSqm)),
-    medianDaysOnMarket: _median(filteredSold.map((x) => x.daysOnMarket)),
-    medianVsAskingPct: _median(filteredSold.map((x) => x.vsAskingPct)),
+    medianPerSqm: MKT.median(filteredSold.map((x) => x.perSqm)),
+    medianDaysOnMarket: MKT.median(filteredSold.map((x) => x.daysOnMarket)),
+    medianVsAskingPct: MKT.median(filteredSold.map((x) => x.vsAskingPct)),
     pctBelowAsking: (() => {
       const wa = filteredSold.filter((x) => Number.isFinite(x.vsAsking));
       return wa.length ? Math.round(wa.filter((x) => x.vsAsking < 0).length / wa.length * 100) : null;
@@ -940,7 +932,7 @@ function renderLocalMarket(r) {
   const compVal = medianPsm && p.floorAreaSqm ? Math.round(medianPsm * p.floorAreaSqm) : null;
   const estDays = stats.medianDaysOnMarket != null ? Math.round(stats.medianDaysOnMarket) : null;
   const psmArr = sales.map((x) => x.perSqm).filter(Number.isFinite);
-  const psmMed = _median(psmArr) || 1;
+  const psmMed = MKT.median(psmArr) || 1;
   const spreadPct = psmArr.length >= 2 ? (Math.max(...psmArr) - Math.min(...psmArr)) / psmMed : 1;
   const conf = (stats.count >= 8 && spreadPct < 0.6) ? { label: "High", cls: "pos" }
     : (stats.count >= 4 && spreadPct < 0.95) ? { label: "Medium", cls: "neu" }
@@ -1013,7 +1005,7 @@ function renderLocalMarket(r) {
   if (procHost && r.best) {
     const P = r.inputs.property, M = r.inputs.mortgage, cfg = r.inputs.sellingCfg;
     const startIdx = ymIndex(DATA.META.asOf), OUT = 30;
-    const netAt = (gby, iso) => economicsForWindow({ property: P, mortgage: M, sellingCfg: cfg, presentValue: r.presentValue, presentISO: DATA.META.asOf, growthByYear: gby, windowDate: iso }).net;
+    const netAt = (gby, iso) => economicsForWindow({ property: P, mortgage: M, sellingCfg: cfg, presentValue: r.presentValue, presentISO: DATA.META.asOf, growthByYear: gby, windowDate: iso, cgtCfg: r.cgtCfg }).net;
     const labels = [], base = [], lo = [], hi = [];
     for (let k = 0; k <= OUT; k += 1) {
       const iso = ymToISO(startIdx + k);

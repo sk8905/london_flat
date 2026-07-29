@@ -79,6 +79,21 @@ export function sellingCosts(salePrice, cfg) {
   };
 }
 
+// Capital Gains Tax on a straight sale.
+//   • A main residence is fully exempt (Private Residence Relief) -> CGT = 0.
+//   • A non-primary residence (never lived in / BTL) owes CGT on the whole gain,
+//     net of acquisition costs, selling costs and the annual exempt amount.
+// (The partial-PRR case — a former home later let out — is modelled separately in
+//  letting.js, which apportions the gain by residence months.) cgtCfg is
+//  { rate, annualExempt }; passing null leaves CGT at 0.
+export function saleCGT(property, saleValue, sellingCostsTotal, cgtCfg) {
+  if (property.isPrimaryResidence || !cgtCfg) return 0;
+  const acquisition = property.purchasePrice + (property.sdltPaid || 0) + (property.otherBuyCosts || 0);
+  const gain = Math.max(0, saleValue - acquisition - (sellingCostsTotal || 0));
+  const chargeable = Math.max(0, gain - (cgtCfg.annualExempt || 0));
+  return chargeable * (cgtCfg.rate || 0);
+}
+
 // Full economics of selling in a given window.
 // Returns value, outstanding balance, ERC, selling costs, CGT, and net proceeds.
 export function economicsForWindow(opts) {
@@ -123,8 +138,9 @@ export function economicsForWindow(opts) {
   // 4) Selling costs.
   const costs = sellingCosts(saleValue, sellingCfg);
 
-  // 5) CGT — exempt for a primary residence (Private Residence Relief).
-  const cgt = property.isPrimaryResidence ? 0 : 0; // BTL handling could go here.
+  // 5) CGT — exempt for a primary residence (Private Residence Relief); a
+  //    non-primary residence owes it on the gain (see saleCGT).
+  const cgt = saleCGT(property, saleValue, costs.total, opts.cgtCfg);
 
   // 6) Net proceeds (cash in hand after clearing the mortgage and all costs).
   const net = saleValue - outstanding - erc - costs.total - cgt;
@@ -181,9 +197,11 @@ export function interestPaidToDate(mortgage, saleDateISO) {
 // + buying costs + interest paid to date — after clearing the mortgage, ERC, agent
 // fee (+VAT), legal, EPC and any CGT. Solving net(P*) = cashToRecoup for P*:
 //   P*(1 − agentRate) = outstanding + ERC + legal + EPC + CGT + cashToRecoup
-// where agentRate = agentPct·(1 + VAT/100). CGT is 0 for a primary residence.
+// where agentRate = agentPct·(1 + VAT/100). CGT is 0 for a primary residence; for
+// a non-primary residence it depends on P* itself (the gain net of the agent fee),
+// so we solve the fixed point by a few iterations.
 export function breakEvenRecoupAll(opts) {
-  const { property, mortgage, sellingCfg, saleDateISO } = opts;
+  const { property, mortgage, sellingCfg, saleDateISO, cgtCfg } = opts;
 
   const deposit = Math.max(0, property.purchasePrice - mortgage.principal);
   const sdlt = property.sdltPaid || 0;
@@ -216,9 +234,14 @@ export function breakEvenRecoupAll(opts) {
   const agentRate = (sellingCfg.agentPct / 100) * (1 + sellingCfg.vatPct / 100);
   const legal = sellingCfg.legalFixed || 0;
   const epc = sellingCfg.epcAndMiscFixed || 0;
-  const cgt = property.isPrimaryResidence ? 0 : 0; // main residence -> PRR
 
-  const breakEvenPrice = (outstanding + erc + legal + epc + cgt + cashToRecoup) / (1 - agentRate);
+  // CGT (0 for a main residence) depends on the sale price, which depends on CGT.
+  // Solve the fixed point: for a primary residence it converges immediately at cgt=0.
+  let cgt = 0, breakEvenPrice = 0;
+  for (let it = 0; it < 6; it++) {
+    breakEvenPrice = (outstanding + erc + legal + epc + cgt + cashToRecoup) / (1 - agentRate);
+    cgt = saleCGT(property, breakEvenPrice, breakEvenPrice * agentRate + legal + epc, cgtCfg);
+  }
   const agentFee = breakEvenPrice * agentRate;
 
   return {

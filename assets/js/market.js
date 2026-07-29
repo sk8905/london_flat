@@ -389,8 +389,8 @@ const daysBetween = (aISO, bISO) => {
   const b = Date.parse(bISO + "T00:00:00Z");
   return Number.isFinite(a) && Number.isFinite(b) ? Math.round((b - a) / 86400000) : null;
 };
-const median = (arr) => {
-  const a = [...arr].sort((x, y) => x - y);
+export const median = (arr) => {
+  const a = arr.filter(Number.isFinite).sort((x, y) => x - y);
   const n = a.length;
   if (!n) return null;
   return n % 2 ? a[(n - 1) / 2] : (a[n / 2 - 1] + a[n / 2]) / 2;

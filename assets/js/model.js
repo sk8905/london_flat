@@ -29,8 +29,13 @@ function growthAtDate(dateISO, growthByYear) {
 export function runModel(data, overrides = {}) {
   const {
     PROPERTY, MORTGAGE, SELLING_COSTS, PRICE_HISTORY, RATES,
-    FORECAST, POLICY_FACTORS, SEASONALITY, WINDOWS, FACTOR_WEIGHTS, META, COMPARABLES,
+    FORECAST, POLICY_FACTORS, SEASONALITY, WINDOWS, FACTOR_WEIGHTS, META, COMPARABLES, TAX,
   } = data;
+
+  // CGT config for a straight sale (0 for a main residence — see saleCGT).
+  const cgtCfg = TAX
+    ? { rate: TAX.cgtRates[TAX.marginalBand] ?? 0.24, annualExempt: TAX.cgtAnnualExempt ?? 0 }
+    : null;
 
   // ---- merge editable overrides (from UI controls) -------------------------
   const scenarioName = overrides.scenario || FORECAST.defaultScenario;
@@ -74,7 +79,7 @@ export function runModel(data, overrides = {}) {
   const econ = WINDOWS.map((w) => {
     const e = economicsForWindow({
       property: PROPERTY, mortgage, sellingCfg,
-      presentValue, presentISO, growthByYear, windowDate: w.date,
+      presentValue, presentISO, growthByYear, windowDate: w.date, cgtCfg,
     });
     // Financing friction (£) = ERC + extra interest from holding past the fix.
     const monthsPastFix = Math.max(0, monthsBetween(mortgage.fixEndDate, w.date));
@@ -172,6 +177,7 @@ export function runModel(data, overrides = {}) {
     ranked,
     best,
     forecastPaths,
+    cgtCfg,
     inputs: { property: PROPERTY, mortgage, sellingCfg },
   };
 }
