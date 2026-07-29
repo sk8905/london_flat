@@ -1,18 +1,11 @@
 // =============================================================================
-// charts.js  —  Tiny dependency-free SVG charts (line, band, bar, diverging, gauge)
+// charts.js  —  Tiny dependency-free SVG charts (line, band, bar, scatter map, sparkline)
 // -----------------------------------------------------------------------------
 // All charts render into a container as inline SVG with a viewBox, so they scale
 // fluidly. No external libraries — works offline and inside Zero Trust.
 // =============================================================================
 
 const SVGNS = "http://www.w3.org/2000/svg";
-const fmtGBP = (n) =>
-  "£" + Math.round(n).toLocaleString("en-GB");
-const fmtGBPk = (n) =>
-  "£" + (n / 1000).toFixed(0) + "k";
-const fmtPct = (n) => n.toFixed(2) + "%";
-
-export const fmt = { fmtGBP, fmtGBPk, fmtPct };
 
 function el(name, attrs = {}, parent) {
   const node = document.createElementNS(SVGNS, name);
@@ -237,10 +230,13 @@ export function dualAxisLine(container, opts) {
       const py = yL(lerp(opts.left.values, fc.rate));
       el("circle", { cx: x, cy: py, r: 4, fill: "#fff", stroke: opts.left.color, "stroke-width": 2 }, svg);
       el("circle", { cx: x, cy: yR(lerp(opts.right.values, fc.rate)), r: 4, fill: "#fff", stroke: opts.right.color, "stroke-width": 2 }, svg);
-      // stagger labels above/below so near-coincident dots (flat curve) stay legible
-      const t = el("text", { x, y: k % 2 === 0 ? py - 9 : py + 17, class: "axis-x", style: "text-anchor:middle;font-weight:700" }, svg);
-      t.setAttribute("fill", opts.left.color);
-      t.textContent = fc.label;
+      // label sits below-right of the dot (clear of the crossing lines); empty
+      // labels are skipped so a dot can render without crowding the curve.
+      if (fc.label) {
+        const t = el("text", { x: x + 6, y: py + 18, class: "axis-x", style: "text-anchor:start;font-weight:700" }, svg);
+        t.setAttribute("fill", opts.left.color);
+        t.textContent = fc.label;
+      }
     });
   }
   drawLegend(container, [{ name: opts.left.name, color: opts.left.color }, { name: opts.right.name, color: opts.right.color }]);
@@ -336,143 +332,6 @@ export function barChart(container, opts) {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Diverging horizontal bars for factor scores in [-100, 100].
-// opts: { items:[{label,value,color}], height }
-// ---------------------------------------------------------------------------
-export function divergingBars(container, opts) {
-  const W = chartW(container), rowH = 34;
-  const H = opts.items.length * rowH + 30;
-  // reserve a fixed value column on the right (valW) so numbers never collide
-  // with bars or row labels at any width.
-  const valW = 46;
-  const m = { t: 10, r: 16 + valW, b: 20, l: 148 };
-  const iw = W - m.l - m.r;
-  const svg = svgRoot(container, W, H);
-  const mid = m.l + iw / 2;
-  const xAt = (v) => mid + (v / 100) * (iw / 2);
-  const valX = W - valW + 2; // left edge of the value column
-
-  el("line", { x1: mid, y1: m.t, x2: mid, y2: H - m.b, class: "axis-mid" }, svg);
-  [["-100", m.l, "middle"], ["0", mid, "middle"], ["+100", m.l + iw, "middle"]].forEach(([lab, x, anc]) => {
-    const t = el("text", { x, y: H - 6, class: "axis-x", style: "text-anchor:" + anc }, svg);
-    t.textContent = lab;
-  });
-
-  opts.items.forEach((it, i) => {
-    const cy = m.t + i * rowH + rowH / 2;
-    const x0 = mid, x1 = xAt(it.value);
-    el("rect", {
-      x: Math.min(x0, x1), y: cy - 9, width: Math.max(2, Math.abs(x1 - x0)), height: 18,
-      rx: 3, fill: it.color || (it.value >= 0 ? "#3a6b54" : "#9c4040"),
-    }, svg);
-    const lt = el("text", { x: m.l - 12, y: cy + 4, class: "row-label" }, svg);
-    lt.setAttribute("text-anchor", "end");
-    lt.textContent = it.label;
-    // value in the fixed right-hand column (never overlaps a bar or the labels)
-    const vt = el("text", { x: valX, y: cy + 4, class: "row-value" }, svg);
-    vt.setAttribute("text-anchor", "start");
-    vt.textContent = (it.value >= 0 ? "+" : "") + it.value.toFixed(0);
-  });
-}
-
-// ---------------------------------------------------------------------------
-// Semicircular gauge for a signal in [-100, 100].
-// ---------------------------------------------------------------------------
-export function gauge(container, value, label) {
-  const W = 320, H = 190;
-  const svg = svgRoot(container, W, H);
-  const cx = W / 2, cy = 150, r = 120;
-  const a0 = Math.PI, a1 = 0; // left to right
-  const polar = (ang) => [cx + r * Math.cos(ang), cy + r * Math.sin(ang) * -1];
-
-  // coloured arc segments
-  const segs = [
-    { from: -100, to: -40, color: "#9c4040" },
-    { from: -40, to: -12, color: "#9a7b4f" },
-    { from: -12, to: 12, color: "#9ca3af" },
-    { from: 12, to: 40, color: "#84cc16" },
-    { from: 40, to: 100, color: "#3a6b54" },
-  ];
-  const valToAng = (v) => a0 + ((v + 100) / 200) * (a1 - a0);
-  segs.forEach((s) => {
-    const A = valToAng(s.from), B = valToAng(s.to);
-    const [x1, y1] = polar(A), [x2, y2] = polar(B);
-    el("path", {
-      d: `M ${x1} ${y1} A ${r} ${r} 0 0 1 ${x2} ${y2}`,
-      fill: "none", stroke: s.color, "stroke-width": 16, "stroke-linecap": "butt",
-    }, svg);
-  });
-
-  // needle
-  const va = valToAng(Math.max(-100, Math.min(100, value)));
-  const [nx, ny] = polar(va);
-  el("line", { x1: cx, y1: cy, x2: nx, y2: ny, stroke: "#111827", "stroke-width": 4, "stroke-linecap": "round" }, svg);
-  el("circle", { cx, cy, r: 7, fill: "#111827" }, svg);
-
-  const vt = el("text", { x: cx, y: cy - 28, class: "gauge-value" }, svg);
-  vt.textContent = (value >= 0 ? "+" : "") + value.toFixed(0);
-  const lt = el("text", { x: cx, y: cy - 8, class: "gauge-label" }, svg);
-  lt.textContent = label || "";
-}
-
-// ---------------------------------------------------------------------------
-// Stacked contribution bars (per window): each factor's signed contribution.
-// opts: { windows:[{label}], factors:[{key,label,color}], data: { winId: {key:val} } }
-// ---------------------------------------------------------------------------
-export function stackedContrib(container, windows, factors, height = 320, yUnit) {
-  const W = chartW(container), H = height;
-  const m = { t: 20, r: 16, b: 70, l: 60 };
-  const iw = W - m.l - m.r, ih = H - m.t - m.b;
-  const svg = svgRoot(container, W, H);
-  yUnitLabel(svg, yUnit);
-
-  // y range from min negative stack to max positive stack
-  let lo = 0, hi = 0;
-  windows.forEach((w) => {
-    let pos = 0, neg = 0;
-    factors.forEach((f) => {
-      const v = w.contributions[f.key] || 0;
-      if (v >= 0) pos += v; else neg += v;
-    });
-    hi = Math.max(hi, pos); lo = Math.min(lo, neg);
-  });
-  const ticks = niceTicks(lo, hi, 5);
-  lo = ticks[0]; hi = ticks[ticks.length - 1];
-  const yAt = (v) => m.t + ih - ((v - lo) / (hi - lo)) * ih;
-
-  ticks.forEach((t) => {
-    el("line", { x1: m.l, y1: yAt(t), x2: W - m.r, y2: yAt(t), class: "grid" }, svg);
-    const tx = el("text", { x: m.l - 8, y: yAt(t) + 4, class: "axis-y" }, svg);
-    tx.textContent = (t > 0 ? "+" : "") + t.toFixed(0);
-  });
-  el("line", { x1: m.l, y1: yAt(0), x2: W - m.r, y2: yAt(0), class: "axis-mid" }, svg);
-
-  const slot = iw / windows.length;
-  const bw = Math.min(116, slot * 0.6);
-  windows.forEach((w, i) => {
-    const cx = m.l + slot * i + slot / 2;
-    let posY = 0, negY = 0;
-    factors.forEach((f) => {
-      const v = w.contributions[f.key] || 0;
-      if (v === 0) return;
-      const start = v >= 0 ? posY : negY;
-      const end = start + v;
-      const y1 = yAt(start), y2 = yAt(end);
-      el("rect", { x: cx - bw / 2, y: Math.min(y1, y2), width: bw, height: Math.abs(y2 - y1), fill: f.color }, svg);
-      if (v >= 0) posY = end; else negY = end;
-    });
-    // net marker (composite)
-    const yc = yAt(w.composite);
-    el("line", { x1: cx - bw / 2 - 4, y1: yc, x2: cx + bw / 2 + 4, y2: yc, stroke: "#111827", "stroke-width": 2.5 }, svg);
-    const lt = el("text", { x: cx, y: H - 44, class: "bar-label" }, svg);
-    lt.textContent = w.window.label;
-    const ct = el("text", { x: cx, y: H - 28, class: "bar-sub" }, svg);
-    ct.textContent = "net " + (w.composite >= 0 ? "+" : "") + w.composite.toFixed(0);
-  });
-
-  drawLegend(container, factors.map((f) => ({ name: f.label, color: f.color })).concat([{ name: "Net signal", color: "#111827", line: true }]));
-}
 
 // ---------------------------------------------------------------------------
 // Location map — real OpenStreetMap basemap (CARTO light raster tiles) with the

@@ -2,13 +2,13 @@
 // app.js  —  Entry point: load data, run model, render the single page, wire UI
 // =============================================================================
 
-import * as DATA from "../data/dataset.js?v=53";
-import { runModel, signalLabel, FACTOR_LABELS } from "./model.js?v=53";
-import * as C from "./charts.js?v=53";
-import { monthlyPayment, monthsBetween, ymIndex, ymToISO, breakEvenRecoupAll, interestPaidToDate, economicsForWindow } from "./finance.js?v=53";
-import { rentVsSell } from "./letting.js?v=53";
-import { rentVsBuy } from "./ownrent.js?v=53";
-import * as MKT from "./market.js?v=53";
+import * as DATA from "../data/dataset.js";
+import { runModel, signalLabel, FACTOR_LABELS } from "./model.js";
+import * as C from "./charts.js";
+import { monthlyPayment, monthsBetween, ymIndex, ymToISO, breakEvenRecoupAll, interestPaidToDate, economicsForWindow } from "./finance.js";
+import { rentVsSell } from "./letting.js";
+import { rentVsBuy } from "./ownrent.js";
+import * as MKT from "./market.js";
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const gbp = (n) => (n < 0 ? "−" : "") + "£" + Math.abs(Math.round(n)).toLocaleString("en-GB");
@@ -16,14 +16,6 @@ const signed = (n, f = (x) => x.toFixed(0)) => (n >= 0 ? "+" : "") + f(n);
 const pct = (n) => n.toFixed(2) + "%";
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const monthName = (iso) => MONTHS[parseInt(iso.slice(5, 7), 10) - 1] + " " + iso.slice(0, 4);
-
-const FACTOR_COLORS = {
-  priceTrajectory: "#1f5a73",
-  financingCost: "#6b5b7b",
-  netProceeds: "#4a7c8c",
-  seasonality: "#9a7b4f",
-  policyMacro: "#2f7d57",
-};
 
 const num = (v, fb = 0) => { const n = parseFloat(v); return Number.isFinite(n) ? n : fb; };
 
@@ -514,126 +506,6 @@ function boeToISO(s) {
 }
 
 // ---------------------------------------------------------------------------
-// Verdict hero
-// ---------------------------------------------------------------------------
-function renderVerdict(r) {
-  const best = r.best;
-  const sig = signalLabel(best.composite);
-  const host = $("#verdict-body");
-  const runnerUp = r.ranked[1];
-  const cashIn = cashInvested(r).total;
-  const profitBest = best.net - cashIn;
-
-  host.innerHTML = `
-    <div class="verdict-head">
-      <div>
-        <div class="verdict-kicker">Model recommendation</div>
-        <h2 class="verdict-window">${best.window.label}</h2>
-      </div>
-      <div class="pill pill-${sig.tone}">${sig.label} · signal ${signed(best.composite)}</div>
-    </div>
-    <p class="verdict-lead">
-      Highest-scoring window. Sale value <strong>${gbp(best.saleValue)}</strong> → net proceeds
-      <strong>${gbp(best.net)}</strong> → <strong>${gbp(profitBest)}</strong> profit after your ${gbp(cashIn)} deposit + SDLT
-      ${best.erc > 0 ? `(after a ${gbp(best.erc)} ERC)` : `(no ERC — outside the fix)`}.
-      Next best: <strong>${runnerUp.window.label}</strong> (signal ${signed(runnerUp.composite)}).
-      <span class="muted">Model, not advice — see the reasoning and sources below.</span>
-    </p>`;
-}
-
-// ---------------------------------------------------------------------------
-// Dashboard summary
-// ---------------------------------------------------------------------------
-function renderDashboard(r) {
-  const best = r.best;
-  const equityNow = r.presentValue - balanceNow(r);
-  const let2 = computeLetting(r);
-  const horizonLabel = (LET_HORIZONS.find((h) => h.date === state.letting.horizon) || {}).label || "horizon";
-  const letWins = let2.advantageLet >= 0;
-
-  // KPIs
-  const deposit = r.inputs.property.purchasePrice - r.inputs.mortgage.principal;
-  const buyCosts = (r.inputs.property.sdltPaid || 0) + (r.inputs.property.otherBuyCosts || 0);
-  const cashIn = deposit + buyCosts; // total cash you sank in at purchase
-  const profitBest = best.net - cashIn;
-  $("#dash-kpis").innerHTML = [
-    kpi("Best-window net proceeds", gbp(best.net), "total cash in hand · " + best.window.label, "pos"),
-    kpi("Profit after deposit &amp; SDLT", gbp(profitBest), `net − ${gbp(cashIn)} you put in`, profitBest >= 0 ? "gold" : "neg"),
-    kpi("Est. equity now", gbp(equityNow), "value − mortgage balance"),
-    kpi(`Let vs sell (to ${horizonLabel})`, signed(let2.advantageLet, gbp), letWins ? "letting ahead" : "selling ahead", letWins ? "pos" : "neg"),
-  ].join("");
-
-  // mini charts
-  C.barChart($("#dash-signal-chart"), {
-    bars: r.windows.map((w) => ({
-      label: w.window.label.replace(/ \(.*\)/, ""), value: Math.round(w.composite),
-      color: w === best ? "#1f5a73" : (w.composite >= 0 ? "#aebfc9" : "#d9b3b3"),
-      valueLabel: signed(w.composite),
-    })),
-    yFormat: (v) => v.toFixed(0), height: 240, baseline: 0, yUnit: "signal score",
-  });
-  C.barChart($("#dash-proceeds-chart"), {
-    bars: r.windows.map((w) => ({
-      label: w.window.label.replace(/ \(.*\)/, ""), value: w.net,
-      color: w === best ? "#2f7d57" : "#a9c6b6", valueLabel: gbp(w.net),
-      sub: (w.net - cashIn >= 0 ? "+" + gbp(w.net - cashIn) + " profit" : gbp(w.net - cashIn) + " short"),
-    })),
-    yFormat: (v) => "£" + Math.round(v / 1000) + "k", height: 260, yUnit: "£ proceeds",
-    yRef: cashIn, yRefLabel: "you put in " + gbp(cashIn) + " (deposit + SDLT)",
-    overlay: { values: breakEvenValues(r) },
-  });
-
-  // drivers
-  const entries = Object.entries(best.contributions).sort((a, b) => Math.abs(b[1]) - Math.abs(a[1])).slice(0, 3);
-  $("#dash-drivers").innerHTML = `<div class="drivers">${entries.map(([k, v]) => `
-    <div class="driver">
-      <div class="driver-top"><span class="driver-name">${FACTOR_LABELS[k]}</span>
-        <span class="driver-score ${v >= 0 ? "pos" : "neg"}">${signed(v, (x) => x.toFixed(0))}</span></div>
-      <div class="driver-text">${driverText(k, best)}</div>
-    </div>`).join("")}</div>`;
-
-  // quick links
-  $("#dash-links").innerHTML = [
-    qlink("localmarket", "Explore the local market"),
-    qlink("finances", "Our finances & break-even"),
-    qlink("rentbuy", "Rent vs buy"),
-    qlink("signal", "When to sell"),
-  ].join("");
-  document.querySelectorAll("#dash-links .qlink").forEach((b) =>
-    b.addEventListener("click", () => switchTab(b.dataset.go)));
-}
-
-function kpi(label, value, sub, tone) {
-  return `<div class="kpi ${tone || ""}"><div class="kpi-label">${label}</div>
-    <div class="kpi-value">${value}</div><div class="kpi-sub">${sub}</div></div>`;
-}
-function qlink(go, label) { return `<button class="qlink" data-go="${go}">${label}</button>`; }
-
-function driverText(k, w) {
-  switch (k) {
-    case "priceTrajectory": return `Projected value ${gbp(w.saleValue)} with ${w.momentum >= 0 ? "positive" : "negative"} momentum (${w.momentum.toFixed(1)}%/yr).`;
-    case "financingCost": return w.erc > 0 ? `Inside the fix — a ${gbp(w.erc)} early-repayment charge applies.` : `Outside the fix — no early-repayment charge.`;
-    case "netProceeds": return `Cash in hand of ${gbp(w.net)} after all costs.`;
-    case "seasonality": return `Demand strength index ${w.season.toFixed(2)} for this window's month.`;
-    case "policyMacro": return `Net of CGT exemption, the mansion-tax threshold and macro risk at this date.`;
-    default: return "";
-  }
-}
-
-function topReasons(w) {
-  const out = [];
-  const c = w.contributions;
-  const entries = Object.entries(c).sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]));
-  for (const [k, v] of entries.slice(0, 3)) {
-    const dir = v >= 0 ? "supports" : "argues against";
-    out.push(`<strong>${FACTOR_LABELS[k]}</strong> ${dir} this window (${signed(v, (x) => x.toFixed(0))} pts).`);
-  }
-  if (w.erc > 0) out.push(`Selling here is still inside your fix, so a <strong>${gbp(w.erc)}</strong> early-repayment charge applies.`);
-  else out.push(`Outside the fixed period — <strong>no early-repayment charge</strong>.`);
-  return out;
-}
-
-// ---------------------------------------------------------------------------
 // Your position
 // ---------------------------------------------------------------------------
 function renderPaid(r) {
@@ -789,43 +661,6 @@ function card(label, big, sub, tone) {
 }
 
 // ---------------------------------------------------------------------------
-// Signal: ranking table + stacked contributions
-// ---------------------------------------------------------------------------
-function renderSignal(r) {
-  const host = $("#signal-body");
-  const cashIn = cashInvested(r).total;
-  const rows = r.ranked.map((w, i) => {
-    const sig = signalLabel(w.composite);
-    const profit = w.net - cashIn;
-    return `<tr class="${i === 0 ? "best-row" : ""}">
-      <td>${i === 0 ? `<span class="best-tag">Best</span> ` : ""}${w.window.label}</td>
-      <td><span class="pill pill-${sig.tone} mini">${signed(w.composite)}</span></td>
-      <td>${gbp(w.saleValue)}</td>
-      <td>${gbp(w.net)}</td>
-      <td class="${profit >= 0 ? "" : "neg-cell"}">${signed(profit, gbp)}</td>
-      <td>${w.erc > 0 ? gbp(w.erc) : "—"}</td>
-      <td class="muted">${sig.label}</td>
-    </tr>`;
-  }).join("");
-
-  host.innerHTML = `
-    <div class="chart-wrap"><div id="contrib-chart"></div>
-      <p class="chart-cap">Vertical axis is the <strong>signal score in points (−100 to +100), not £</strong>. Each
-      coloured segment is a factor's weighted contribution; bars above zero push "sell here", below zero push "wait".
-      The black tick marks the net signal for that window. Weights:
-      ${Object.entries(r.weights).map(([k, v]) => `${FACTOR_LABELS[k]} ${(v * 100).toFixed(0)}%`).join(" · ")}.</p>
-    </div>
-    <div class="table-wrap"><table class="rank-table kv">
-      <thead><tr><th>Window</th><th>Signal</th><th>Est. sale value</th><th>Net proceeds</th><th>Net profit*</th><th>ERC</th><th>Read</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>
-    <p class="muted small">*Net profit = net proceeds − your ${gbp(cashIn)} cash in (deposit + SDLT + buying costs).</p></div>`;
-
-  const factors = Object.keys(FACTOR_LABELS).map((k) => ({ key: k, label: FACTOR_LABELS[k], color: FACTOR_COLORS[k] }));
-  C.stackedContrib($("#contrib-chart"), r.windows, factors, 320, "signal score (pts)");
-}
-
-// ---------------------------------------------------------------------------
 // Net proceeds chart + table
 // ---------------------------------------------------------------------------
 function renderProceeds(r) {
@@ -863,95 +698,6 @@ function renderProceeds(r) {
     yRef: cashIn, yRefLabel: "you put in " + gbp(cashIn) + " (deposit + SDLT)",
     overlay: { values: breakEvenValues(r) },
   });
-}
-
-// ---------------------------------------------------------------------------
-// Forecast value path chart
-// ---------------------------------------------------------------------------
-function renderForecastChart(r) {
-  const host = $("#forecast-chart");
-  const toPts = (path) => path.map((p) => ({ x: monthName(p.date), y: p.value }));
-  const base = r.forecastPaths.base, opt = r.forecastPaths.optimistic, pes = r.forecastPaths.pessimistic;
-  const active = r.forecastPaths.active;
-
-  const markers = [];
-  const fixLabel = monthName(r.inputs.mortgage.fixEndDate);
-  if (base.some((p) => monthName(p.date) === fixLabel)) markers.push({ x: fixLabel, label: "fix ends" });
-
-  C.lineChart(host, {
-    height: 320,
-    series: [
-      { name: "Active scenario", color: "#1f5a73", points: toPts(active), width: 3, dots: false },
-      { name: "Optimistic", color: "#2f7d57", points: toPts(opt), dashed: true, dots: false },
-      { name: "Pessimistic", color: "#b04545", points: toPts(pes), dashed: true, dots: false },
-    ],
-    band: { lower: pes.map((p) => p.value), upper: opt.map((p) => p.value), color: "#1f5a73" },
-    yFormat: (v) => "£" + Math.round(v / 1000) + "k",
-    yUnit: "£ value",
-    yRef: r.inputs.property.purchasePrice,
-    yRefLabel: "purchase " + gbp(r.inputs.property.purchasePrice),
-    markers,
-  });
-}
-
-// ---------------------------------------------------------------------------
-// Per-window factor scores (diverging) for the recommended window
-// ---------------------------------------------------------------------------
-function renderFactorScores(r) {
-  const host = $("#factor-scores");
-  const w = r.best;
-  const items = Object.keys(FACTOR_LABELS).map((k) => ({
-    label: FACTOR_LABELS[k], value: w.factors[k], color: FACTOR_COLORS[k],
-  }));
-  host.innerHTML = `<p class="chart-cap">Raw factor scores for the recommended window
-    (<strong>${w.window.label}</strong>) before weighting — each in <strong>signal points from −100 to +100</strong>
-    (not £). Positive favours selling in this window.</p><div id="factor-div"></div>`;
-  C.divergingBars($("#factor-div"), { items });
-}
-
-// ---------------------------------------------------------------------------
-// Factor charts (price history, rates) — re-rendered so they track your inputs
-// ---------------------------------------------------------------------------
-function renderFactorCharts(r) {
-  // Price history (£) — Islington vs London, anchored to your purchase price
-  const ph = DATA.PRICE_HISTORY;
-  const purchasePrice = r.inputs.property.purchasePrice;
-  const toGBP = (idx) => (idx / 100) * purchasePrice;
-  C.lineChart($("#price-chart"), {
-    height: 300,
-    series: [
-      { name: "Your flat (Islington-tracked)", color: "#1f5a73",
-        points: ph.series.map((s) => ({ x: monthName(s.date), y: toGBP(s.islington) })) },
-      { name: "London-wide", color: "#6b5b7b", dashed: true,
-        points: ph.series.map((s) => ({ x: monthName(s.date), y: toGBP(s.london) })) },
-    ],
-    yFormat: (v) => "£" + Math.round(v / 1000) + "k",
-    yUnit: "£ value",
-    yRef: purchasePrice, yRefLabel: "purchase",
-  });
-
-  // Rates chart — base rate, 2yr fix, your rate
-  const rr = DATA.RATES;
-  const yourRate = r.inputs.mortgage.ratePct;
-  C.lineChart($("#rates-chart"), {
-    height: 300,
-    series: [
-      { name: "Avg 2yr fix", color: "#b04545", points: rr.fix2yrSeries.map((s) => ({ x: monthName(s.date), y: s.rate })) },
-      { name: "BoE base rate", color: "#4a7c8c",
-        points: rr.fix2yrSeries.map((s) => ({ x: monthName(s.date), y: nearestBase(rr.baseSeries, s.date) })) },
-      { name: "Your fixed rate", color: "#2f7d57", dashed: true,
-        points: rr.fix2yrSeries.map((s) => ({ x: monthName(s.date), y: yourRate })) },
-    ],
-    yFormat: (v) => v.toFixed(1) + "%",
-    yUnit: "interest rate",
-  });
-}
-
-function nearestBase(series, dateISO) {
-  const t = ymIndex(dateISO);
-  let best = series[0];
-  for (const s of series) if (ymIndex(s.date) <= t) best = s;
-  return best.rate;
 }
 
 // ---------------------------------------------------------------------------
@@ -1383,9 +1129,10 @@ function renderLocalMarket(r) {
   // deltas vs now: 2028 ≈ +0.0pp, 2030 ≈ +0.2pp (fwd 2y swap 4.02→4.02→4.24%).
   const OIS = DATA.RATES.oisFix2yForecast || { asOf: "2026-06", d28: 0.0, d30: 0.2 };
   const r30 = Math.round((baseRate + OIS.d30) * 100) / 100;
-  // Two clear points: now (curve is flat through ~2028) and 2030. Showing the
-  // near-identical 2028 point too just stacks a second dot on "now", so omit it.
-  const fcPath = [{ label: "now", rate: baseRate }, { label: "'30", rate: r30 }];
+  // Two points: now (curve is flat through ~2028) and 2030. The "now" dot is left
+  // unlabelled because the vertical "now ~5.0%" marker already names it — labelling
+  // it again just crowds the curve crossing. Only the 2030 endpoint gets a label.
+  const fcPath = [{ label: "", rate: baseRate }, { label: "'30", rate: r30 }];
   _rateOpts = {
     xLabels: rateGrid.map((rt) => rt.toFixed(1) + "%"), xValues: rateGrid, height: 260,
     left: { name: "Est. price", color: "#1f5a73", values: priceVals, format: (val) => "£" + Math.round(val / 1000) + "k" },

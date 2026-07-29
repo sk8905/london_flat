@@ -17,8 +17,8 @@ material** throughout. Every assumption is editable live via sliders.
 
 Three headline sections, plus the sell-timing tools:
 
-1. **Local market — within 1 km of N1 7TX** (`Local market` tab). Recent listings and
-   completed sales inside a **strict 1 km radius**: new listings per month, days on market,
+1. **Local market — within 2 km of N1 7TX** (`Local market` tab). Recent listings and
+   completed sales inside a **strict 2 km radius**: new listings per month, days on market,
    sold-vs-asking (£ and %), £/m², a map of sales + live listings, the latest **HPI** figures,
    the nearby **new-build pipeline**, and **RICS / estate-agent** price & activity forecasts.
 2. **Our finances** (`Our finances` tab). Everything paid (deposit, SDLT, buying costs,
@@ -66,7 +66,7 @@ london_flat/
 │   └── js/
 │       ├── finance.js         # amortization, ERC, net proceeds, recoup-all break-even (pure)
 │       ├── model.js           # weighted sell-timing signal (pure)
-│       ├── market.js          # 1 km local-market data layer + Homedata adapter (Section 1)
+│       ├── market.js          # 2 km local-market data layer + Homedata adapter (Section 1)
 │       ├── ownrent.js         # own-vs-rent comparator (Section 3, pure)
 │       ├── letting.js         # sell-vs-let comparison, UK tax aware (pure)
 │       ├── charts.js          # dependency-free SVG charts
@@ -74,7 +74,7 @@ london_flat/
 ```
 
 **Local-market data (`market.js`).** All Section-1 rows carry `lat`/`lng` and are filtered to
-a strict 1 km radius of the N1 7TX centroid via a haversine distance. The curated constants are
+a strict 2 km radius of the N1 7TX centroid via a haversine distance. The curated constants are
 the **offline fallback**; `applyHomedata(payload)` merges a live Homedata payload of the same
 shape so the rest of the app keeps reading `market.js`. See *Keeping data fresh* for how the
 daily routine populates it. **The Homedata API key is a secret** — it lives in the Worker
@@ -143,11 +143,13 @@ npx wrangler deploy
 ```
 
 `wrangler.jsonc` binds the repo root as static assets (`ASSETS`) with `run_worker_first: true`,
-so the Worker handles every request: it serves `/api/rates` and stamps `Cache-Control: no-cache`
-on HTML responses. That last part matters — the `[assets]` binding ignores the Pages-only
-`_headers` file, so without it a cached `index.html` could keep pointing at old `?v=` module
-files after a deploy. With it, the HTML always revalidates and picks up new builds immediately;
-the versioned JS/CSS cache normally. If you ever see a stale build, hard-refresh once.
+so the Worker handles every request: it serves `/api/rates` and stamps
+`Cache-Control: no-cache, must-revalidate` on all HTML, CSS and JS responses (images, fonts,
+SVG and the manifest keep their defaults). That matters — the `[assets]` binding ignores the
+Pages-only `_headers` file, so without it a cached copy could persist after a deploy. With it,
+every HTML/CSS/JS file revalidates against its ETag and picks up new builds immediately, so
+there is no need for `?v=` cache-busting query strings. If a device still shows a stale build
+(e.g. an iOS Home-Screen web app), clear it once.
 
 ## Lock it down with Cloudflare Zero Trust (Access)
 
@@ -205,7 +207,7 @@ pushed in the background.)
 
 The **base rate** and the **~70% LTV remortgage rate** now refresh themselves live from the Bank
 of England on every page load (see *Live rates* above) — the routine does **not** need to touch
-those. It handles everything that has no live feed: the **1 km local market** (`market.js`), new
+those. It handles everything that has no live feed: the **2 km local market** (`market.js`), new
 sales, forecasts, policy, £/m², HPI, rents, the 2-year swap, and the snapshot fallbacks.
 Sell-timing recomputes from `assets/data/dataset.js`; the local-market section reads `market.js`.
 
@@ -221,7 +223,8 @@ Paste the block below into your daily (08:00) Claude Code routine:
 
 ```text
 Refresh assets/data/dataset.js in the london_flat repo with the latest figures, then bump the
-build and open a PR. Note: RATES.baseRateNow and RATES.remortgage70Now are fetched LIVE from the
+build and commit directly to the deploy branch (see CLAUDE.md — no PR). Note: RATES.baseRateNow
+and RATES.remortgage70Now are fetched LIVE from the
 Bank of England by the Worker, so do NOT hand-edit those (only refresh their snapshot fallbacks
 if they've drifted far). Work through each item, keeping every value sourced; if nothing changed
 today, make no PR.
@@ -251,16 +254,17 @@ today, make no PR.
    (RATES.baseRateNow/baseRateAsOf, RATES.remortgage70Now/AsOf) and the same FALLBACK block in
    worker.js so offline/no-Worker views aren't stale.
 10. Sources — fix any SOURCES URLs/labels that have moved on (e.g. the latest HPI month page).
-11. Local market (1 km) — refresh assets/js/market.js from Homedata (key from $HOMEDATA_KEY in the
+11. Local market (2 km) — refresh assets/js/market.js from Homedata (key from $HOMEDATA_KEY in the
     environment — NEVER commit it; auth header "Authorization: Api-Key $HOMEDATA_KEY"). Update the
     rows in SALES (askingPrice, price, listedDate, soldDate, sqm, lat, lng), LISTINGS (asking,
     listedDate, status), LISTINGS_PER_MONTH.series, RENT.series + currentAvg2bed, HPI, NEW_BUILDS
-    and FORECASTS. Keep every row within ~1 km of the N1 7TX centroid (51.5346, -0.0899). Set each
+    and FORECASTS. Keep every row within ~2 km of the N1 7TX centroid (51.5346, -0.0899). Set each
     block's asOf and flip its `curated:` flag to false once it holds live data. One Homedata pull
     per day only (free tier ≈100 calls/month). If Homedata is unreachable, leave the curated rows.
-12. Stamp & ship — set META.asOf to today and bump META.build (e.g. "v38 · <today>"); also bump
-    the ?v= query on every module import in index.html and the JS files so caches refresh.
-    Commit, push, and confirm the deployed footer shows the new build.
+12. Stamp & ship — set META.asOf to today and bump META.build (e.g. "v76 · <today>"). Caches
+    refresh automatically via the Worker's no-cache headers, so there is no `?v=` to bump.
+    Commit and push to the deploy branch (see CLAUDE.md — no PR), then confirm the deployed
+    footer shows the new build.
 
 Flag anything you couldn't verify from a primary source rather than guessing.
 ```
@@ -274,7 +278,7 @@ network allow-list, add them:
 | --- | --- |
 | `api.homedata.co.uk`, `homedata.co.uk` | Homedata — listings, days-on-market, sold-vs-asking, rents |
 | `www.gov.uk`, `landregistry.data.gov.uk` | HM Land Registry sold prices & UK HPI |
-| `api.postcodes.io` | Geocoding postcodes → lat/lng for the 1 km radius |
+| `api.postcodes.io` | Geocoding postcodes → lat/lng for the 2 km radius |
 | `find-energy-certificate.service.gov.uk` | EPC floor areas (£/m²) |
 | `www.planit.org.uk` | Planning applications — the new-build pipeline |
 | `www.ons.gov.uk` | ONS Islington rents & house-price stats |
