@@ -9,8 +9,8 @@
 // =============================================================================
 
 export const META = {
-  asOf: "2026-06-30",
-  build: "v77 · 2026-07-29", // bump on each change so the footer confirms the live build
+  asOf: "2026-07-30",
+  build: "v78 · 2026-07-30", // bump on each change so the footer confirms the live build
   currency: "GBP",
   disclaimer:
     "This tool is an informational model, not financial, tax, mortgage or legal advice. " +
@@ -107,6 +107,26 @@ export const SOURCES = {
     url: "https://www.zoopla.co.uk/house-prices/n1-7tx/",
     publisher: "Zoopla",
   },
+  hpiMay2026: {
+    label: "UK House Price Index for May 2026",
+    url: "https://www.gov.uk/government/statistics/uk-house-price-index-for-may-2026/uk-house-price-index-summary-may-2026",
+    publisher: "GOV.UK",
+  },
+  swapRateJul2026: {
+    label: "Mortgage Solutions — Swap rate surge triggers wave of mortgage pricing hikes",
+    url: "https://www.mortgagesolutions.co.uk/mortgage-news/2026/07/24/swap-rate-surge-triggers-wave-of-mortgage-pricing-hikes/",
+    publisher: "Mortgage Solutions",
+  },
+  onsCpiJune2026: {
+    label: "ONS — Consumer price inflation, UK: June 2026",
+    url: "https://www.ons.gov.uk/economy/inflationandpriceindices/bulletins/consumerpriceinflation/june2026",
+    publisher: "Office for National Statistics",
+  },
+  boeMpcDates2026: {
+    label: "Bank of England — Monetary Policy Committee dates for 2026",
+    url: "https://www.bankofengland.co.uk/news/2025/september/monetary-policy-committee-dates-for-2026",
+    publisher: "Bank of England",
+  },
 };
 
 // -----------------------------------------------------------------------------
@@ -175,14 +195,17 @@ export const SELLING_COSTS = {
 // -----------------------------------------------------------------------------
 // Price history — index anchored to the purchase (Mar 2025 = 100).
 // Built from Land Registry Islington series + London-wide trend. Islington FLATS
-// were roughly flat year-to-March-2026 while London-wide fell ~2%; we lean to the
-// flat-specific signal but keep London softness visible.
+// were roughly flat year-to-March-2026 but reversed sharply to -7.0% YoY by the
+// May 2026 release (London-wide -3.7%); we lean to the flat-specific signal but
+// keep London softness visible.
 // -----------------------------------------------------------------------------
 export const PRICE_HISTORY = {
   source: "landRegistryHPI",
   note:
-    "Islington average price £673k (Mar 2025, revised) → £679k (Mar 2026), +0.9%. " +
-    "Islington FLATS were broadly flat over the year; London-wide -2.1%. Index is " +
+    "UPDATED (hpiMay2026): Islington FLATS fell -7.0% YoY to £557,257 (May 2026 HPI release), a sharp " +
+    "reversal from the roughly-flat picture through March 2026 — coinciding with the swap-rate-driven rise " +
+    "in mortgage costs (see RATES.swap2yrNow). Islington overall -6.4% YoY to £669,879; London overall " +
+    "-3.7% YoY to £544,814 (also see market.js HPI, which already carries these live figures). Index is " +
     "anchored to your purchase month so 100 = £890,000.",
   anchorDate: "2025-03-01",
   // {date, islingtonIndex, londonIndex} relative to Mar 2025 = 100
@@ -192,7 +215,10 @@ export const PRICE_HISTORY = {
     { date: "2025-09", islington: 99.4, london: 99.0 },
     { date: "2025-12", islington: 99.2, london: 98.4 },
     { date: "2026-03", islington: 99.3, london: 97.9 }, // Islington flats ~flat, London -2.1%
-    { date: "2026-06", islington: 99.0, london: 97.6 }, // provisional / estimate
+    // Islington/London index at 2025-05 interpolated (99.8 / 99.6) between the 2025-03 and
+    // 2025-06 points, then rolled forward by the official YoY from hpiMay2026 (flats -7.0%,
+    // London overall -3.7%) — the May 2026 release supersedes the earlier provisional June guess.
+    { date: "2026-05", islington: 92.8, london: 95.9 },
   ],
 };
 
@@ -207,8 +233,11 @@ export const RATES = {
   // 2-year GBP interest-rate swap (SONIA) — the wholesale rate UK lenders price
   // fixed-rate mortgages and real-estate lending off. Sits above Bank Rate when
   // the market expects cuts to be slow; the key driver of fixed mortgage pricing.
-  swap2yrNow: 4.06,
-  swap2yrAsOf: "2026-06-26",
+  // Middle East conflict (Iran / Strait of Hormuz escalation, mid-Jul 2026) pushed the 2yr
+  // swap up sharply — see swapRateJul2026 (from 3.99% in Jun 2026 to 4.26% by 22 Jul 2026);
+  // lenders (e.g. TSB) repriced 2yr fixes up in response.
+  swap2yrNow: 4.26,
+  swap2yrAsOf: "2026-07-22",
   // Current average 2-year fixed REMORTGAGE rate at ~70% LTV (the band that fits
   // this flat). Live-refreshed from Bank of England quoted mortgage rates,
   // interpolated between the published 60% and 75% LTV series. Snapshot fallback:
@@ -226,9 +255,12 @@ export const RATES = {
   // the Worker also supplies the prior day's figure for the live series.
   baseRatePrev: 3.75,
   remortgage70Prev: 5.02,
-  swap2yrPrev: 4.09,
-  cpiPct: 2.8, // CPI to May 2026
-  nextDecision: "2026-07-30",
+  swap2yrPrev: 4.06,
+  cpiPct: 2.6, // CPI to June 2026 (onsCpiJune2026; eased from 2.8% in May — a 15-month low)
+  // Today (2026-07-30) is an MPC decision day, published ~12:00 BST — after this routine's
+  // early-morning run, so the outcome isn't reflected yet; the live BoE badge will pick it up
+  // automatically. Next scheduled decision after today, per boeMpcDates2026:
+  nextDecision: "2026-09-17",
   // Bank Rate path (history + light forward estimate)
   baseSeries: [
     { date: "2024-08", rate: 5.0 },
