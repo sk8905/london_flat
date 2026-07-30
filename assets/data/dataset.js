@@ -146,32 +146,6 @@ export const COMPARABLES = {
   n1_7txAvg12m: 1070000, // your postcode, last 12 months
 };
 
-// -----------------------------------------------------------------------------
-// Recent completed SALES of 2-bed flats in N1 (representative comparables).
-// Compiled from HM Land Registry sold prices; floor area (m²) and bathroom count
-// from EPC register and listing data. Bathrooms and exact areas aren't in core
-// open data, so where not published they reflect each property's typical spec —
-// verify individual transactions via the linked sources. £/m² is computed.
-// -----------------------------------------------------------------------------
-export const COMPS = {
-  sources: ["soldPriceData", "zooplaN17tx", "onsIslington"],
-  asOf: "2026-06-30",
-  note:
-    "Recent N1 two-bedroom flat sales — restricted to new-build and purpose-built apartments, the like-for-like " +
-    "set for your 2020-built flat (period/warehouse conversions and maisonettes are excluded). Prices from HM Land " +
-    "Registry; floor area and bathrooms from EPC/listing data where available. Your flat is highlighted for comparison.",
-  // lat/lng geocoded from each street's postcode (checkmypostcode / streetcheck /
-  // doogal) — street-level, not exact door numbers.
-  rows: [
-    { addr: "Wenlock Road (Wharf), N1 7", date: "2026-03", price: 840000, beds: 2, baths: 2, type: "Apartment — new build", sqm: 80, lat: 51.5318, lng: -0.0947 },
-    { addr: "Prebend Street, N1 8", date: "2026-02", price: 660000, beds: 2, baths: 1, type: "Apartment — purpose-built", sqm: 70, lat: 51.5365, lng: -0.0961 },
-    { addr: "City Wharf, Wharf Road, N1 7", date: "2026-01", price: 870000, beds: 2, baths: 2, type: "Apartment — new build", sqm: 83, lat: 51.5328, lng: -0.0966 },
-    { addr: "Jefferson Court, Cynthia Street, N1 9", date: "2025-09", price: 950000, beds: 2, baths: 2, type: "Apartment — new build", sqm: 90, lat: 51.5317, lng: -0.1132 },
-    { addr: "250 City Road, N1 7", date: "2025-05", price: 820000, beds: 2, baths: 2, type: "Apartment — new build", sqm: 77, lat: 51.5289, lng: -0.0953 },
-    { addr: "Liverpool Road (Angel), N1 1", date: "2025-02", price: 560000, beds: 2, baths: 1, type: "Apartment — purpose-built", sqm: 62, lat: 51.5349, lng: -0.1070 },
-  ],
-};
-
 export const MORTGAGE = {
   principal: 615000, // amount borrowed = £890k − £275k deposit
   ltv: 615000 / 890000, // ~69% loan-to-value
@@ -220,20 +194,6 @@ export const PRICE_HISTORY = {
     { date: "2026-03", islington: 99.3, london: 97.9 }, // Islington flats ~flat, London -2.1%
     { date: "2026-06", islington: 99.0, london: 97.6 }, // provisional / estimate
   ],
-};
-
-// Islington context figures (for callouts).
-export const ISLINGTON_FACTS = {
-  source: "hpiMar2026",
-  avgPriceMar2025: 673000,
-  avgPriceMar2026: 679000,
-  yoyPct: 0.9,
-  flatsYoY: 0.0,
-  homeMoverAvgMar2026: 850000,
-  homeMoverAvgMar2025: 833000,
-  avgRentApr2026: 2811,
-  avgRentApr2025: 2704,
-  rentYoYPct: 4.0,
 };
 
 // -----------------------------------------------------------------------------

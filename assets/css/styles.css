@@ -187,18 +187,9 @@ a.badge:hover { text-decoration: none; border-color: var(--brand); color: var(--
 
 
 /* ---------- valuation box ---------- */
-.val-box { background: var(--brand-bg); border: 1px solid var(--line); border-left: 4px solid var(--brand); border-radius: var(--radius-sm); padding: 18px 20px; margin-bottom: 18px; }
 .val-head { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--brand); font-weight: 700; }
 .val-main { font-size: 23px; font-weight: 700; letter-spacing: -0.015em; margin: 4px 0 12px; color: var(--brand-ink); }
 .val-main .val-sub { font-size: 14px; font-weight: 400; color: var(--ink-soft); letter-spacing: 0; }
-.val-anchors { display: flex; flex-direction: column; gap: 6px; font-size: 13.5px; color: var(--ink-soft); }
-.val-anchors strong { color: var(--ink); }
-.anchor-num, .factor-num {
-  display: inline-grid; place-items: center; width: 19px; height: 19px; border-radius: 5px;
-  background: var(--brand); color: #fff; font-size: 11.5px; font-weight: 700; margin-right: 7px;
-  vertical-align: baseline; line-height: 1;
-}
-.factor-num { width: 22px; height: 22px; font-size: 13px; border-radius: 6px; transform: translateY(2px); }
 
 /* ---------- cards (position / letting) ---------- */
 .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
@@ -247,7 +238,6 @@ a.badge:hover { text-decoration: none; border-color: var(--brand); color: var(--
 .legend-swatch.dashed { background-image: repeating-linear-gradient(90deg,currentColor 0 4px,transparent 4px 7px) !important; }
 
 .grid { stroke: #eef1f6; stroke-width: 1; }
-.axis-mid { stroke: #cbd5e1; stroke-width: 1.5; }
 .axis-x, .axis-y { fill: #94a3b8; font-size: 12px; }
 .axis-unit { fill: #64748b; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
 .axis-x { text-anchor: middle; } .axis-y { text-anchor: end; }
@@ -259,8 +249,6 @@ a.badge:hover { text-decoration: none; border-color: var(--brand); color: var(--
 .bar-value { fill: #0f172a; font-size: 13px; font-weight: 700; text-anchor: middle; }
 .bar-label { fill: #334155; font-size: 12.5px; font-weight: 600; text-anchor: middle; }
 .bar-sub { fill: #94a3b8; font-size: 11px; text-anchor: middle; }
-.row-label { fill: #334155; font-size: 12.5px; }
-.row-value { fill: #0f172a; font-size: 12.5px; font-weight: 700; }
 .map-tilewrap { position: relative; width: 100%; border-radius: 12px; overflow: hidden; border: 1px solid var(--line); background: #e9eef1; }
 .map-tile { position: absolute; display: block; }
 .map-attr { position: absolute; right: 0; bottom: 0; z-index: 3; background: rgba(255,255,255,.78); color: #556; font-size: 10px; padding: 1px 6px; border-top-left-radius: 6px; }
@@ -289,7 +277,6 @@ a.badge:hover { text-decoration: none; border-color: var(--brand); color: var(--
 .table-wrap { overflow-x: auto; margin-top: 6px; }
 .rank-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
 .rank-table th, .rank-table td { text-align: left; padding: 5px 9px; border-bottom: 1px solid var(--line-soft); line-height: 1.3; white-space: nowrap; }
-.rank-table td.rank-cell { text-align: left; font-weight: 700; color: var(--muted); width: 1%; padding-right: 6px; }
 .rank-table td.date-cell { font-weight: 700; color: var(--ink); white-space: nowrap; }
 
 /* frozen first column (address stays visible on horizontal scroll) */
@@ -364,24 +351,10 @@ a.src-line:hover, .src-line a:hover { text-decoration: underline; }
 .rank-table td:first-child, .rank-table th:first-child { text-align: left; }
 .best-row { background: var(--pos-bg); }
 .best-row td { font-weight: 600; }
-.best-tag { display: inline-block; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; padding: 2px 7px; border-radius: 5px; background: var(--pos); color: #fff; vertical-align: middle; }
 .neg-cell { color: var(--neg); }
 .comps-table th:nth-child(6), .comps-table td:nth-child(6) { text-align: left; } /* building type */
 .comps-table th:nth-child(4), .comps-table td:nth-child(4),
 .comps-table th:nth-child(5), .comps-table td:nth-child(5) { text-align: left; } /* beds/baths */
-
-/* ---------- factors ---------- */
-.factor { border-top: 1px solid var(--line); padding: 22px 0; }
-.factor:first-of-type { border-top: none; padding-top: 6px; }
-.factor-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
-.factor-head h3 { margin: 0; font-size: 16.5px; }
-.factor-weight { font-size: 11.5px; color: var(--muted); background: var(--line-soft); padding: 3px 10px; border-radius: 999px; white-space: nowrap; font-weight: 600; }
-.factor p { color: var(--ink-soft); font-size: 14px; }
-.policy-list { list-style: none; padding: 0; margin: 6px 0; }
-.policy-list li { padding: 10px 0; border-bottom: 1px dashed var(--line); color: var(--ink-soft); font-size: 13.5px; }
-.policy-list li:last-child { border-bottom: none; }
-.tag { display: inline-block; font-size: 10.5px; font-weight: 800; padding: 2px 8px; border-radius: 6px; margin-right: 8px; vertical-align: middle; text-transform: uppercase; letter-spacing: .03em; }
-.tag.pos { background: var(--pos-bg); color: var(--pos); } .tag.neg { background: var(--neg-bg); color: var(--neg); } .tag.neu { background: var(--line-soft); color: var(--ink-soft); }
 
 /* ---------- letting ---------- */
 .letting-lead { font-size: 15px; color: var(--ink); max-width: none; margin: 4px 0 18px; }
