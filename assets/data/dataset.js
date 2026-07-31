@@ -9,8 +9,8 @@
 // =============================================================================
 
 export const META = {
-  asOf: "2026-06-30",
-  build: "v77 · 2026-07-29", // bump on each change so the footer confirms the live build
+  asOf: "2026-07-31",
+  build: "v78 · 2026-07-31", // bump on each change so the footer confirms the live build
   currency: "GBP",
   disclaimer:
     "This tool is an informational model, not financial, tax, mortgage or legal advice. " +
@@ -24,13 +24,18 @@ export const META = {
 export const SOURCES = {
   landRegistryHPI: {
     label: "HM Land Registry — UK House Price Index (Islington)",
-    url: "https://landregistry.data.gov.uk/app/ukhpi/browse?from=2024-01-01&location=http%3A%2F%2Flandregistry.data.gov.uk%2Fid%2Fregion%2Fislington&to=2026-03-01",
+    url: "https://landregistry.data.gov.uk/app/ukhpi/browse?from=2024-01-01&location=http%3A%2F%2Flandregistry.data.gov.uk%2Fid%2Fregion%2Fislington&to=2026-07-01",
     publisher: "HM Land Registry / ONS",
   },
   hpiMar2026: {
     label: "UK House Price Index for March 2026",
     url: "https://www.gov.uk/government/news/uk-house-price-index-for-march-2026",
     publisher: "GOV.UK",
+  },
+  hpiMay2026: {
+    label: "UK House Price Index for May 2026 (latest release, published 22 Jul 2026)",
+    url: "https://www.ons.gov.uk/visualisations/housingpriceslocal/E09000019/",
+    publisher: "HM Land Registry / ONS",
   },
   onsIslington: {
     label: "ONS — Housing prices in Islington (local area)",
@@ -45,6 +50,11 @@ export const SOURCES = {
   boeJune2026: {
     label: "Monetary Policy Summary, June 2026 (Bank Rate held at 3.75%)",
     url: "https://www.bankofengland.co.uk/monetary-policy-summary-and-minutes/2026/june-2026",
+    publisher: "Bank of England",
+  },
+  boeJuly2026: {
+    label: "Monetary Policy Summary, July 2026 (Bank Rate held at 3.75%, 6-3 vote)",
+    url: "https://www.bankofengland.co.uk/monetary-policy-summary-and-minutes/2026/july-2026",
     publisher: "Bank of England",
   },
   rightmoveRates: {
@@ -179,11 +189,13 @@ export const SELLING_COSTS = {
 // flat-specific signal but keep London softness visible.
 // -----------------------------------------------------------------------------
 export const PRICE_HISTORY = {
-  source: "landRegistryHPI",
+  source: "hpiMay2026",
   note:
-    "Islington average price £673k (Mar 2025, revised) → £679k (Mar 2026), +0.9%. " +
-    "Islington FLATS were broadly flat over the year; London-wide -2.1%. Index is " +
-    "anchored to your purchase month so 100 = £890,000.",
+    "Islington average price £673k (Mar 2025, revised) → £678k (Mar 2026, +0.7%) → £670k " +
+    "(May 2026, latest UK HPI release), as the Middle East conflict's swap-rate shock pushed " +
+    "mortgage costs up over spring/summer 2026 and cooled the market fast. Islington FLATS -7.0% " +
+    "YoY to May 2026 (£557k avg); London-wide -3.7% YoY. Index is anchored to your purchase " +
+    "month so 100 = £890,000.",
   anchorDate: "2025-03-01",
   // {date, islingtonIndex, londonIndex} relative to Mar 2025 = 100
   series: [
@@ -191,8 +203,15 @@ export const PRICE_HISTORY = {
     { date: "2025-06", islington: 99.7, london: 99.4 },
     { date: "2025-09", islington: 99.4, london: 99.0 },
     { date: "2025-12", islington: 99.2, london: 98.4 },
-    { date: "2026-03", islington: 99.3, london: 97.9 }, // Islington flats ~flat, London -2.1%
-    { date: "2026-06", islington: 99.0, london: 97.6 }, // provisional / estimate
+    // Mar 2026 corrected to 100.7 from the confirmed £678,022 UK HPI average price
+    // (673,478 base) — the prior 99.3 didn't match this dataset's own +0.9% note.
+    { date: "2026-03", islington: 100.7, london: 97.9 },
+    // 2026-05 is the newest published UK HPI month (released 22 Jul 2026); replaces the
+    // old 2026-06 provisional/estimate point. islington = confirmed £669,879 / £673,478
+    // base. london is derived by applying the same 2-month Islington % change to the last
+    // verified London point (97.9) — no independently-confirmed May 2026 London £ figure
+    // was pulled this run, so treat it as an estimate, not a raw index reading.
+    { date: "2026-05", islington: 99.5, london: 96.7 },
   ],
 };
 
@@ -200,18 +219,20 @@ export const PRICE_HISTORY = {
 // Interest-rate history & the user's rate.
 // -----------------------------------------------------------------------------
 export const RATES = {
-  source: "boeJune2026",
+  source: "boeJuly2026",
   rateSource: "rightmoveRates",
-  baseRateNow: 3.75, // BoE Bank Rate, held June 2026 (live-refreshable)
-  baseRateAsOf: "2026-06-17",
+  baseRateNow: 3.75, // BoE Bank Rate, held 29 Jul 2026 (6-3 vote); live-refreshable
+  baseRateAsOf: "2026-07-30",
   // 2-year GBP interest-rate swap (SONIA) — the wholesale rate UK lenders price
   // fixed-rate mortgages and real-estate lending off. Sits above Bank Rate when
   // the market expects cuts to be slow; the key driver of fixed mortgage pricing.
-  swap2yrNow: 4.06,
-  swap2yrAsOf: "2026-06-26",
+  swap2yrNow: 4.26,
+  swap2yrAsOf: "2026-07-29",
   // Current average 2-year fixed REMORTGAGE rate at ~70% LTV (the band that fits
   // this flat). Live-refreshed from Bank of England quoted mortgage rates,
   // interpolated between the published 60% and 75% LTV series. Snapshot fallback:
+  // NOT independently re-verified this run (no primary BoE Bankstats figure pulled) —
+  // left unchanged; flag for next refresh.
   remortgage70Now: 5.02,
   remortgage70AsOf: "2026-06",
   // Forecast 2-yr-fix path from the Bank of England OIS instantaneous forward
@@ -219,16 +240,17 @@ export const RATES = {
   // in percentage points, at ~2028 and ~2030: the 2-yr swap forward starting in T
   // years (avg instantaneous fwd over [T,T+2]) moves 4.02% (now) → 4.02% (2028) →
   // 4.24% (2030), i.e. broadly flat then edging up — so the fix holds ~5%, ~5.2%
-  // by 2030. Refresh from the monthly OIS spreadsheet.
+  // by 2030. Refresh from the monthly OIS spreadsheet. NOT re-pulled this run —
+  // still June 2026 vintage; flag for next refresh.
   oisFix2yForecast: { asOf: "BoE OIS, Jun 2026", d28: 0.0, d30: 0.2 },
   // Previous CALENDAR-DAY values, so each badge can show a day-over-day % change.
   // The daily 08:00 routine rolls "*Now" into "*Prev" before writing the new value;
   // the Worker also supplies the prior day's figure for the live series.
   baseRatePrev: 3.75,
   remortgage70Prev: 5.02,
-  swap2yrPrev: 4.09,
-  cpiPct: 2.8, // CPI to May 2026
-  nextDecision: "2026-07-30",
+  swap2yrPrev: 4.06,
+  cpiPct: 2.6, // CPI to June 2026 (ONS, down from 2.8% in May)
+  nextDecision: "2026-09-17",
   // Bank Rate path (history + light forward estimate)
   baseSeries: [
     { date: "2024-08", rate: 5.0 },
@@ -238,16 +260,18 @@ export const RATES = {
     { date: "2025-08", rate: 4.0 },
     { date: "2025-11", rate: 3.75 },
     { date: "2026-06", rate: 3.75 },
+    { date: "2026-07", rate: 3.75 }, // held, 6-3 vote (3 wanted +0.25 to 4.00%)
   ],
-  // Average market fixes, June 2026 (Rightmove/Moneyfacts-style averages)
-  avg2yrFix: 5.55,
-  avg5yrFix: 5.54,
+  // Average market fixes, late July 2026 (Moneyfacts averages, whole-of-market)
+  avg2yrFix: 5.6,
+  avg5yrFix: 5.6,
   fix2yrSeries: [
     { date: "2025-09", rate: 5.05 },
     { date: "2025-12", rate: 5.20 },
     { date: "2026-03", rate: 5.78 }, // Middle East shock pushed swaps up
     { date: "2026-05", rate: 5.78 },
     { date: "2026-06", rate: 5.55 }, // easing back
+    { date: "2026-07", rate: 5.6 }, // ticked back up (5.57% 22 Jul → ~5.60% 28 Jul)
   ],
   yourRate: MORTGAGE.ratePct,
 };
@@ -374,14 +398,16 @@ export const POLICY_FACTORS = [
   {
     id: "macroRisk",
     title: "Middle East conflict — energy & swap-rate volatility",
-    source: "boeJune2026",
+    source: "boeJuly2026",
     direction: -1,
     weightHint: "medium",
     summary:
-      "The Bank flags the Middle East conflict and energy prices as the dominant risk to the " +
-      "inflation outlook. It pushed mortgage swap rates up in spring 2026 and keeps the rate-cut " +
-      "path uncertain — a downside risk to a near-term price recovery.",
-    effective: "2026-06-01",
+      "The Bank still calls the Middle East conflict 'the dominant source of uncertainty' for " +
+      "inflation (Brent $84/bbl, UK gas 136p/therm, 28 Jul); 3 of 9 MPC members voted to hike in " +
+      "July. It has pushed mortgage swap rates and fixed rates up through summer 2026 (2-yr swap " +
+      "+20bps in a month) and cooled Islington prices sharply — a real downside risk, now visibly " +
+      "showing up in the price data, not just a forecast risk.",
+    effective: "2026-07-29",
   },
 ];
 

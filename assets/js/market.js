@@ -353,7 +353,7 @@ export const NEW_BUILDS = {
 // attribution; update by re-reading each publisher's latest release.
 // -----------------------------------------------------------------------------
 export const FORECASTS = {
-  asOf: "2026-06-30",
+  asOf: "2026-07-31",
   curated: true,
   sources: ["ricsSurvey", "rightmoveListings"],
   rows: [
@@ -365,10 +365,11 @@ export const FORECASTS = {
       activity: "Subdued transactions; recovery weighted to H2.",
       url: "https://www.savills.co.uk/insight-and-opinion/savills-news/391268/savills-revises-uk-house-price-forecast-as-higher-mortgage-costs-weigh-on-demand",
       note: "2026 −2%, then +4% (2027) and +5% (2028)." },
-    { source: "Knight Frank (Greater London)", short: "Knight Frank", horizon: "2026", priceYoY: 3.0,
-      activity: "Demand improving as mortgage rates settle.",
+    { source: "Knight Frank (Greater London)", short: "Knight Frank", horizon: "2026", priceYoY: 1.5,
+      activity: "Downgraded on higher mortgage rates and weaker sentiment; demand cooling near-term.",
       url: "https://www.knightfrank.co.uk/research/article/2026/4/uk-housing-market-forecast-q2-2026",
-      note: "+3% 2026, +4% 2027; ~13.6% cumulative London 2026–2030." },
+      note: "UK national revised down to +1.5% 2026 (from +3%), +3% 2027, +4% 2028; Greater London " +
+        "specifically also cut from +3% but the exact revised GL figure wasn't published — flagged, not verified." },
     { source: "Zoopla", short: "Zoopla", horizon: "2026", priceYoY: 1.5,
       activity: "Buyer demand up year-on-year; more supply keeps prices in check.",
       url: "https://www.zoopla.co.uk/discover/property-news/house-price-index/",

@@ -18,11 +18,11 @@
 // Snapshot fallback — keep roughly in step with dataset.js RATES.
 const FALLBACK = {
   baseRateNow: 3.75,
-  baseRateAsOf: "2026-06-17",
+  baseRateAsOf: "2026-07-30",
   baseRatePrev: 3.75,
-  swap2yrNow: 4.06,
-  swap2yrAsOf: "2026-06-26",
-  swap2yrPrev: 4.09,
+  swap2yrNow: 4.26,
+  swap2yrAsOf: "2026-07-29",
+  swap2yrPrev: 4.06,
   remortgage70Now: 5.02,
   remortgage70AsOf: "2026-06",
   remortgage70Prev: 5.02,
