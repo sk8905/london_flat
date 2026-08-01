@@ -454,9 +454,8 @@ function drawLegend(container, items) {
     const span = document.createElement("span");
     span.className = "legend-item";
     const sw = document.createElement("span");
-    sw.className = "legend-swatch" + (it.dashed ? " dashed" : "") + (it.line ? " line" : "");
-    sw.style.background = it.line ? "transparent" : it.color;
-    if (it.line) sw.style.borderTop = "3px solid " + it.color;
+    sw.className = "legend-swatch" + (it.dashed ? " dashed" : "");
+    sw.style.background = it.color;
     span.appendChild(sw);
     const tx = document.createElement("span");
     tx.textContent = it.name;

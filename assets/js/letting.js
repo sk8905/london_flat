@@ -141,14 +141,14 @@ export function rentVsSell(opts) {
   // ---- totals & comparison --------------------------------------------------
   // Guard the horizon length so a bad date can't blow up the opportunity-cost
   // exponent (clamped to a sane 0–10 years).
-  const years_f = monthsOwned > startMonths
+  const yearsF = monthsOwned > startMonths
     ? Math.max(0, Math.min(10, monthsBetween(presentISO, saleDate) / 12)) : 0;
   const letTotal = cumulativeNetRent + netSaleProceeds;
-  const sellNowGrown = sellNowNet * Math.pow(1 + letCfg.opportunityRatePct / 100, years_f);
+  const sellNowGrown = sellNowNet * Math.pow(1 + letCfg.opportunityRatePct / 100, yearsF);
 
   const fin = (x) => (Number.isFinite(x) ? x : 0); // belt-and-braces against NaN/Infinity
   return {
-    saleDate, years: years_f,
+    saleDate, years: yearsF,
     yearsTable: years,
     cumulativeNetRent: fin(cumulativeNetRent), cumulativePrincipal: fin(cumulativePrincipal),
     cumulativeInterest: fin(cumulativeInterest), cumulativeTax: fin(cumulativeTax),

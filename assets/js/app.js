@@ -362,9 +362,8 @@ async function loadIdentity() {
 // Data-freshness line: when this view loaded, and the newest dated item the
 // notifications watch (most recent sale, base-rate date or 2yr-swap date).
 function fmtItemDate(iso) {
-  const mi = parseInt(iso.slice(5, 7), 10) - 1;
   const d = iso.length >= 10 ? parseInt(iso.slice(8, 10), 10) : null;
-  return (d ? d + " " : "") + (MONTHS[mi] || "") + " " + iso.slice(0, 4);
+  return (d ? d + " " : "") + monthName(iso);
 }
 function renderFreshness() {
   const r = $("#id-refresh");

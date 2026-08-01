@@ -152,8 +152,6 @@ export const COMPARABLES = {
     "which typically sits in the upper half of the range (new-build premium, maturing with age).",
   // N1 sold price per square metre (Land Registry-derived).
   perSqm: { low: 8350, median: 9900, high: 11790 },
-  n1FlatAvg12m: 665438, // all N1 flats, all sizes — skewed small/older
-  n1_7txAvg12m: 1070000, // your postcode, last 12 months
 };
 
 export const MORTGAGE = {

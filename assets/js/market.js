@@ -308,11 +308,6 @@ export const RENT = {
 // -----------------------------------------------------------------------------
 // NEW-BUILD PIPELINE — upcoming / under-construction developments near N1 7TX
 // that add supply (a headwind for resale prices) or amenity.
-// FLAGGED / still curated (2026-07-24): these are real, named local schemes, but
-// their `units`/`completion` are not verifiable from the single daily Homedata
-// pull. A refresh would cross-reference the Homedata Planning endpoint
-// (/planning/search) and PlanIt per scheme; until then the pipeline is left as the
-// curated estimate rather than guessed live.
 // -----------------------------------------------------------------------------
 // LIVE (2026-07-24): active residential pipeline within 2 km, from PlanIt planning
 // records (www.planit.org.uk). Each row links to its planning application. `units`
@@ -384,7 +379,6 @@ export const FORECASTS = {
 // -----------------------------------------------------------------------------
 // DERIVED VIEWS — pure helpers the UI reads. All distance-filtered to the radius.
 // -----------------------------------------------------------------------------
-const ymIdx = (iso) => parseInt(iso.slice(0, 4), 10) * 12 + (parseInt(iso.slice(5, 7), 10) - 1);
 const daysBetween = (aISO, bISO) => {
   const a = Date.parse(aISO + "T00:00:00Z");
   const b = Date.parse(bISO + "T00:00:00Z");
