@@ -348,7 +348,7 @@ export const NEW_BUILDS = {
 // attribution; update by re-reading each publisher's latest release.
 // -----------------------------------------------------------------------------
 export const FORECASTS = {
-  asOf: "2026-07-31",
+  asOf: "2026-08-02",
   curated: true,
   sources: ["ricsSurvey", "rightmoveListings"],
   rows: [
@@ -358,8 +358,9 @@ export const FORECASTS = {
       note: "London net price balance near zero; 12-month sales expectations positive." },
     { source: "Savills (mainstream London)", short: "Savills", horizon: "2026", priceYoY: -2.0,
       activity: "Subdued transactions; recovery weighted to H2.",
-      url: "https://www.savills.co.uk/insight-and-opinion/savills-news/391268/savills-revises-uk-house-price-forecast-as-higher-mortgage-costs-weigh-on-demand",
-      note: "2026 −2%, then +4% (2027) and +5% (2028)." },
+      url: "https://www.savills.co.uk/research_articles/229130/391249-0",
+      note: "Revised Jun 2026: 2026 −2%, 2027 +2.5%, 2028 +5%, 2029 +6%, 2030 +6% — 18.5% cumulative " +
+        "to 2030, down from the prior 22.2% forecast." },
     { source: "Knight Frank (Greater London)", short: "Knight Frank", horizon: "2026", priceYoY: 1.5,
       activity: "Downgraded on higher mortgage rates and weaker sentiment; demand cooling near-term.",
       url: "https://www.knightfrank.co.uk/research/article/2026/4/uk-housing-market-forecast-q2-2026",

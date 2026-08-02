@@ -9,8 +9,8 @@
 // =============================================================================
 
 export const META = {
-  asOf: "2026-07-31",
-  build: "v78 · 2026-07-31", // bump on each change so the footer confirms the live build
+  asOf: "2026-08-02",
+  build: "v79 · 2026-08-02", // bump on each change so the footer confirms the live build
   currency: "GBP",
   disclaimer:
     "This tool is an informational model, not financial, tax, mortgage or legal advice. " +
@@ -73,9 +73,14 @@ export const SOURCES = {
     publisher: "Knight Frank Research",
   },
   zooplaHPI: {
-    label: "Zoopla — House Price Index (May 2026)",
+    label: "Zoopla — House Price Index (July 2026)",
     url: "https://www.zoopla.co.uk/discover/property-news/house-price-index/",
     publisher: "Zoopla",
+  },
+  savillsJune2026: {
+    label: "Savills — Revised mainstream house price forecasts (Jun 2026): 18.5% cumulative to 2030, down from 22.2%",
+    url: "https://www.savills.co.uk/research_articles/229130/391249-0",
+    publisher: "Savills Research",
   },
   budgetMansionTax: {
     label: "Autumn Budget 2025 — High Value Council Tax Surcharge ('mansion tax')",
@@ -224,8 +229,8 @@ export const RATES = {
   // 2-year GBP interest-rate swap (SONIA) — the wholesale rate UK lenders price
   // fixed-rate mortgages and real-estate lending off. Sits above Bank Rate when
   // the market expects cuts to be slow; the key driver of fixed mortgage pricing.
-  swap2yrNow: 4.26,
-  swap2yrAsOf: "2026-07-29",
+  swap2yrNow: 4.15,
+  swap2yrAsOf: "2026-07-31",
   // Current average 2-year fixed REMORTGAGE rate at ~70% LTV (the band that fits
   // this flat). Live-refreshed from Bank of England quoted mortgage rates,
   // interpolated between the published 60% and 75% LTV series. Snapshot fallback:
@@ -246,7 +251,7 @@ export const RATES = {
   // the Worker also supplies the prior day's figure for the live series.
   baseRatePrev: 3.75,
   remortgage70Prev: 5.02,
-  swap2yrPrev: 4.06,
+  swap2yrPrev: 4.26,
   cpiPct: 2.6, // CPI to June 2026 (ONS, down from 2.8% in May)
   nextDecision: "2026-09-17",
   // Bank Rate path (history + light forward estimate)
@@ -279,16 +284,17 @@ export const RATES = {
 // Three scenarios; "base" drives the headline numbers. All editable via sliders.
 // -----------------------------------------------------------------------------
 export const FORECAST = {
-  sources: ["savillsForecast", "knightFrank", "zooplaHPI"],
+  sources: ["savillsForecast", "savillsJune2026", "knightFrank", "zooplaHPI"],
   note:
-    "Consensus: a soft 2026 (Savills revised to -2%) then recovery from 2027 " +
-    "(Knight Frank +3% 2027, +4% 2028; Savills +4% then +5%). London lags the UK " +
-    "near-term but Knight Frank models ~13.6% cumulative London growth 2026–2030.",
+    "Consensus: a soft 2026 (Savills -2%, Knight Frank +1.5%) then recovery from 2027. Savills' " +
+    "June 2026 revision cut its 5-year cumulative forecast to 18.5% (from 22.2%): -2% (2026), " +
+    "+2.5% (2027), +5% (2028), +6% (2029), +6% (2030). Knight Frank: +1.5% (2026), +3% (2027), " +
+    "+4% (2028). 'Base' blends the two; London lags the UK near-term.",
   // Annual growth (%) applied from each calendar year.
   scenarios: {
     pessimistic: { 2026: -4.0, 2027: 0.0, 2028: 1.5, 2029: 2.5 },
-    base: { 2026: -2.0, 2027: 3.0, 2028: 4.0, 2029: 5.0 },
-    optimistic: { 2026: -1.0, 2027: 4.5, 2028: 5.5, 2029: 6.0 },
+    base: { 2026: -2.0, 2027: 2.75, 2028: 4.5, 2029: 5.5 },
+    optimistic: { 2026: -1.0, 2027: 4.5, 2028: 5.5, 2029: 6.5 },
   },
   defaultScenario: "base",
 };
