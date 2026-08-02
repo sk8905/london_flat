@@ -146,7 +146,7 @@ function currentOverrides() {
     scenario: state.custom ? "custom" : state.scenario,
     growthByYear: state.growthByYear,
     remortgageRate: state.remortgageRate,
-    presentValue: state.presentValue ?? undefined,
+    presentValue: state.presentValue,
   };
 }
 
@@ -449,7 +449,7 @@ function renderRateBadges() {
   // number. The YoY IS the value (not a hidden delta) so it stays visible on phones.
   const H = MKT.HPI;
   const hpiEl = $("#live-hpi");
-  if (hpiEl && H && Number.isFinite(H.islingtonFlatsYoYPct)) {
+  if (hpiEl && Number.isFinite(H.islingtonFlatsYoYPct)) {
     const y = H.islingtonFlatsYoYPct;
     const flat = Math.abs(y) < 0.05;
     const color = flat ? "var(--muted)" : (y > 0 ? "var(--pos)" : "var(--neg)");
@@ -1166,7 +1166,7 @@ function renderLocalMarket(r) {
 }
 
 // ---------------------------------------------------------------------------
-// Rent-it-out vs sell comparison
+// SECTION 2 — Rent-it-out vs sell comparison
 // ---------------------------------------------------------------------------
 function computeLetting(r) {
   const L = state.letting;

@@ -28,7 +28,7 @@ function growthAtDate(dateISO, growthByYear) {
 
 export function runModel(data, overrides = {}) {
   const {
-    PROPERTY, MORTGAGE, SELLING_COSTS, PRICE_HISTORY, RATES,
+    PROPERTY, MORTGAGE, SELLING_COSTS, PRICE_HISTORY,
     FORECAST, POLICY_FACTORS, SEASONALITY, WINDOWS, FACTOR_WEIGHTS, META, COMPARABLES, TAX,
   } = data;
 
