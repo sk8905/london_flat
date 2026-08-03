@@ -42,7 +42,6 @@ export function runModel(data, overrides = {}) {
   const growthByYear = overrides.growthByYear || FORECAST.scenarios[scenarioName];
   const mortgage = {
     ...MORTGAGE,
-    principal: MORTGAGE.principal, // getter resolved
     remortgageRatePctAssumed:
       overrides.remortgageRate ?? MORTGAGE.remortgageRatePctAssumed,
     _purchaseDate: PROPERTY.purchaseDate,

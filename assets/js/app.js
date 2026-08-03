@@ -361,10 +361,6 @@ async function loadIdentity() {
 
 // Data-freshness line: when this view loaded, and the newest dated item the
 // notifications watch (most recent sale, base-rate date or 2yr-swap date).
-function fmtItemDate(iso) {
-  const d = iso.length >= 10 ? parseInt(iso.slice(8, 10), 10) : null;
-  return (d ? d + " " : "") + monthName(iso);
-}
 function renderFreshness() {
   const r = $("#id-refresh");
   if (r) {
@@ -381,7 +377,7 @@ function renderFreshness() {
       ..._liveDates,
     ].filter(Boolean);
     const maxISO = dates.sort().slice(-1)[0];
-    l.textContent = "Latest item " + (maxISO ? fmtItemDate(maxISO) : "—");
+    l.textContent = "Latest item " + (maxISO ? fmtDayMon(maxISO) : "—");
   }
 }
 

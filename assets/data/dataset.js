@@ -22,11 +22,6 @@ export const META = {
 // Sources registry — referenced by id throughout the dataset and the UI.
 // -----------------------------------------------------------------------------
 export const SOURCES = {
-  landRegistryHPI: {
-    label: "HM Land Registry — UK House Price Index (Islington)",
-    url: "https://landregistry.data.gov.uk/app/ukhpi/browse?from=2024-01-01&location=http%3A%2F%2Flandregistry.data.gov.uk%2Fid%2Fregion%2Fislington&to=2026-07-01",
-    publisher: "HM Land Registry / ONS",
-  },
   hpiMar2026: {
     label: "UK House Price Index for March 2026",
     url: "https://www.gov.uk/government/news/uk-house-price-index-for-march-2026",
@@ -41,16 +36,6 @@ export const SOURCES = {
     label: "ONS — Housing prices in Islington (local area)",
     url: "https://www.ons.gov.uk/visualisations/housingpriceslocal/E09000019/",
     publisher: "Office for National Statistics",
-  },
-  boeRate: {
-    label: "Bank of England — Bank Rate (latest decision)",
-    url: "https://www.bankofengland.co.uk/monetary-policy/the-interest-rate-bank-rate",
-    publisher: "Bank of England",
-  },
-  boeJune2026: {
-    label: "Monetary Policy Summary, June 2026 (Bank Rate held at 3.75%)",
-    url: "https://www.bankofengland.co.uk/monetary-policy-summary-and-minutes/2026/june-2026",
-    publisher: "Bank of England",
   },
   boeJuly2026: {
     label: "Monetary Policy Summary, July 2026 (Bank Rate held at 3.75%, 6-3 vote)",
@@ -97,11 +82,6 @@ export const SOURCES = {
     url: "https://www.rightmove.co.uk/guides/seller/preparing-to-sell/is-now-the-right-time-to-sell/",
     publisher: "Rightmove",
   },
-  hoaRateForecast: {
-    label: "HomeOwners Alliance — Mortgage rate predictions 2026",
-    url: "https://hoa.org.uk/advice/guides-for-homeowners/for-owners/mortgage-rate-forecast/",
-    publisher: "HomeOwners Alliance",
-  },
   cgtPrivateResidence: {
     label: "GOV.UK — Private Residence Relief (Capital Gains Tax)",
     url: "https://www.gov.uk/tax-sell-home",
@@ -116,11 +96,6 @@ export const SOURCES = {
     label: "HM Land Registry — Price Paid / sold-price search (N1, £/m²)",
     url: "https://www.gov.uk/search-house-prices",
     publisher: "HM Land Registry",
-  },
-  zooplaN17tx: {
-    label: "Zoopla — sold prices & estimates for N1 7TX",
-    url: "https://www.zoopla.co.uk/house-prices/n1-7tx/",
-    publisher: "Zoopla",
   },
 };
 
@@ -169,7 +144,7 @@ export const MORTGAGE = {
   // ERC: 1% of the outstanding balance while still inside the current fixed period.
   ercPctWhileFixed: 1.0,
   // Assumed remortgage rate once the fix ends (editable). Anchored to the
-  // current ~5.5% 2yr fix with a modest easing assumption by spring 2027.
+  // current ~5.6% 2yr fix with a modest easing assumption by spring 2027.
   remortgageRatePctAssumed: 5.1,
   // The NEW deal taken when the current fix ends also has its own fixed term and
   // ERC — selling inside it triggers that charge too. Set the term to 0 (or the

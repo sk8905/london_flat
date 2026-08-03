@@ -3,7 +3,6 @@
    ========================================================================== */
 :root {
   --bg: #eceef1;            /* cool light grey — lets white panels lift off the page */
-  --bg-2: #e4e7eb;
   --panel: #ffffff;
   --ink: #1a2230;          /* deep slate ink */
   --ink-soft: #45505f;
@@ -15,24 +14,17 @@
   --brand-dark: #17475c;
   --brand-ink: #14404f;
   --brand-bg: #e8f0f3;
-  --navy: #1b2735;         /* charcoal (used sparingly) */
-  --navy-2: #243140;
   --accent: #a06a3c;       /* warm bronze, for occasional emphasis */
-  --accent-bg: #f6efe6;
   --pos: #2f7d57;          /* green with life */
   --pos-bg: #e4f1ea;
   --neg: #b04545;          /* clay red */
   --neg-bg: #f6e7e5;
-  --neu: #79828f;
   --amber: #9a6b2f;
   --radius: 12px;
   --radius-sm: 9px;
-  --shadow-sm: 0 1px 2px rgba(20,30,45,.05);
   --shadow: 0 1px 2px rgba(20,30,45,.05), 0 4px 14px rgba(20,30,45,.06);
   --shadow-lg: 0 2px 6px rgba(20,30,45,.07), 0 14px 38px rgba(20,30,45,.10);
   --font: Calibri, "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
-  --serif: var(--font);
-  --mono: ui-monospace, "SF Mono", "Roboto Mono", Menlo, monospace;
 }
 /* touch-action: manipulation kills double-tap-to-zoom everywhere (headers, nav,
    buttons, content) while keeping scroll and pinch-zoom for accessibility. */
