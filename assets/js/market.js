@@ -507,8 +507,3 @@ export function applyHomedata(payload) {
   merge(FORECASTS, payload.forecasts);
   return true;
 }
-
-// True if any local-market dataset is still the curated fallback (for UI badges).
-export function isCurated() {
-  return [SALES, LISTINGS, LISTINGS_PER_MONTH, HPI, RENT, NEW_BUILDS, FORECASTS].some((d) => d.curated);
-}
