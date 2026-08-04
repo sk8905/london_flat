@@ -348,7 +348,7 @@ export const NEW_BUILDS = {
 // attribution; update by re-reading each publisher's latest release.
 // -----------------------------------------------------------------------------
 export const FORECASTS = {
-  asOf: "2026-08-02",
+  asOf: "2026-08-04",
   curated: true,
   sources: ["ricsSurvey", "rightmoveListings"],
   rows: [

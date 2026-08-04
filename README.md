@@ -193,7 +193,9 @@ No configuration is required; it works as soon as the Access application is in p
 The header has a **notifications bell**. On each visit it diffs the live dataset against a
 snapshot saved in the browser and flags, as unread alerts:
 
-- **New N1 sales** added to `COMPS.rows`,
+- **New N1 sales** added to `market.js`'s `SALES.rows` (the standalone `COMPS.rows` export was
+  removed as dead code on 2026-07-30 once `market.js`'s live sales comps superseded it — this is
+  now the only export the notification diff reads),
 - a **change in the BoE base rate** (`RATES.baseRateNow`),
 - a **≥10bps move in the 2-year swap** (`RATES.swap2yrNow`).
 
@@ -230,10 +232,13 @@ if they've drifted far). Work through each item, keeping every value sourced; if
 today, make no PR.
 
 1. Recent N1 sales — search HM Land Registry + Zoopla for newly-registered sold 2-bed
-   new-build or purpose-built apartments in N1. Add each as a COMPS.rows entry
-   {addr, date "YYYY-MM", price, beds, baths, type, sqm, lat, lng}, geocoding lat/lng from the
-   street's postcode (checkmypostcode / postcodes.io). Keep only new-build/purpose-built.
-   Update COMPS.asOf. (Each new row alerts me in the app.)
+   new-build or purpose-built apartments in N1. Add each as an assets/js/market.js SALES.rows
+   entry {addr, beds, baths, type, sqm, askingPrice (optional), price, listedDate (optional),
+   soldDate: "YYYY-MM-DD", lat, lng}, geocoding lat/lng from the street's postcode
+   (checkmypostcode / postcodes.io). Keep only new-build/purpose-built, within the 2 km radius,
+   and exclude council/ex-council/shared-ownership stock. Update SALES.asOf. (Each new row
+   alerts me in the app — see Notifications above. COMPS.rows in dataset.js was removed as dead
+   code; do not recreate it.)
 2. 2-year GBP swap — FIRST copy the existing RATES.swap2yrNow into RATES.swap2yrPrev (so the
    badge shows today's day-over-day change), THEN set RATES.swap2yrNow + swap2yrAsOf to the
    current 2-year SONIA swap (no live feed, so it's manual). A move of 10bps or more alerts me.
