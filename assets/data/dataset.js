@@ -175,7 +175,7 @@ export const PRICE_HISTORY = {
     "YoY to May 2026 (£557k avg); London-wide -3.7% YoY. Index is anchored to your purchase " +
     "month so 100 = £890,000.",
   anchorDate: "2025-03-01",
-  // {date, islingtonIndex, londonIndex} relative to Mar 2025 = 100
+  // {date, islington, london} relative to Mar 2025 = 100
   series: [
     { date: "2025-03", islington: 100.0, london: 100.0 },
     { date: "2025-06", islington: 99.7, london: 99.4 },

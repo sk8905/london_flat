@@ -19,7 +19,7 @@ import {
 // Build a month-by-month mortgage schedule from `fromISO` to `toISO`, handling the
 // switch from the residential fix to the post-fix (let/BTL) rate at fixEndDate.
 // Uses integer month indices (timezone-safe — no Date.setMonth).
-export function scheduleInterest(mortgage, letCfg, fromISO, toISO) {
+function scheduleInterest(mortgage, letCfg, fromISO, toISO) {
   const monthsPaidAtStart = monthsBetween(mortgage._purchaseDate, fromISO);
   let balance = balanceAfter(mortgage.principal, mortgage.ratePct, mortgage.termYears, monthsPaidAtStart);
   const startIdx = ymIndex(fromISO), endIdx = ymIndex(toISO), fixIdx = ymIndex(mortgage.fixEndDate);

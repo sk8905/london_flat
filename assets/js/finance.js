@@ -86,7 +86,7 @@ export function sellingCosts(salePrice, cfg) {
 // (The partial-PRR case — a former home later let out — is modelled separately in
 //  letting.js, which apportions the gain by residence months.) cgtCfg is
 //  { rate, annualExempt }; passing null leaves CGT at 0.
-export function saleCGT(property, saleValue, sellingCostsTotal, cgtCfg) {
+function saleCGT(property, saleValue, sellingCostsTotal, cgtCfg) {
   if (property.isPrimaryResidence || !cgtCfg) return 0;
   const acquisition = property.purchasePrice + (property.sdltPaid || 0) + (property.otherBuyCosts || 0);
   const gain = Math.max(0, saleValue - acquisition - (sellingCostsTotal || 0));

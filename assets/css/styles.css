@@ -341,9 +341,9 @@ a.src-line:hover, .src-line a:hover { text-decoration: underline; }
 .best-row { background: var(--pos-bg); }
 .best-row td { font-weight: 600; }
 .neg-cell { color: var(--neg); }
-.comps-table th:nth-child(6), .comps-table td:nth-child(6) { text-align: left; } /* building type */
+.comps-table th:nth-child(6), .comps-table td:nth-child(6) { text-align: left; }
 .comps-table th:nth-child(4), .comps-table td:nth-child(4),
-.comps-table th:nth-child(5), .comps-table td:nth-child(5) { text-align: left; } /* beds/baths */
+.comps-table th:nth-child(5), .comps-table td:nth-child(5) { text-align: left; }
 
 /* ---------- letting ---------- */
 .letting-lead { font-size: 15px; color: var(--ink); max-width: none; margin: 4px 0 18px; }
