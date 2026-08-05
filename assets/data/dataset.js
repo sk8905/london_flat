@@ -9,8 +9,8 @@
 // =============================================================================
 
 export const META = {
-  asOf: "2026-08-02",
-  build: "v79 · 2026-08-02", // bump on each change so the footer confirms the live build
+  asOf: "2026-08-05",
+  build: "v80 · 2026-08-05", // bump on each change so the footer confirms the live build
   currency: "GBP",
   disclaimer:
     "This tool is an informational model, not financial, tax, mortgage or legal advice. " +
@@ -204,8 +204,10 @@ export const RATES = {
   // 2-year GBP interest-rate swap (SONIA) — the wholesale rate UK lenders price
   // fixed-rate mortgages and real-estate lending off. Sits above Bank Rate when
   // the market expects cuts to be slow; the key driver of fixed mortgage pricing.
-  swap2yrNow: 4.15,
-  swap2yrAsOf: "2026-07-31",
+  // No free live feed for this series, so it's a manual snapshot (Bluegamma SONIA
+  // swap curve, 04 Aug 2026 17:00 London close) — single-source, flag if it looks off.
+  swap2yrNow: 4.10,
+  swap2yrAsOf: "2026-08-04",
   // Current average 2-year fixed REMORTGAGE rate at ~70% LTV (the band that fits
   // this flat). Live-refreshed from Bank of England quoted mortgage rates,
   // interpolated between the published 60% and 75% LTV series. Snapshot fallback:
@@ -226,7 +228,7 @@ export const RATES = {
   // the Worker also supplies the prior day's figure for the live series.
   baseRatePrev: 3.75,
   remortgage70Prev: 5.02,
-  swap2yrPrev: 4.26,
+  swap2yrPrev: 4.15,
   cpiPct: 2.6, // CPI to June 2026 (ONS, down from 2.8% in May)
   nextDecision: "2026-09-17",
   // Bank Rate path (history + light forward estimate)
