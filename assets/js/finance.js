@@ -254,6 +254,9 @@ export function breakEvenRecoupAll(opts) {
   };
 }
 
+// Belt-and-braces against NaN/Infinity leaking into a result object.
+export const fin = (x) => (Number.isFinite(x) ? x : 0);
+
 // Monthly mortgage payment now vs. after remortgage — the "holding cost" signal.
 export function holdingCostDelta(mortgage) {
   const io = mortgage.repaymentType === "interest_only";

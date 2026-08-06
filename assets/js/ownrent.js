@@ -19,7 +19,7 @@
 
 import {
   monthlyPayment, balanceAfter, monthsBetween, valueMultiplier, sellingCosts,
-  ymIndex, ymToISO,
+  ymIndex, ymToISO, fin,
 } from "./finance.js";
 
 // Net proceeds if the flat were sold on `dateISO` (cash in hand after clearing the
@@ -135,7 +135,6 @@ export function rentVsBuy(opts) {
   const oppCostEquityMonthly = equityNow * opp / 12;
   const ownEconomicMonthly = interestMonthly + scMonthly + maintMonthly + oppCostEquityMonthly - appreciationMonthly;
 
-  const fin = (x) => (Number.isFinite(x) ? x : 0);
   return {
     horizonISO, years: yearsF, yearsTable: years,
     equityNow: fin(equityNow), sellNowNet: fin(nowSale.net),

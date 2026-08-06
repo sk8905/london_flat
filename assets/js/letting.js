@@ -13,7 +13,7 @@
 
 import {
   monthlyPayment, balanceAfter, monthsBetween, valueMultiplier, sellingCosts,
-  ymIndex, ymToISO,
+  ymIndex, ymToISO, fin,
 } from "./finance.js";
 
 // Build a month-by-month mortgage schedule from `fromISO` to `toISO`, handling the
@@ -146,7 +146,6 @@ export function rentVsSell(opts) {
   const letTotal = cumulativeNetRent + netSaleProceeds;
   const sellNowGrown = sellNowNet * Math.pow(1 + letCfg.opportunityRatePct / 100, yearsF);
 
-  const fin = (x) => (Number.isFinite(x) ? x : 0); // belt-and-braces against NaN/Infinity
   return {
     saleDate, years: yearsF,
     yearsTable: years,
