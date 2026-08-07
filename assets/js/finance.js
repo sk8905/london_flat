@@ -198,14 +198,18 @@ export function interestPaidToDate(mortgage, saleDateISO) {
   return Math.max(0, interest);
 }
 
-// Break-even sale price to RECOUP ALL CASH IN by a given sale date: the price at
-// which net proceeds exactly return every pound you have sunk in — deposit + SDLT
-// + buying costs + interest paid to date — after clearing the mortgage, ERC, agent
-// fee (+VAT), legal, EPC and any CGT. Solving net(P*) = cashToRecoup for P*:
+// Break-even sale price by a given sale date, for three cumulative recoup targets:
+//   (i)   deposit only,
+//   (ii)  deposit + SDLT + other buying costs,
+//   (iii) deposit + SDLT + buying costs + mortgage interest paid to date.
+// Each is the price at which net proceeds exactly return that cash after clearing
+// the mortgage, ERC, agent fee (+VAT), legal, EPC and any CGT. Solving
+// net(P*) = cashToRecoup for P*:
 //   P*(1 − agentRate) = outstanding + ERC + legal + EPC + CGT + cashToRecoup
 // where agentRate = agentPct·(1 + VAT/100). CGT is 0 for a primary residence; for
 // a non-primary residence it depends on P* itself (the gain net of the agent fee),
-// so we solve the fixed point by a few iterations.
+// so we solve the fixed point by a few iterations. Returns all three tiers plus
+// back-compat top-level fields for the full recoup-all tier (iii).
 export function breakEvenRecoupAll(opts) {
   const { property, mortgage, sellingCfg, saleDateISO, cgtCfg } = opts;
 
@@ -238,22 +242,41 @@ export function breakEvenRecoupAll(opts) {
   const legal = sellingCfg.legalFixed || 0;
   const epc = sellingCfg.epcAndMiscFixed || 0;
 
-  // CGT (0 for a main residence) depends on the sale price, which depends on CGT.
-  // Solve the fixed point: for a primary residence it converges immediately at cgt=0.
-  let cgt = 0, breakEvenPrice = 0;
-  for (let it = 0; it < 6; it++) {
-    breakEvenPrice = (outstanding + erc + legal + epc + cgt + cashToRecoup) / (1 - agentRate);
-    cgt = saleCGT(property, breakEvenPrice, breakEvenPrice * agentRate + legal + epc, cgtCfg);
-  }
-  const agentFee = breakEvenPrice * agentRate;
+  // Solve the break-even price for a given cash-recoup target. Every tier shares the
+  // same sale-side costs (outstanding, ERC, agent fee, legal, EPC); only the cash to
+  // return changes. CGT (0 for a main residence) depends on the price, which depends
+  // on CGT, so we settle the fixed point in a few iterations.
+  const solve = (cashToRecoup) => {
+    let cgt = 0, price = 0;
+    for (let it = 0; it < 6; it++) {
+      price = (outstanding + erc + legal + epc + cgt + cashToRecoup) / (1 - agentRate);
+      cgt = saleCGT(property, price, price * agentRate + legal + epc, cgtCfg);
+    }
+    const agentFee = price * agentRate;
+    return {
+      cashToRecoup, breakEvenPrice: price, cgt, agentFee,
+      // sanity: net proceeds at this price should equal cashToRecoup
+      netAtBreakEven: price - outstanding - erc - agentFee - legal - epc - cgt,
+    };
+  };
+
+  // Three cumulative recoup targets, cheapest first.
+  const tiers = {
+    deposit: solve(deposit),                                   // (i)   deposit only
+    costs:   solve(deposit + sdlt + buyingCosts),              // (ii)  + SDLT + buying costs
+    all:     solve(deposit + sdlt + buyingCosts + interestPaid), // (iii) + interest paid to date
+  };
+  const allTier = tiers.all;
 
   return {
     saleDateISO,
-    breakEvenPrice,
-    cashToRecoup,
-    components: { deposit, sdlt, buyingCosts, interestPaid, outstanding, erc, agentFee, legal, epc, cgt },
-    // sanity: net proceeds at the break-even price should equal cashToRecoup
-    netAtBreakEven: breakEvenPrice - outstanding - erc - agentFee - legal - epc - cgt,
+    tiers,
+    inputs: { deposit, sdlt, buyingCosts, interestPaid, outstanding, erc, legal, epc, agentRate },
+    // Back-compat: top-level fields describe the full recoup-all tier (iii).
+    breakEvenPrice: allTier.breakEvenPrice,
+    cashToRecoup: allTier.cashToRecoup,
+    components: { deposit, sdlt, buyingCosts, interestPaid, outstanding, erc, agentFee: allTier.agentFee, legal, epc, cgt: allTier.cgt },
+    netAtBreakEven: allTier.netAtBreakEven,
   };
 }
 

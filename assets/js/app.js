@@ -564,7 +564,7 @@ function renderPaid(r) {
       Edit any figure on the <strong>Inputs</strong> tab — saved in this browser.</p>`;
 }
 
-// Break-even to recoup all cash in — a headline price and a component waterfall.
+// Break-even sale price, shown for three cumulative cash-recoup targets.
 function renderBreakEven(r) {
   const host = $("#breakeven-body");
   if (!host) return;
@@ -572,53 +572,56 @@ function renderBreakEven(r) {
   const be = breakEvenRecoupAll({
     property: p, mortgage: m, sellingCfg: r.inputs.sellingCfg, saleDateISO: DATA.META.asOf, cgtCfg: r.cgtCfg,
   });
-  const c = be.components;
-  const gapVsValue = be.breakEvenPrice - r.presentValue;
-  const overValue = gapVsValue > 0;
-  const perSqm = p.floorAreaSqm ? Math.round(be.breakEvenPrice / p.floorAreaSqm) : null;
+  const t = be.tiers, ci = be.inputs, value = r.presentValue;
+
+  // One tier card: label, what cash it returns, the break-even price, and how that
+  // price compares with today's estimated value.
+  const tierCard = (num, name, recoups, tier) => {
+    const gap = tier.breakEvenPrice - value;
+    const over = gap > 0;
+    const perSqm = p.floorAreaSqm ? Math.round(tier.breakEvenPrice / p.floorAreaSqm) : null;
+    return `<div class="be-tier">
+      <div class="be-tier-head">
+        <span class="be-tier-num">${num}</span>
+        <div>
+          <div class="be-tier-name">${name}</div>
+          <div class="be-tier-recoups">Get back ${recoups}</div>
+        </div>
+      </div>
+      <div class="be-tier-fig">
+        <div class="be-tier-price">${gbp(tier.breakEvenPrice)}${perSqm ? `<span class="be-tier-psm">${gbp(perSqm)}/m²</span>` : ""}</div>
+        <span class="pill pill-${over ? "neg" : "pos"}">${over ? gbp(gap) + " above" : gbp(-gap) + " below"} value</span>
+      </div>
+    </div>`;
+  };
+
+  const cashCosts = gbp(ci.deposit + ci.sdlt + ci.buyingCosts);
+  const cashAll = gbp(ci.deposit + ci.sdlt + ci.buyingCosts + ci.interestPaid);
 
   host.innerHTML = `
-    <div class="be-hero">
-      <div>
-        <div class="verdict-kicker">Sell for at least</div>
-        <div class="be-price">${gbp(be.breakEvenPrice)}</div>
-        <div class="be-sub">${perSqm ? gbp(perSqm) + "/m² · " : ""}to get back every pound if you sold today</div>
-      </div>
-      <div class="pill pill-${overValue ? "neg" : "pos"}">
-        ${overValue ? gbp(gapVsValue) + " above" : gbp(-gapVsValue) + " below"} est. value ${gbp(r.presentValue)}
-      </div>
+    <p class="letting-lead">Three break-even sale prices, depending on how much of your own cash you want back before a sale
+      "washes its face". Each price is what you'd need to achieve <strong>today</strong> (est. value ${gbp(value)}); all figures
+      are after clearing the mortgage and every selling cost.</p>
+    <div class="be-tiers">
+      ${tierCard("i", "Deposit back", `your ${gbp(ci.deposit)} deposit`, t.deposit)}
+      ${tierCard("ii", "Deposit + purchase costs back", `deposit + SDLT + buying costs (${cashCosts})`, t.costs)}
+      ${tierCard("iii", "All cash back", `the above + mortgage interest paid so far (${cashAll})`, t.all)}
     </div>
-    <p class="letting-lead">${overValue
-      ? `The break-even is <strong>${gbp(gapVsValue)} above</strong> today's estimated value of ${gbp(r.presentValue)}, so selling
-         right now would leave you short of recouping all your cash — price growth or more principal repaid closes the gap.`
-      : `Today's estimated value of <strong>${gbp(r.presentValue)}</strong> is already <strong>${gbp(-gapVsValue)} above</strong>
-         the break-even, so a sale now would recoup all your cash with room to spare.`}</p>
     <div class="table-wrap"><table class="rank-table kv">
-      <thead><tr><th>To recoup (net proceeds must cover)</th><th>Amount</th></tr></thead>
+      <thead><tr><th>Cash each scenario returns</th><th>Amount</th></tr></thead>
       <tbody>
-        <tr><td>Deposit</td><td>${gbp(c.deposit)}</td></tr>
-        <tr><td>Stamp Duty (SDLT)</td><td>${gbp(c.sdlt)}</td></tr>
-        <tr><td>Other buying costs</td><td>${gbp(c.buyingCosts)}</td></tr>
-        <tr><td>Mortgage interest paid to date</td><td>${gbp(c.interestPaid)}</td></tr>
-        <tr class="best-row"><td><strong>Total cash to recoup</strong></td><td><strong>${gbp(be.cashToRecoup)}</strong></td></tr>
+        <tr><td>Deposit <span class="muted small">— target (i)</span></td><td>${gbp(ci.deposit)}</td></tr>
+        <tr><td>+ Stamp Duty (SDLT)</td><td>${gbp(ci.sdlt)}</td></tr>
+        <tr><td>+ Other buying costs <span class="muted small">— target (ii)</span></td><td>${gbp(ci.buyingCosts)}</td></tr>
+        <tr class="best-row"><td>+ Mortgage interest paid to date <span class="muted small">— target (iii)</span></td><td>${gbp(ci.interestPaid)}</td></tr>
       </tbody>
     </table></div>
-    <div class="table-wrap" style="margin-top:14px"><table class="rank-table kv">
-      <thead><tr><th>Plus, the sale must also cover</th><th>Amount</th></tr></thead>
-      <tbody>
-        <tr><td>Outstanding mortgage</td><td>${gbp(c.outstanding)}</td></tr>
-        <tr><td>Early-repayment charge (ERC)${c.erc > 0 ? "" : " — none"}</td><td>${gbp(c.erc)}</td></tr>
-        <tr><td>Estate agent fee (incl VAT)</td><td>${gbp(c.agentFee)}</td></tr>
-        <tr><td>Legal / conveyancing</td><td>${gbp(c.legal)}</td></tr>
-        <tr><td>EPC &amp; misc</td><td>${gbp(c.epc)}</td></tr>
-        <tr><td>Capital Gains Tax</td><td>${gbp(c.cgt)}${p.isPrimaryResidence ? " (main residence)" : ""}</td></tr>
-        <tr class="best-row"><td><strong>Break-even sale price</strong></td><td><strong>${gbp(be.breakEvenPrice)}</strong></td></tr>
-      </tbody>
-    </table></div>
-    <p class="muted small">Break-even solves net proceeds = cash to recoup. Because the agent fee scales with the price, it is
-      P* = (outstanding + ERC + legal + EPC + CGT + cash to recoup) ÷ (1 − agent%·(1+VAT)). Interest paid and the outstanding
-      balance both grow the longer you hold, so this figure drifts up over time — see the recoup-all line on the proceeds chart
-      below for each candidate window.</p>`;
+    <p class="muted small">Every price also has to cover the <strong>${gbp(ci.outstanding)} outstanding mortgage</strong>${
+      ci.erc > 0 ? ", the " + gbp(ci.erc) + " early-repayment charge" : ""}, the estate-agent fee (incl VAT), legal, EPC${
+      p.isPrimaryResidence ? "" : " and Capital Gains Tax"} — that is why each break-even sits above the cash it returns. Because the
+      agent fee (and any CGT) scale with the price, each solves P* = (outstanding + ERC + legal + EPC + CGT + cash to recoup) ÷
+      (1 − agent%·(1+VAT)). All three assume a sale <strong>today</strong>; they drift up the longer you hold as interest mounts —
+      see the recoup-all line on the proceeds chart below for later windows.</p>`;
 }
 
 // Total cash you sank in at purchase: deposit + SDLT + other buying costs.
