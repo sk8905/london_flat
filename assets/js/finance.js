@@ -198,6 +198,20 @@ export function interestPaidToDate(mortgage, saleDateISO) {
   return Math.max(0, interest);
 }
 
+// Cumulative market rent you would have paid to live in an equivalent flat from
+// `fromISO` to `toISO` — the "rent saved" by owning instead of renting. Anchored so
+// the most recent month equals `monthlyRent` (a current market level) and grown /
+// discounted at `growthPct`/yr for earlier months. Timezone-safe integer month math.
+export function rentPaidToDate(monthlyRent, growthPct, fromISO, toISO) {
+  const months = monthsBetween(fromISO, toISO);
+  if (months <= 0 || !(monthlyRent > 0)) return 0;
+  const g = (growthPct || 0) / 100;
+  const base = monthlyRent / Math.pow(1 + g, months / 12); // rent level at the first month
+  let total = 0;
+  for (let k = 0; k < months; k++) total += base * Math.pow(1 + g, k / 12);
+  return total;
+}
+
 // Break-even sale price by a given sale date, for three cumulative recoup targets:
 //   (i)   deposit only,
 //   (ii)  deposit + SDLT + other buying costs,
@@ -208,16 +222,23 @@ export function interestPaidToDate(mortgage, saleDateISO) {
 //   P*(1 − agentRate) = outstanding + ERC + legal + EPC + CGT + cashToRecoup
 // where agentRate = agentPct·(1 + VAT/100). CGT is 0 for a primary residence; for
 // a non-primary residence it depends on P* itself (the gain net of the agent fee),
-// so we solve the fixed point by a few iterations. Returns all three tiers plus
-// back-compat top-level fields for the full recoup-all tier (iii).
+// so we solve the fixed point by a few iterations.
+// Each tier carries TWO scenarios: `recoup` (the pure cash-back price) and `vsRent`
+// (the same target credited with the rent you'd otherwise have paid — a lower price,
+// since owning has already saved you that rent). Returns all three tiers, the shared
+// rentSaved figure, plus back-compat top-level fields for tier (iii)'s recoup price.
 export function breakEvenRecoupAll(opts) {
-  const { property, mortgage, sellingCfg, saleDateISO, cgtCfg } = opts;
+  const { property, mortgage, sellingCfg, saleDateISO, cgtCfg, rentCfg } = opts;
 
   const deposit = Math.max(0, property.purchasePrice - mortgage.principal);
   const sdlt = property.sdltPaid || 0;
   const buyingCosts = property.otherBuyCosts || 0;
   const interestPaid = interestPaidToDate(mortgage, saleDateISO);
-  const cashToRecoup = deposit + sdlt + buyingCosts + interestPaid;
+
+  // Rent you'd have paid renting an equivalent flat since purchase — a saving that
+  // owning has already banked, so it lowers each break-even in the "vs renting" view.
+  const purchaseISO = mortgage._purchaseDate || mortgage.purchaseDate || property.purchaseDate;
+  const rentSaved = rentCfg ? rentPaidToDate(rentCfg.monthlyRent, rentCfg.growthPct, purchaseISO, saleDateISO) : 0;
 
   // Outstanding balance and ERC at the sale date (mirrors economicsForWindow).
   const io = mortgage.repaymentType === "interest_only";
@@ -260,19 +281,27 @@ export function breakEvenRecoupAll(opts) {
     };
   };
 
-  // Three cumulative recoup targets, cheapest first.
+  // Each tier = a cash-recoup target solved two ways: the pure recoup, and the same
+  // target credited with rent saved (floored at 0 so a break-even never dips below
+  // what the sale must clear anyway). Three cumulative targets, cheapest first.
+  const tier = (target) => ({
+    target,
+    recoup: solve(target),
+    vsRent: solve(Math.max(0, target - rentSaved)),
+  });
   const tiers = {
-    deposit: solve(deposit),                                   // (i)   deposit only
-    costs:   solve(deposit + sdlt + buyingCosts),              // (ii)  + SDLT + buying costs
-    all:     solve(deposit + sdlt + buyingCosts + interestPaid), // (iii) + interest paid to date
+    deposit: tier(deposit),                                   // (i)   deposit only
+    costs:   tier(deposit + sdlt + buyingCosts),              // (ii)  + SDLT + buying costs
+    all:     tier(deposit + sdlt + buyingCosts + interestPaid), // (iii) + interest paid to date
   };
-  const allTier = tiers.all;
+  const allTier = tiers.all.recoup;
 
   return {
     saleDateISO,
     tiers,
+    rentSaved,
     inputs: { deposit, sdlt, buyingCosts, interestPaid, outstanding, erc, legal, epc, agentRate },
-    // Back-compat: top-level fields describe the full recoup-all tier (iii).
+    // Back-compat: top-level fields describe the full recoup-all tier (iii), recoup scenario.
     breakEvenPrice: allTier.breakEvenPrice,
     cashToRecoup: allTier.cashToRecoup,
     components: { deposit, sdlt, buyingCosts, interestPaid, outstanding, erc, agentFee: allTier.agentFee, legal, epc, cgt: allTier.cgt },
