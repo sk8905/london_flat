@@ -9,8 +9,8 @@
 // =============================================================================
 
 export const META = {
-  asOf: "2026-08-02",
-  build: "v79 · 2026-08-02", // bump on each change so the footer confirms the live build
+  asOf: "2026-08-04",
+  build: "v80 · 2026-08-04", // bump on each change so the footer confirms the live build
   currency: "GBP",
   disclaimer:
     "This tool is an informational model, not financial, tax, mortgage or legal advice. " +
@@ -96,6 +96,11 @@ export const SOURCES = {
     label: "HM Land Registry — Price Paid / sold-price search (N1, £/m²)",
     url: "https://www.gov.uk/search-house-prices",
     publisher: "HM Land Registry",
+  },
+  onsRentJun2026: {
+    label: "ONS — Private rent and house prices, UK (bulletin covering rents to June 2026)",
+    url: "https://www.ons.gov.uk/economy/inflationandpriceindices/bulletins/privaterentandhousepricesuk/july2026",
+    publisher: "Office for National Statistics",
   },
 };
 
@@ -279,15 +284,16 @@ export const FORECAST = {
 // Defaults are sourced; all are editable in the UI. Income tax matters a lot here.
 // -----------------------------------------------------------------------------
 export const LETTING = {
-  sources: ["hpiMar2026", "budgetZoopla", "cgtRates"],
+  sources: ["onsRentJun2026", "budgetZoopla", "cgtRates"],
   note:
-    "Islington average private rent was £2,811/mo in April 2026 (+4.0% YoY). Section 24 " +
-    "means mortgage interest is NOT a deductible expense for individual landlords — instead " +
-    "you get a 20% tax credit on the interest. From April 2027 the Budget raised property- " +
-    "income tax rates by 2 points (to 22/42/47%). Letting your former home also erodes " +
-    "Private Residence Relief, so part of the eventual gain becomes liable to CGT.",
-  monthlyRent: 2811, // Islington average (Apr 2026); editable for your specific flat
-  rentGrowthPct: 4.0, // annual; Islington rent YoY to Apr 2026
+    "Islington average private rent was £2,843/mo in June 2026 (+5.4% YoY; flats/maisonettes " +
+    "specifically +5.7% YoY). Section 24 means mortgage interest is NOT a deductible expense " +
+    "for individual landlords — instead you get a 20% tax credit on the interest. From April " +
+    "2027 the Budget raised property-income tax rates by 2 points (to 22/42/47%). Letting your " +
+    "former home also erodes Private Residence Relief, so part of the eventual gain becomes " +
+    "liable to CGT.",
+  monthlyRent: 2843, // Islington average (Jun 2026); editable for your specific flat
+  rentGrowthPct: 5.4, // annual; Islington rent YoY to Jun 2026
   voidMonthsPerYear: 1, // assume ~1 month vacant per year
   agentFeePct: 10, // full-management letting agent fee (% of rent), excl VAT
   agentVatPct: 20,
