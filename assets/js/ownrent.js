@@ -19,7 +19,7 @@
 
 import {
   monthlyPayment, balanceAfter, monthsBetween, valueMultiplier, sellingCosts,
-  ymIndex, ymToISO, fin,
+  ymIndex, ymToISO, fin, ercAt,
 } from "./finance.js";
 
 // Net proceeds if the flat were sold on `dateISO` (cash in hand after clearing the
@@ -29,11 +29,7 @@ function netProceedsAt(property, mortgage, sellingCfg, value, dateISO) {
   const outstanding = mortgage.repaymentType === "interest_only"
     ? mortgage.principal
     : balanceAfter(mortgage.principal, mortgage.ratePct, mortgage.termYears, monthsPaid);
-  const idx = ymIndex(dateISO), fixIdx = ymIndex(mortgage.fixEndDate);
-  const newFixEndIdx = fixIdx + Math.round((mortgage.remortgageFixYears || 0) * 12);
-  let erc = 0;
-  if (idx < fixIdx) erc = outstanding * (mortgage.ercPctWhileFixed / 100);
-  else if (idx < newFixEndIdx) erc = outstanding * ((mortgage.remortgageErcPct || 0) / 100);
+  const erc = ercAt(mortgage, ymIndex(dateISO), outstanding);
   const costs = sellingCosts(value, sellingCfg);
   return { net: value - outstanding - erc - costs.total, outstanding, erc, costs };
 }

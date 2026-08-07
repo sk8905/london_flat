@@ -1,8 +1,8 @@
 // =============================================================================
 // dataset.js  —  Curated, sourced market dataset for the London Flat forecaster
 // -----------------------------------------------------------------------------
-// Every figure below is a snapshot researched on 2026-06-30. Each block carries a
-// `source` key (an id into SOURCES) and a `note` so the UI can show provenance.
+// Every figure below is a curated snapshot; each block carries its own `source`
+// key (an id into SOURCES) and a `note` so the UI can show provenance.
 // Anything forward-looking is flagged `estimate: true`. Edit freely — the app
 // recomputes everything from this file. Values such as the BoE Bank Rate are
 // curated snapshots here; update them and redeploy to refresh.

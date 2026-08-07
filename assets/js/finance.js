@@ -94,6 +94,17 @@ function saleCGT(property, saleValue, sellingCostsTotal, cgtCfg) {
   return chargeable * (cgtCfg.rate || 0);
 }
 
+// Early Repayment Charge at a given month-index — applies inside EITHER the
+// current fix or the new fixed deal taken once the current fix ends (you'd
+// remortgage into it).
+export function ercAt(mortgage, atIdx, outstanding) {
+  const fixIdx = ymIndex(mortgage.fixEndDate);
+  const newFixEndIdx = fixIdx + Math.round((mortgage.remortgageFixYears || 0) * 12);
+  if (atIdx < fixIdx) return outstanding * (mortgage.ercPctWhileFixed / 100);
+  if (atIdx < newFixEndIdx) return outstanding * ((mortgage.remortgageErcPct || 0) / 100);
+  return 0;
+}
+
 // Full economics of selling in a given window.
 // Returns value, outstanding balance, ERC, selling costs, CGT, and net proceeds.
 export function economicsForWindow(opts) {
@@ -128,12 +139,7 @@ export function economicsForWindow(opts) {
 
   // 3) Early Repayment Charge — applies while inside EITHER the current fix or the
   //    new fixed deal taken when the current fix ends (you'd remortgage into it).
-  const winIdx = ymIndex(windowDate);
-  const fixIdx = ymIndex(mortgage.fixEndDate);
-  const newFixEndIdx = fixIdx + Math.round((mortgage.remortgageFixYears || 0) * 12);
-  let erc = 0;
-  if (winIdx < fixIdx) erc = outstanding * (mortgage.ercPctWhileFixed / 100);
-  else if (winIdx < newFixEndIdx) erc = outstanding * ((mortgage.remortgageErcPct || 0) / 100);
+  const erc = ercAt(mortgage, ymIndex(windowDate), outstanding);
 
   // 4) Selling costs.
   const costs = sellingCosts(saleValue, sellingCfg);
@@ -226,10 +232,7 @@ export function breakEvenRecoupAll(opts) {
     const remTermYears = Math.max(1, mortgage.termYears - monthsPaidAtFix / 12);
     outstanding = balanceAfter(balAtFix, mortgage.remortgageRatePctAssumed, remTermYears, monthsPaidAtSale - monthsPaidAtFix);
   }
-  const newFixEndIdx = fixIdx + Math.round((mortgage.remortgageFixYears || 0) * 12);
-  let erc = 0;
-  if (saleIdx < fixIdx) erc = outstanding * (mortgage.ercPctWhileFixed / 100);
-  else if (saleIdx < newFixEndIdx) erc = outstanding * ((mortgage.remortgageErcPct || 0) / 100);
+  const erc = ercAt(mortgage, saleIdx, outstanding);
 
   const agentRate = (sellingCfg.agentPct / 100) * (1 + sellingCfg.vatPct / 100);
   const legal = sellingCfg.legalFixed || 0;
