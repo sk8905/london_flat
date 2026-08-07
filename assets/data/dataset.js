@@ -9,8 +9,8 @@
 // =============================================================================
 
 export const META = {
-  asOf: "2026-08-02",
-  build: "v79 · 2026-08-02", // bump on each change so the footer confirms the live build
+  asOf: "2026-08-07",
+  build: "v80 · 2026-08-07", // bump on each change so the footer confirms the live build
   currency: "GBP",
   disclaimer:
     "This tool is an informational model, not financial, tax, mortgage or legal advice. " +
@@ -204,14 +204,15 @@ export const RATES = {
   // 2-year GBP interest-rate swap (SONIA) — the wholesale rate UK lenders price
   // fixed-rate mortgages and real-estate lending off. Sits above Bank Rate when
   // the market expects cuts to be slow; the key driver of fixed mortgage pricing.
-  swap2yrNow: 4.15,
-  swap2yrAsOf: "2026-07-31",
+  swap2yrNow: 4.08,
+  swap2yrAsOf: "2026-08-05",
   // Current average 2-year fixed REMORTGAGE rate at ~70% LTV (the band that fits
   // this flat). Live-refreshed from Bank of England quoted mortgage rates,
   // interpolated between the published 60% and 75% LTV series. Snapshot fallback:
-  // NOT independently re-verified this run (no primary BoE Bankstats figure pulled) —
-  // left unchanged; flag for next refresh.
-  remortgage70Now: 5.02,
+  // re-verified this run against the BoE IADB (IUMBV37 60% LTV = 4.76%, IUMBV34 75%
+  // LTV = 4.81%, both 2026-06-30) — interpolated 70% LTV = 4.79%, materially below
+  // the prior 5.02% fallback, so updated.
+  remortgage70Now: 4.79,
   remortgage70AsOf: "2026-06",
   // Forecast 2-yr-fix path from the Bank of England OIS instantaneous forward
   // curve (month-end 2026-06, statistics/yield-curves). Change vs the current fix,
@@ -226,7 +227,7 @@ export const RATES = {
   // the Worker also supplies the prior day's figure for the live series.
   baseRatePrev: 3.75,
   remortgage70Prev: 5.02,
-  swap2yrPrev: 4.26,
+  swap2yrPrev: 4.15,
   cpiPct: 2.6, // CPI to June 2026 (ONS, down from 2.8% in May)
   nextDecision: "2026-09-17",
   // Bank Rate path (history + light forward estimate)
