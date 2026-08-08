@@ -19,7 +19,7 @@
 
 import {
   monthlyPayment, balanceAfter, monthsBetween, valueMultiplier, sellingCosts,
-  ymIndex, ymToISO, fin, ercAt,
+  ymIndex, ymToISO, fin, ercAt, yearOfISO,
 } from "./finance.js";
 
 // Net proceeds if the flat were sold on `dateISO` (cash in hand after clearing the
@@ -153,7 +153,7 @@ export function rentVsBuy(opts) {
 
 // Annual growth (%) for the calendar year of an ISO date, from a scenario map.
 function growthAt(growthByYear, dateISO) {
-  const yr = parseInt(dateISO.slice(0, 4), 10);
+  const yr = yearOfISO(dateISO);
   const keys = Object.keys(growthByYear);
   return growthByYear[yr] ?? growthByYear[keys[keys.length - 1]] ?? 0;
 }
