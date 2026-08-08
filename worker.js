@@ -23,9 +23,9 @@ const FALLBACK = {
   swap2yrNow: 4.08,
   swap2yrAsOf: "2026-08-05",
   swap2yrPrev: 4.15,
-  remortgage70Now: 4.79,
-  remortgage70AsOf: "2026-06",
-  remortgage70Prev: 5.02,
+  remortgage70Now: 4.75,
+  remortgage70AsOf: "2026-07",
+  remortgage70Prev: 4.79,
 };
 
 // Bank of England Interactive Database (IADB) series we pull, all in one request:

@@ -9,8 +9,8 @@
 // =============================================================================
 
 export const META = {
-  asOf: "2026-08-07",
-  build: "v82 · 2026-08-07", // bump on each change so the footer confirms the live build
+  asOf: "2026-08-08",
+  build: "v83 · 2026-08-08", // bump on each change so the footer confirms the live build
   currency: "GBP",
   disclaimer:
     "This tool is an informational model, not financial, tax, mortgage or legal advice. " +
@@ -209,11 +209,11 @@ export const RATES = {
   // Current average 2-year fixed REMORTGAGE rate at ~70% LTV (the band that fits
   // this flat). Live-refreshed from Bank of England quoted mortgage rates,
   // interpolated between the published 60% and 75% LTV series. Snapshot fallback:
-  // re-verified this run against the BoE IADB (IUMBV37 60% LTV = 4.76%, IUMBV34 75%
-  // LTV = 4.81%, both 2026-06-30) — interpolated 70% LTV = 4.79%, materially below
-  // the prior 5.02% fallback, so updated.
-  remortgage70Now: 4.79,
-  remortgage70AsOf: "2026-06",
+  // re-verified this run against the newly-published BoE IADB month (IUMBV37 60%
+  // LTV = 4.68%, IUMBV34 75% LTV = 4.79%, both 2026-07-31, vs the prior 2026-06-30
+  // reading of 4.76%/4.81%) — interpolated 70% LTV = 4.75%, down from 4.79%.
+  remortgage70Now: 4.75,
+  remortgage70AsOf: "2026-07",
   // Forecast 2-yr-fix path from the Bank of England OIS instantaneous forward
   // curve (month-end 2026-06, statistics/yield-curves). Change vs the current fix,
   // in percentage points, at ~2028 and ~2030: the 2-yr swap forward starting in T
@@ -226,7 +226,7 @@ export const RATES = {
   // The daily 08:00 routine rolls "*Now" into "*Prev" before writing the new value;
   // the Worker also supplies the prior day's figure for the live series.
   baseRatePrev: 3.75,
-  remortgage70Prev: 5.02,
+  remortgage70Prev: 4.79,
   swap2yrPrev: 4.15,
   cpiPct: 2.6, // CPI to June 2026 (ONS, down from 2.8% in May)
   nextDecision: "2026-09-17",
@@ -241,9 +241,11 @@ export const RATES = {
     { date: "2026-06", rate: 3.75 },
     { date: "2026-07", rate: 3.75 }, // held, 6-3 vote (3 wanted +0.25 to 4.00%)
   ],
-  // Average market fixes, late July 2026 (Moneyfacts averages, whole-of-market)
-  avg2yrFix: 5.6,
-  avg5yrFix: 5.6,
+  // Average market fixes, week ending 7 Aug 2026 (Moneyfacts averages,
+  // whole-of-market, via Mortgage Strategy) — lenders continued repricing up
+  // on expectations Bank Rate cuts will be slower (2yr fix +17bps in a month).
+  avg2yrFix: 5.63,
+  avg5yrFix: 5.66,
   fix2yrSeries: [
     { date: "2025-09", rate: 5.05 },
     { date: "2025-12", rate: 5.20 },
@@ -251,6 +253,7 @@ export const RATES = {
     { date: "2026-05", rate: 5.78 },
     { date: "2026-06", rate: 5.55 }, // easing back
     { date: "2026-07", rate: 5.6 }, // ticked back up (5.57% 22 Jul → ~5.60% 28 Jul)
+    { date: "2026-08", rate: 5.63 }, // continued drift up (7 Aug, Moneyfacts)
   ],
   yourRate: MORTGAGE.ratePct,
 };
