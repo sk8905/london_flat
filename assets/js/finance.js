@@ -21,6 +21,14 @@ export function ymToISO(index) {
 // Calendar year from an ISO date string.
 export function yearOfISO(iso) { return parseInt(iso.slice(0, 4), 10); }
 
+// Annual growth (%) for the calendar year of an ISO date, from a scenario map
+// { year: pct, ... } — falls back to the last defined year if dateISO is beyond it.
+export function growthForYear(growthByYear, dateISO) {
+  const yr = yearOfISO(dateISO);
+  const keys = Object.keys(growthByYear);
+  return growthByYear[yr] ?? growthByYear[keys[keys.length - 1]] ?? 0;
+}
+
 // Months between two YYYY-MM-DD (or YYYY-MM) dates (integer, timezone-safe).
 export function monthsBetween(fromISO, toISO) {
   return ymIndex(toISO) - ymIndex(fromISO);

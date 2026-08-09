@@ -19,7 +19,7 @@
 
 import {
   monthlyPayment, balanceAfter, monthsBetween, valueMultiplier, sellingCosts,
-  ymIndex, ymToISO, fin, ercAt, yearOfISO,
+  ymIndex, ymToISO, fin, ercAt, growthForYear,
 } from "./finance.js";
 
 // Net proceeds if the flat were sold on `dateISO` (cash in hand after clearing the
@@ -127,7 +127,7 @@ export function rentVsBuy(opts) {
   const firstYear = years[0] || { interest: 0, months: 12 };
   const monthsIn1 = Math.max(1, firstYear.months);
   const interestMonthly = firstYear.interest / monthsIn1;
-  const appreciationMonthly = presentValue * (growthAt(growthByYear, presentISO) / 100) / 12;
+  const appreciationMonthly = presentValue * (growthForYear(growthByYear, presentISO) / 100) / 12;
   const oppCostEquityMonthly = equityNow * opp / 12;
   const ownEconomicMonthly = interestMonthly + scMonthly + maintMonthly + oppCostEquityMonthly - appreciationMonthly;
 
@@ -149,11 +149,4 @@ export function rentVsBuy(opts) {
       advantageOwn: fin(advantageOwn),
     },
   };
-}
-
-// Annual growth (%) for the calendar year of an ISO date, from a scenario map.
-function growthAt(growthByYear, dateISO) {
-  const yr = yearOfISO(dateISO);
-  const keys = Object.keys(growthByYear);
-  return growthByYear[yr] ?? growthByYear[keys[keys.length - 1]] ?? 0;
 }

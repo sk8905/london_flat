@@ -8,7 +8,7 @@
 
 import {
   economicsForWindow, holdingCostDelta, monthsBetween,
-  currentValueFromIndex, valueMultiplier, ymIndex, ymToISO, yearOfISO,
+  currentValueFromIndex, valueMultiplier, ymIndex, ymToISO, growthForYear,
 } from "./finance.js";
 
 const clamp = (x, lo, hi) => Math.max(lo, Math.min(hi, x));
@@ -17,13 +17,6 @@ const clamp = (x, lo, hi) => Math.max(lo, Math.min(hi, x));
 function spread(v, min, max) {
   if (max - min < 1e-9) return 0;
   return ((v - min) / (max - min)) * 200 - 100;
-}
-
-// Annual growth (%) for the calendar year of a window's date, from a scenario.
-function growthAtDate(dateISO, growthByYear) {
-  const yr = yearOfISO(dateISO);
-  const keys = Object.keys(growthByYear);
-  return growthByYear[yr] ?? growthByYear[keys[keys.length - 1]] ?? 0;
 }
 
 export function runModel(data, overrides = {}) {
@@ -84,7 +77,7 @@ export function runModel(data, overrides = {}) {
     const monthsPastFix = Math.max(0, monthsBetween(mortgage.fixEndDate, w.date));
     const extraInterest = monthsPastFix * Math.max(0, hcd.deltaMonthly);
     const friction = e.erc + extraInterest;
-    const momentum = growthAtDate(w.date, growthByYear); // % annual at the window
+    const momentum = growthForYear(growthByYear, w.date); // % annual at the window
     const season = SEASONALITY.monthIndex[w.peakMonth - 1];
     return { window: w, ...e, friction, extraInterest, monthsPastFix, momentum, season };
   });
