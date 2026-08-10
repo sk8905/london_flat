@@ -587,7 +587,7 @@ function renderBreakEven(r) {
         <span class="be-scn-label">${label}</span>
         <span class="be-scn-price">${gbp(scn.breakEvenPrice)}</span>
       </div>
-      <div class="be-scn-gap"><span class="pill pill-mini pill-${over ? "neg" : "pos"}">${
+      <div class="be-scn-gap"><span class="pill pill-${over ? "neg" : "pos"}">${
         over ? gbp(gap) + " above" : gbp(-gap) + " below"} value</span></div>
     </div>`;
   };
@@ -993,7 +993,7 @@ function renderLocalMarket(r) {
       spk.push({ id: sid, values: trend.series, color: tm.color });
       trendHtml = `<span class="kpi-trend"><span class="spark" id="${sid}"></span><span class="tr-arrow" style="color:${tm.color}">${tm.arrow}</span></span>`;
     }
-    return `<div class="statrow kpi-stat"><span class="sr-label">${label}</span><span class="sr-value">${value}</span><span class="sr-sub"><span class="sr-sub-txt">${sub || ""}</span>${trendHtml}</span></div>`;
+    return `<div class="statrow kpi-stat"><span class="sr-label">${label}</span><span class="sr-value">${value}</span><span class="sr-sub"><span>${sub || ""}</span>${trendHtml}</span></div>`;
   };
   const group = (title, rows) => `<div class="kpi-group"><div class="kpi-group-h">${title}</div><div class="statrows">${rows}</div></div>`;
   const kpis = $("#lm-kpis");
@@ -1113,7 +1113,7 @@ function renderLocalMarket(r) {
   if (hpiHost) hpiHost.innerHTML = `<div class="statrows sr-2">` +
     statrow("Islington", gbp(H.islingtonAvg), yoy(H.islingtonYoYPct)) +
     statrow("Islington flats", gbp(H.islingtonFlatsAvg), yoy(H.islingtonFlatsYoYPct)) +
-    statrow("N1 7TX 12-mo", gbp(H.n1_7txAvg12m), "2 km flats") +
+    statrow("N1 7TX 12-mo", gbp(H.n17txAvg12m), "2 km flats") +
     statrow("London", gbp(H.londonAvg), yoy(H.londonYoYPct)) +
     statrow("England", gbp(H.englandAvg), yoy(H.englandYoYPct)) +
     `</div><a class="src-line" href="https://landregistry.data.gov.uk/app/ukhpi" target="_blank" rel="noopener">UK HPI · ${monthName(H.asOf)}</a>`;

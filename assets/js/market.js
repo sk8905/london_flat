@@ -244,7 +244,7 @@ export const LISTINGS_PER_MONTH = {
 // -----------------------------------------------------------------------------
 // LIVE (UK HPI, month 2026-05, HM Land Registry / ONS — published ~2 months in
 // arrears; the newest month is PROVISIONAL and gets revised, so YoY can be volatile).
-// Pulled from landregistry.data.gov.uk/data/ukhpi. `n1_7txAvg12m` is now the
+// Pulled from landregistry.data.gov.uk/data/ukhpi. `n17txAvg12m` is now the
 // trailing-12-month MEDIAN completed flat-sale price within 2 km of the centroid
 // (Homedata/HMLR completions, council-filtered, n=11) — a hyper-local anchor for a
 // 2-bed flat buyer, which reads lower than the whole-postcode figure that included houses.
@@ -256,7 +256,7 @@ export const HPI = {
   islingtonYoYPct: -6.4,
   islingtonFlatsAvg: 557257, // Islington flats/maisonettes (UK HPI)
   islingtonFlatsYoYPct: -7.0,
-  n1_7txAvg12m: 671000, // 2 km trailing-12m median completed flat sale (Homedata/HMLR, council-filtered, n=11)
+  n17txAvg12m: 671000, // 2 km trailing-12m median completed flat sale (Homedata/HMLR, council-filtered, n=11)
   londonAvg: 544814,
   londonYoYPct: -3.7,
   englandAvg: 292095,
