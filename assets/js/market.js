@@ -132,6 +132,12 @@ export const SALES = {
   rows: [
     { addr: "Top Floor Flat, 30 Duncan Terrace", beds: 2, baths: 1, type: "Purpose-built", sqm: 62,
       askingPrice: 875000, price: 845000, listedDate: "2025-10-01", soldDate: "2026-03-27", lat: 51.53322, lng: -0.10366 },
+    // Manually added 2026-08-10 (no HOMEDATA_KEY in this environment, so pulled directly):
+    // HM Land Registry Price Paid Data + Zoopla sold-price page + EPC register floor area.
+    { addr: "Flat 62 Decorum Apartments, 3 Wenlock Road", beds: 2, baths: 2, type: "Purpose-built", sqm: 74,
+      price: 720000, soldDate: "2026-03-02", lat: 51.53044, lng: -0.09395 },
+    { addr: "Flat 65 The Cooper Building, 36 Wharf Road", beds: 2, baths: 2, type: "New build", sqm: 67,
+      price: 650000, soldDate: "2026-02-26", lat: 51.53143, lng: -0.09544 },
     { addr: "4 Walton Villas, Downham Road", beds: 2, baths: 1, type: "Purpose-built", sqm: 55,
       askingPrice: 550000, price: 535000, listedDate: "2025-08-15", soldDate: "2026-02-06", lat: 51.53936, lng: -0.07939 },
     { addr: "Flat 12 Sledge Tower, Dalston Square", beds: 2, baths: 2, type: "New build", sqm: 74,
