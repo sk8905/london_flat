@@ -225,7 +225,7 @@ export function dualAxisLine(container, opts) {
     const dline = opts.forecast.map((fc) => `${fx(fc.rate)},${yR(lerp(opts.right.values, fc.rate))}`);
     el("polyline", { points: pline.join(" "), fill: "none", stroke: opts.left.color, "stroke-width": 1.5, "stroke-dasharray": "2 3", opacity: 0.7 }, svg);
     el("polyline", { points: dline.join(" "), fill: "none", stroke: opts.right.color, "stroke-width": 1.5, "stroke-dasharray": "2 3", opacity: 0.7 }, svg);
-    opts.forecast.forEach((fc, k) => {
+    opts.forecast.forEach((fc) => {
       const x = fx(fc.rate);
       const py = yL(lerp(opts.left.values, fc.rate));
       el("circle", { cx: x, cy: py, r: 4, fill: "#fff", stroke: opts.left.color, "stroke-width": 2 }, svg);
