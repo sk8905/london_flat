@@ -9,8 +9,8 @@
 // =============================================================================
 
 export const META = {
-  asOf: "2026-08-10",
-  build: "v84 · 2026-08-10", // bump on each change so the footer confirms the live build
+  asOf: "2026-08-11",
+  build: "v85 · 2026-08-11", // bump on each change so the footer confirms the live build
   currency: "GBP",
   disclaimer:
     "This tool is an informational model, not financial, tax, mortgage or legal advice. " +
@@ -204,8 +204,13 @@ export const RATES = {
   // 2-year GBP interest-rate swap (SONIA) — the wholesale rate UK lenders price
   // fixed-rate mortgages and real-estate lending off. Sits above Bank Rate when
   // the market expects cuts to be slow; the key driver of fixed mortgage pricing.
-  swap2yrNow: 4.08,
-  swap2yrAsOf: "2026-08-05",
+  // Chatham Financial curve (via mfbrokers.co.uk money-markets page), "correct as
+  // of 10/08/2026": 4.11%. A separate live tracker (bluegamma.io) read 4.17% the
+  // same day — used the named institutional source over the unbranded tracker;
+  // flagging the ~6bp spread rather than picking blind. Either reading keeps the
+  // move under the 10bps in-app alert threshold.
+  swap2yrNow: 4.11,
+  swap2yrAsOf: "2026-08-10",
   // Current average 2-year fixed REMORTGAGE rate at ~70% LTV (the band that fits
   // this flat). Live-refreshed from Bank of England quoted mortgage rates,
   // interpolated between the published 60% and 75% LTV series. Snapshot fallback:
@@ -227,7 +232,7 @@ export const RATES = {
   // the Worker also supplies the prior day's figure for the live series.
   baseRatePrev: 3.75,
   remortgage70Prev: 4.79,
-  swap2yrPrev: 4.15,
+  swap2yrPrev: 4.08,
   cpiPct: 2.6, // CPI to June 2026 (ONS, down from 2.8% in May)
   nextDecision: "2026-09-17",
   // Bank Rate path (history + light forward estimate)
@@ -386,10 +391,11 @@ export const POLICY_FACTORS = [
     weightHint: "medium",
     summary:
       "The Bank still calls the Middle East conflict 'the dominant source of uncertainty' for " +
-      "inflation (Brent $84/bbl, UK gas 136p/therm, 28 Jul); 3 of 9 MPC members voted to hike in " +
-      "July. It has pushed mortgage swap rates and fixed rates up through summer 2026 (2-yr swap " +
-      "+20bps in a month) and cooled Islington prices sharply — a real downside risk, now visibly " +
-      "showing up in the price data, not just a forecast risk.",
+      "inflation (Brent $84/bbl, UK gas 136p/therm, 28 Jul; Brent has since climbed to ~$88/bbl " +
+      "by 10 Aug); 3 of 9 MPC members voted to hike in July. It has pushed mortgage swap rates " +
+      "and fixed rates up through summer 2026 (2-yr swap +20bps in a month) and cooled Islington " +
+      "prices sharply — a real downside risk, now visibly showing up in the price data, not just " +
+      "a forecast risk.",
     effective: "2026-07-29",
   },
 ];
