@@ -1191,7 +1191,6 @@ function computeLetting(r) {
     selfManage: L.selfManage,
     opportunityRatePct: L.opportunityRate,
     interestOnly: L.interestOnly,
-    letMortgageRatePctAfterFix: DATA.LETTING.letMortgageRatePctAfterFix,
   };
   const tax = { ...DATA.TAX, marginalBand: L.taxBand };
   const mortgage = { ...r.inputs.mortgage, _purchaseDate: r.inputs.property.purchaseDate };
