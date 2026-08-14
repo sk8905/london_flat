@@ -9,8 +9,8 @@
 // =============================================================================
 
 export const META = {
-  asOf: "2026-08-10",
-  build: "v84 · 2026-08-10", // bump on each change so the footer confirms the live build
+  asOf: "2026-08-14",
+  build: "v85 · 2026-08-14", // bump on each change so the footer confirms the live build
   currency: "GBP",
   disclaimer:
     "This tool is an informational model, not financial, tax, mortgage or legal advice. " +
@@ -123,15 +123,15 @@ export const PROPERTY = {
 // -----------------------------------------------------------------------------
 export const COMPARABLES = {
   sources: ["soldPriceData", "hpiMar2026", "onsIslington"],
-  asOf: "2026-04-11",
+  asOf: "2026-08-04",
   note:
-    "Actual SOLD prices, not asking prices or forecasts. Half of 1,923 N1 (Islington) Land " +
-    "Registry sales completed at £8,350–£11,790/m² (interquartile range); the median is ~£10,000/m². " +
+    "Actual SOLD prices, not asking prices or forecasts. Half of 1,931 N1 (Islington) Land " +
+    "Registry sales completed at £8,360–£11,850/m² (interquartile range); the median is ~£9,930/m². " +
     "N1 flats were broadly flat in value over the year to March 2026, and the N1 7TX postcode " +
     "12-month average sold price was ~£1.07m. Your flat is a 2020-built 2-bed/2-bath of 91.45 m², " +
     "which typically sits in the upper half of the range (new-build premium, maturing with age).",
-  // N1 sold price per square metre (Land Registry-derived).
-  perSqm: { low: 8350, median: 9900, high: 11790 },
+  // N1 sold price per square metre (Land Registry-derived interquartile range).
+  perSqm: { low: 8360, median: 9930, high: 11850 },
 };
 
 export const MORTGAGE = {
@@ -386,10 +386,12 @@ export const POLICY_FACTORS = [
     weightHint: "medium",
     summary:
       "The Bank still calls the Middle East conflict 'the dominant source of uncertainty' for " +
-      "inflation (Brent $84/bbl, UK gas 136p/therm, 28 Jul); 3 of 9 MPC members voted to hike in " +
-      "July. It has pushed mortgage swap rates and fixed rates up through summer 2026 (2-yr swap " +
-      "+20bps in a month) and cooled Islington prices sharply — a real downside risk, now visibly " +
-      "showing up in the price data, not just a forecast risk.",
+      "inflation (Brent $84/bbl, UK gas 136p/therm at the 28 Jul MPC; since drifted higher to " +
+      "~$88–90/bbl and ~149p/therm by 13 Aug on renewed Gulf shipping attacks and curtailed LNG " +
+      "flows); 3 of 9 MPC members voted to hike in July. It has pushed mortgage swap rates and " +
+      "fixed rates up through summer 2026 (2-yr swap +20bps in a month) and cooled Islington " +
+      "prices sharply — a real downside risk, now visibly showing up in the price data, not just " +
+      "a forecast risk. Next MPC decision 17 Sep 2026.",
     effective: "2026-07-29",
   },
 ];
