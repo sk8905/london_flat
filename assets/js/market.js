@@ -130,6 +130,17 @@ export const SALES = {
   curated: false,
   sources: ["landRegPP", "epcRegister", "homedata"],
   rows: [
+    // Manually added 2026-08-14 (no HOMEDATA_KEY in this environment, so pulled directly):
+    // HM Land Registry Price Paid Data + EPC register floor area, cross-checked against
+    // Zoopla sold-price pages. Land Registry's newest posted transaction in the 2 km ring
+    // is 2026-06-19 (registration lag), so these fill the Apr–Jun 2026 gap that had not yet
+    // posted when the dataset was last built; nothing has registered past 2026-06-19 yet.
+    { addr: "Flat 13, Marley House, Roseberry Place", beds: 2, baths: 2, type: "Purpose-built", sqm: 71,
+      price: 582500, soldDate: "2026-06-16", lat: 51.544762, lng: -0.074851 },
+    { addr: "Flat 16, Arbon Court, Linton Street", beds: 2, baths: 1, type: "Purpose-built", sqm: 62,
+      price: 675000, soldDate: "2026-05-29", lat: 51.536342, lng: -0.092221 },
+    { addr: "Flat 54, Thomas Tower, Dalston Square", beds: 2, baths: 2, type: "New build", sqm: 64,
+      price: 538000, soldDate: "2026-05-15", lat: 51.545644, lng: -0.074857 },
     { addr: "Top Floor Flat, 30 Duncan Terrace", beds: 2, baths: 1, type: "Purpose-built", sqm: 62,
       askingPrice: 875000, price: 845000, listedDate: "2025-10-01", soldDate: "2026-03-27", lat: 51.53322, lng: -0.10366 },
     // Manually added 2026-08-10 (no HOMEDATA_KEY in this environment, so pulled directly):
@@ -252,8 +263,10 @@ export const LISTINGS_PER_MONTH = {
 // arrears; the newest month is PROVISIONAL and gets revised, so YoY can be volatile).
 // Pulled from landregistry.data.gov.uk/data/ukhpi. `n17txAvg12m` is now the
 // trailing-12-month MEDIAN completed flat-sale price within 2 km of the centroid
-// (Homedata/HMLR completions, council-filtered, n=13) — a hyper-local anchor for a
-// 2-bed flat buyer, which reads lower than the whole-postcode figure that included houses.
+// (Homedata/HMLR completions, council-filtered, n=16 as of the 2026-08-14 comp
+// additions) — a hyper-local anchor for a 2-bed flat buyer, which reads lower than
+// the whole-postcode figure that included houses. Next UK HPI release (June 2026
+// data) is due 2026-08-19 — recheck after that date.
 export const HPI = {
   asOf: "2026-05-01",
   curated: false,
@@ -262,7 +275,7 @@ export const HPI = {
   islingtonYoYPct: -6.4,
   islingtonFlatsAvg: 557257, // Islington flats/maisonettes (UK HPI)
   islingtonFlatsYoYPct: -7.0,
-  n17txAvg12m: 671000, // 2 km trailing-12m median completed flat sale (Homedata/HMLR, council-filtered, n=13)
+  n17txAvg12m: 670500, // 2 km trailing-12m median completed flat sale (Homedata/HMLR, council-filtered, n=16)
   londonAvg: 544814,
   londonYoYPct: -3.7,
   englandAvg: 292095,
@@ -354,7 +367,7 @@ export const NEW_BUILDS = {
 // attribution; update by re-reading each publisher's latest release.
 // -----------------------------------------------------------------------------
 export const FORECASTS = {
-  asOf: "2026-08-02",
+  asOf: "2026-08-14",
   curated: true,
   sources: ["ricsSurvey", "rightmoveListings"],
   rows: [
@@ -372,10 +385,11 @@ export const FORECASTS = {
       url: "https://www.knightfrank.co.uk/research/article/2026/4/uk-housing-market-forecast-q2-2026",
       note: "UK national revised down to +1.5% 2026 (from +3%), +3% 2027, +4% 2028; Greater London " +
         "specifically also cut from +3% but the exact revised GL figure wasn't published — flagged, not verified." },
-    { source: "Zoopla", short: "Zoopla", horizon: "2026", priceYoY: 1.5,
-      activity: "Buyer demand up year-on-year; more supply keeps prices in check.",
+    { source: "Zoopla", short: "Zoopla", horizon: "2026", priceYoY: 1.0,
+      activity: "Sales-agreed volumes down 9% YoY in July, the weakest month of 2026; growth cooling.",
       url: "https://www.zoopla.co.uk/discover/property-news/house-price-index/",
-      note: "UK ~+1.5% 2026; London lags on affordability, more choice for buyers." },
+      note: "Revised down 30 Jul 2026: annual growth easing from 1.3% (Jul actual) towards ~1% by " +
+        "year-end (was ~+1.5%); London lags on affordability, more choice for buyers." },
     { source: "Foxtons / local agents (Islington)", short: "Foxtons", horizon: "Next 12m", priceYoY: 1.0,
       activity: "Steady 2-bed demand from professionals; new-build supply caps upside.",
       url: "https://www.foxtons.co.uk/discover/house-price-index",
