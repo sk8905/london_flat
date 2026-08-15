@@ -26,7 +26,8 @@
   --font: Calibri, "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
 }
 /* touch-action: manipulation kills double-tap-to-zoom everywhere (headers, nav,
-   buttons, content) while keeping scroll and pinch-zoom for accessibility. */
+   buttons, content) while keeping scroll. Pinch and ctrl/trackpad-wheel zoom are
+   separately disabled by the guards in index.html and the viewport meta tag. */
 * { box-sizing: border-box; touch-action: manipulation; }
 html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 body {
