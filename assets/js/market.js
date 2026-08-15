@@ -354,7 +354,7 @@ export const NEW_BUILDS = {
 // attribution; update by re-reading each publisher's latest release.
 // -----------------------------------------------------------------------------
 export const FORECASTS = {
-  asOf: "2026-08-02",
+  asOf: "2026-08-15",
   curated: true,
   sources: ["ricsSurvey", "rightmoveListings"],
   rows: [
@@ -372,10 +372,12 @@ export const FORECASTS = {
       url: "https://www.knightfrank.co.uk/research/article/2026/4/uk-housing-market-forecast-q2-2026",
       note: "UK national revised down to +1.5% 2026 (from +3%), +3% 2027, +4% 2028; Greater London " +
         "specifically also cut from +3% but the exact revised GL figure wasn't published — flagged, not verified." },
-    { source: "Zoopla", short: "Zoopla", horizon: "2026", priceYoY: 1.5,
-      activity: "Buyer demand up year-on-year; more supply keeps prices in check.",
+    { source: "Zoopla", short: "Zoopla", horizon: "2026", priceYoY: 1.0,
+      activity: "Growth cooling through the year; London and the South East flat to modestly down.",
       url: "https://www.zoopla.co.uk/discover/property-news/house-price-index/",
-      note: "UK ~+1.5% 2026; London lags on affordability, more choice for buyers." },
+      note: "Updated 30 Jul 2026: UK annual growth has slowed to 1.3%, and Zoopla expects it to " +
+        "ease further to ~1% by year-end (from +1.5% expected earlier in 2026). London home values " +
+        "down ~£3,270 YTD to June 2026 — London/SE seen flat or modestly down for H2." },
     { source: "Foxtons / local agents (Islington)", short: "Foxtons", horizon: "Next 12m", priceYoY: 1.0,
       activity: "Steady 2-bed demand from professionals; new-build supply caps upside.",
       url: "https://www.foxtons.co.uk/discover/house-price-index",

@@ -9,8 +9,8 @@
 // =============================================================================
 
 export const META = {
-  asOf: "2026-08-10",
-  build: "v84 · 2026-08-10", // bump on each change so the footer confirms the live build
+  asOf: "2026-08-15",
+  build: "v85 · 2026-08-15", // bump on each change so the footer confirms the live build
   currency: "GBP",
   disclaimer:
     "This tool is an informational model, not financial, tax, mortgage or legal advice. " +
@@ -241,11 +241,11 @@ export const RATES = {
     { date: "2026-06", rate: 3.75 },
     { date: "2026-07", rate: 3.75 }, // held, 6-3 vote (3 wanted +0.25 to 4.00%)
   ],
-  // Average market fixes, week ending 7 Aug 2026 (Moneyfacts averages,
-  // whole-of-market, via Mortgage Strategy) — lenders continued repricing up
-  // on expectations Bank Rate cuts will be slower (2yr fix +17bps in a month).
-  avg2yrFix: 5.63,
-  avg5yrFix: 5.66,
+  // Average market fixes, week ending 14 Aug 2026 (Moneyfacts averages,
+  // whole-of-market, via Mortgage Strategy) — first weekly FALL in over a month
+  // (2yr 5.63%→5.61%, 5yr 5.67%→5.64%), though still ~9bps/12bps up on early July.
+  avg2yrFix: 5.61,
+  avg5yrFix: 5.64,
   fix2yrSeries: [
     { date: "2025-09", rate: 5.05 },
     { date: "2025-12", rate: 5.20 },
@@ -253,7 +253,7 @@ export const RATES = {
     { date: "2026-05", rate: 5.78 },
     { date: "2026-06", rate: 5.55 }, // easing back
     { date: "2026-07", rate: 5.6 }, // ticked back up (5.57% 22 Jul → ~5.60% 28 Jul)
-    { date: "2026-08", rate: 5.63 }, // continued drift up (7 Aug, Moneyfacts)
+    { date: "2026-08", rate: 5.61 }, // first weekly fall in over a month (14 Aug, Moneyfacts)
   ],
   yourRate: MORTGAGE.ratePct,
 };
