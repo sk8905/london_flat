@@ -10,7 +10,7 @@
 //   • The page renders fully from the curated snapshot in dataset.js FIRST and
 //     only upgrades the rate badges if /api/rates resolves — so if this Worker
 //     isn't deployed (pure static hosting), nothing breaks and nothing hangs.
-//   • The upstream fetch is time-boxed (4s) and falls back to the snapshot
+//   • The upstream fetch is time-boxed (4.5s) and falls back to the snapshot
 //     constants below, so a slow/blocked source never stalls the response.
 //   • Responses are cached at the edge for 6 hours (Bank Rate changes ~8×/yr).
 // =============================================================================

@@ -2,7 +2,8 @@
 // dataset.js  —  Curated, sourced market dataset for the London Flat forecaster
 // -----------------------------------------------------------------------------
 // Every figure below is a curated snapshot; each block carries its own `source`
-// key (an id into SOURCES) and a `note` so the UI can show provenance.
+// id (a short mnemonic label, e.g. "hpiMay2026") and a `note` so a human editor
+// can see provenance at a glance.
 // Anything forward-looking is flagged `estimate: true`. Edit freely — the app
 // recomputes everything from this file. Values such as the BoE Bank Rate are
 // curated snapshots here; update them and redeploy to refresh.
@@ -16,87 +17,6 @@ export const META = {
     "This tool is an informational model, not financial, tax, mortgage or legal advice. " +
     "Figures are curated snapshots and forward-looking estimates that will go stale. " +
     "Verify against the linked sources and a qualified adviser before acting.",
-};
-
-// -----------------------------------------------------------------------------
-// Sources registry — referenced by id throughout the dataset and the UI.
-// -----------------------------------------------------------------------------
-export const SOURCES = {
-  hpiMar2026: {
-    label: "UK House Price Index for March 2026",
-    url: "https://www.gov.uk/government/news/uk-house-price-index-for-march-2026",
-    publisher: "GOV.UK",
-  },
-  hpiMay2026: {
-    label: "UK House Price Index for May 2026 (latest release, published 22 Jul 2026)",
-    url: "https://www.ons.gov.uk/visualisations/housingpriceslocal/E09000019/",
-    publisher: "HM Land Registry / ONS",
-  },
-  onsIslington: {
-    label: "ONS — Housing prices in Islington (local area)",
-    url: "https://www.ons.gov.uk/visualisations/housingpriceslocal/E09000019/",
-    publisher: "Office for National Statistics",
-  },
-  boeJuly2026: {
-    label: "Monetary Policy Summary, July 2026 (Bank Rate held at 3.75%, 6-3 vote)",
-    url: "https://www.bankofengland.co.uk/monetary-policy-summary-and-minutes/2026/july-2026",
-    publisher: "Bank of England",
-  },
-  rightmoveRates: {
-    label: "Rightmove — current UK mortgage rates",
-    url: "https://www.rightmove.co.uk/news/articles/property-news/current-uk-mortgage-rates/",
-    publisher: "Rightmove",
-  },
-  savillsForecast: {
-    label: "Savills — UK house price forecast revised to -2% for 2026",
-    url: "https://www.savills.co.uk/insight-and-opinion/savills-news/391268/savills-revises-uk-house-price-forecast-as-higher-mortgage-costs-weigh-on-demand",
-    publisher: "Savills Research",
-  },
-  knightFrank: {
-    label: "Knight Frank — UK Housing Market Forecast, Q2 2026",
-    url: "https://www.knightfrank.co.uk/research/article/2026/4/uk-housing-market-forecast-q2-2026",
-    publisher: "Knight Frank Research",
-  },
-  zooplaHPI: {
-    label: "Zoopla — House Price Index (July 2026)",
-    url: "https://www.zoopla.co.uk/discover/property-news/house-price-index/",
-    publisher: "Zoopla",
-  },
-  savillsJune2026: {
-    label: "Savills — Revised mainstream house price forecasts (Jun 2026): 18.5% cumulative to 2030, down from 22.2%",
-    url: "https://www.savills.co.uk/research_articles/229130/391249-0",
-    publisher: "Savills Research",
-  },
-  budgetMansionTax: {
-    label: "Autumn Budget 2025 — High Value Council Tax Surcharge ('mansion tax')",
-    url: "https://hoa.org.uk/news/new-property-tax/",
-    publisher: "HomeOwners Alliance",
-  },
-  budgetZoopla: {
-    label: "Zoopla — What the Autumn Budget means for the housing market",
-    url: "https://www.zoopla.co.uk/discover/property-news/autumn-budget-impact-on-uk-housing-market/",
-    publisher: "Zoopla",
-  },
-  seasonalRightmove: {
-    label: "Rightmove — When is the best time to sell a house?",
-    url: "https://www.rightmove.co.uk/guides/seller/preparing-to-sell/is-now-the-right-time-to-sell/",
-    publisher: "Rightmove",
-  },
-  cgtPrivateResidence: {
-    label: "GOV.UK — Private Residence Relief (Capital Gains Tax)",
-    url: "https://www.gov.uk/tax-sell-home",
-    publisher: "GOV.UK / HMRC",
-  },
-  cgtRates: {
-    label: "GOV.UK — Capital Gains Tax rates & allowances; property income tax",
-    url: "https://www.gov.uk/capital-gains-tax/rates",
-    publisher: "GOV.UK / HMRC",
-  },
-  soldPriceData: {
-    label: "HM Land Registry — Price Paid / sold-price search (N1, £/m²)",
-    url: "https://www.gov.uk/search-house-prices",
-    publisher: "HM Land Registry",
-  },
 };
 
 // -----------------------------------------------------------------------------

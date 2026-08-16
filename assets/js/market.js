@@ -65,47 +65,6 @@ export function withinRadius(rows, km = RADIUS_KM) {
 }
 
 // -----------------------------------------------------------------------------
-// SOURCES specific to the local market (referenced by the UI for provenance).
-// -----------------------------------------------------------------------------
-export const MARKET_SOURCES = {
-  landRegPP: {
-    label: "HM Land Registry — Price Paid Data (N1, sold prices)",
-    url: "https://www.gov.uk/search-house-prices",
-    publisher: "HM Land Registry",
-  },
-  epcRegister: {
-    label: "EPC Register — floor areas (£/m²)",
-    url: "https://find-energy-certificate.service.gov.uk/",
-    publisher: "DLUHC / Open Data Communities",
-  },
-  homedata: {
-    label: "Homedata — live listings, days-on-market & sold-vs-asking",
-    url: "https://homedata.co.uk/",
-    publisher: "Homedata",
-  },
-  rightmoveListings: {
-    label: "Rightmove — asking prices, time on market, rental listings (N1)",
-    url: "https://www.rightmove.co.uk/property-for-sale/Islington.html",
-    publisher: "Rightmove",
-  },
-  planit: {
-    label: "PlanIt — planning applications & the new-build pipeline",
-    url: "https://www.planit.org.uk/planapplic/loc/N1%207TX/search",
-    publisher: "PlanIt.org.uk",
-  },
-  ricsSurvey: {
-    label: "RICS — UK Residential Market Survey (London price & activity balances)",
-    url: "https://www.rics.org/news-insights/market-surveys/uk-residential-market-survey",
-    publisher: "Royal Institution of Chartered Surveyors",
-  },
-  onsRents: {
-    label: "ONS — Private rent & house price statistics (Islington)",
-    url: "https://www.ons.gov.uk/economy/inflationandpriceindices/bulletins/privaterentandhousepricesuk/latest",
-    publisher: "Office for National Statistics",
-  },
-};
-
-// -----------------------------------------------------------------------------
 // SALES — recent completed sales of flats near N1 7TX, with the extra listing
 // fields the local-market view needs: askingPrice, listedDate, soldDate. Days on
 // market and sold-vs-asking are DERIVED (see deriveSales) so a live feed only has

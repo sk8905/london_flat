@@ -411,9 +411,11 @@ function rerender() {
 // Header
 // ---------------------------------------------------------------------------
 // Small day-over-day (calendar) change on each rate badge. "Yesterday's" value is
-// carried in the dataset (RATES.*Prev), maintained by the daily 08:00 routine and
-// overridden by the Worker where it can supply the prior day's figure — so the
-// change is genuine calendar day-over-day, independent of when you last visited.
+// carried in the dataset (RATES.*Prev), maintained by the daily 08:00 routine and,
+// for the base-rate and remortgage badges, overridden by the Worker where it can
+// supply the prior day's figure (the Worker doesn't fetch a swap-rate series, so
+// the swap badge's Prev always comes from the dataset) — so the change is genuine
+// calendar day-over-day, independent of when you last visited.
 function setRateBadge(id, text, title, deltaPct) {
   const el = $("#" + id);
   if (!el) return;
