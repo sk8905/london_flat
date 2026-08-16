@@ -10,8 +10,8 @@
 // =============================================================================
 
 export const META = {
-  asOf: "2026-08-15",
-  build: "v85 · 2026-08-15", // bump on each change so the footer confirms the live build
+  asOf: "2026-08-16",
+  build: "v86 · 2026-08-16", // bump on each change so the footer confirms the live build
   currency: "GBP",
   disclaimer:
     "This tool is an informational model, not financial, tax, mortgage or legal advice. " +
@@ -124,8 +124,13 @@ export const RATES = {
   // 2-year GBP interest-rate swap (SONIA) — the wholesale rate UK lenders price
   // fixed-rate mortgages and real-estate lending off. Sits above Bank Rate when
   // the market expects cuts to be slow; the key driver of fixed mortgage pricing.
-  swap2yrNow: 4.08,
-  swap2yrAsOf: "2026-08-05",
+  // Re-verified this run against two cross-checked sources (propertyresearch.uk,
+  // bluegamma.io), both quoting the same 13 Aug 2026 close: 4.16%, up 8bps from the
+  // prior 4.08% reading. Recent daily moves were small ("stable over 5 days" per
+  // propertyresearch.uk), consistent with the Middle East swap-rate volatility
+  // easing slightly since its early-Aug peak.
+  swap2yrNow: 4.16,
+  swap2yrAsOf: "2026-08-13",
   // Current average 2-year fixed REMORTGAGE rate at ~70% LTV (the band that fits
   // this flat). Live-refreshed from Bank of England quoted mortgage rates,
   // interpolated between the published 60% and 75% LTV series. Snapshot fallback:
@@ -147,7 +152,7 @@ export const RATES = {
   // the Worker also supplies the prior day's figure for the live series.
   baseRatePrev: 3.75,
   remortgage70Prev: 4.79,
-  swap2yrPrev: 4.15,
+  swap2yrPrev: 4.08,
   cpiPct: 2.6, // CPI to June 2026 (ONS, down from 2.8% in May)
   nextDecision: "2026-09-17",
   // Bank Rate path (history + light forward estimate)
@@ -205,13 +210,15 @@ export const FORECAST = {
 export const LETTING = {
   sources: ["hpiMar2026", "budgetZoopla", "cgtRates"],
   note:
-    "Islington average private rent was £2,811/mo in April 2026 (+4.0% YoY). Section 24 " +
-    "means mortgage interest is NOT a deductible expense for individual landlords — instead " +
-    "you get a 20% tax credit on the interest. From April 2027 the Budget raised property- " +
-    "income tax rates by 2 points (to 22/42/47%). Letting your former home also erodes " +
-    "Private Residence Relief, so part of the eventual gain becomes liable to CGT.",
-  monthlyRent: 2811, // Islington average (Apr 2026); editable for your specific flat
-  rentGrowthPct: 4.0, // annual; Islington rent YoY to Apr 2026
+    "Islington average private rent was £2,843/mo in June 2026 (+5.4% YoY, ONS Price Index of " +
+    "Private Rents borough breakdown, up from £2,697 in June 2025) — a more current, borough- " +
+    "specific reading than the previous April figure. Section 24 means mortgage interest is " +
+    "NOT a deductible expense for individual landlords — instead you get a 20% tax credit on " +
+    "the interest. From April 2027 the Budget raised property-income tax rates by 2 points " +
+    "(to 22/42/47%). Letting your former home also erodes Private Residence Relief, so part of " +
+    "the eventual gain becomes liable to CGT.",
+  monthlyRent: 2843, // Islington average (Jun 2026, ONS PIPR); editable for your specific flat
+  rentGrowthPct: 5.4, // annual; Islington rent YoY to Jun 2026 (ONS)
   voidMonthsPerYear: 1, // assume ~1 month vacant per year
   agentFeePct: 10, // full-management letting agent fee (% of rent), excl VAT
   agentVatPct: 20,
@@ -305,11 +312,13 @@ export const POLICY_FACTORS = [
     direction: -1,
     weightHint: "medium",
     summary:
-      "The Bank still calls the Middle East conflict 'the dominant source of uncertainty' for " +
-      "inflation (Brent $84/bbl, UK gas 136p/therm, 28 Jul); 3 of 9 MPC members voted to hike in " +
-      "July. It has pushed mortgage swap rates and fixed rates up through summer 2026 (2-yr swap " +
-      "+20bps in a month) and cooled Islington prices sharply — a real downside risk, now visibly " +
-      "showing up in the price data, not just a forecast risk.",
+      "The conflict has escalated rather than resolved: Brent crude is ~$88.5/bbl and UK wholesale " +
+      "gas ~149p/therm (14 Aug, both up sharply from $84/136p on 28 Jul) as Iran–Oman talks on " +
+      "reopening the Strait of Hormuz remain deadlocked and the IEA warns of the widest global " +
+      "supply deficit in five years. The Bank called it 'the dominant source of uncertainty' for " +
+      "inflation at its 29 Jul hold (3 of 9 MPC members voted to hike). It has pushed mortgage " +
+      "swap and fixed rates up through summer 2026 and cooled Islington prices sharply — a real " +
+      "downside risk, now visibly showing up in the price data, not just a forecast risk.",
     effective: "2026-07-29",
   },
 ];

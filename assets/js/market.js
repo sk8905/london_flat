@@ -239,11 +239,13 @@ export const HPI = {
 // in radius, geocoded via postcodes.io). The live median (£3,600) runs well
 // above the old curated series — the City Road Basin is dominated by premium
 // new-build towers, and portal ASKING rents sit above ONS achieved rents.
-// `yoYPct` is LIVE: ONS Price Index of Private Rents (PIPR), London, +2.2% in the
-// 12 months to June 2026 (the bulletin doesn't break out Islington; London is the
-// closest verified figure). The historical quarterly `series` before 2026-07 is
-// still retained estimates — there is no allow-listed source for a 2 km 2-bed rent
-// history — so only the final `2026-07` point is a live measurement.
+// `yoYPct` is LIVE: ONS Price Index of Private Rents (PIPR), Islington-specific
+// (borough E09000019 via the ONS local housing-prices tool), +5.4% in the 12
+// months to June 2026 (£2,843, up from £2,697) — this run found the borough
+// breakdown, replacing the London-wide +2.2% proxy used previously. The
+// historical quarterly `series` before 2026-07 is still retained estimates —
+// there is no allow-listed source for a 2 km 2-bed rent history — so only the
+// final `2026-07` point is a live measurement.
 export const RENT = {
   asOf: "2026-07-26",
   curated: false,
@@ -259,7 +261,7 @@ export const RENT = {
     { month: "2026-07", rent: 3600 }, // LIVE — Homedata live-listings median (n=205, 2 km, council-filtered)
   ],
   currentAvg2bed: 3600, // LIVE — median of 205 in-radius 2-bed asking rents (2 km, council-filtered)
-  yoYPct: 2.2, // LIVE — ONS PIPR, London private rents, 12 months to June 2026
+  yoYPct: 5.4, // LIVE — ONS PIPR, Islington private rents (E09000019), 12 months to June 2026
   listings: [
     { addr: "New North Road, N1 7BH", beds: 2, baths: 1, pcm: 2750, lat: 51.53656, lng: -0.08998 },
     { addr: "Angel Wharf, N1 7ER", beds: 2, baths: 2, pcm: 3950, lat: 51.53363, lng: -0.09323 },
