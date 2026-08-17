@@ -338,7 +338,7 @@ export function barChart(container, opts) {
 // sales overlaid as pins. No mapping library: tiles are plain <img> elements
 // positioned in a responsive % grid, markers are absolutely-positioned divs.
 // Needs network for the tile images; if they fail, the pins still show on the
-// map's background fill. opts.points: [{lat,lng,n,you,tip,plain}]
+// map's background fill. opts.points: [{lat,lng,n,you,tip,plain,listing}]
 // ---------------------------------------------------------------------------
 const lon2px = (lon, z) => ((lon + 180) / 360) * Math.pow(2, z) * 256;
 const lat2px = (lat, z) => {

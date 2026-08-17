@@ -234,7 +234,7 @@ export function rentPaidToDate(monthlyRent, growthPct, fromISO, toISO) {
 // Each tier carries TWO scenarios: `recoup` (the pure cash-back price) and `vsRent`
 // (the same target credited with the rent you'd otherwise have paid — a lower price,
 // since owning has already saved you that rent). Returns all three tiers, the shared
-// rentSaved figure, plus back-compat top-level fields for tier (iii)'s recoup price.
+// rentSaved figure, and the inputs used to build them.
 export function breakEvenRecoupAll(opts) {
   const { property, mortgage, sellingCfg, saleDateISO, cgtCfg, rentCfg } = opts;
 
@@ -302,18 +302,10 @@ export function breakEvenRecoupAll(opts) {
     costs:   tier(deposit + sdlt + buyingCosts),              // (ii)  + SDLT + buying costs
     all:     tier(deposit + sdlt + buyingCosts + interestPaid), // (iii) + interest paid to date
   };
-  const allTier = tiers.all.recoup;
-
   return {
-    saleDateISO,
     tiers,
     rentSaved,
     inputs: { deposit, sdlt, buyingCosts, interestPaid, outstanding, erc, legal, epc, agentRate },
-    // Back-compat: top-level fields describe the full recoup-all tier (iii), recoup scenario.
-    breakEvenPrice: allTier.breakEvenPrice,
-    cashToRecoup: allTier.cashToRecoup,
-    components: { deposit, sdlt, buyingCosts, interestPaid, outstanding, erc, agentFee: allTier.agentFee, legal, epc, cgt: allTier.cgt },
-    netAtBreakEven: allTier.netAtBreakEven,
   };
 }
 

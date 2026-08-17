@@ -8,7 +8,7 @@
 
 import {
   economicsForWindow, holdingCostDelta, monthsBetween,
-  currentValueFromIndex, valueMultiplier, ymIndex, ymToISO, growthForYear,
+  currentValueFromIndex, ymIndex, growthForYear,
 } from "./finance.js";
 
 const clamp = (x, lo, hi) => Math.max(lo, Math.min(hi, x));
@@ -138,25 +138,6 @@ export function runModel(data, overrides = {}) {
   const ranked = [...scored].sort((a, b) => b.composite - a.composite);
   const best = ranked[0];
 
-  // ---- forecast value path (monthly) for charts ----------------------------
-  const pathEnd = WINDOWS[WINDOWS.length - 1].date;
-  function buildPath(gby) {
-    const pts = [];
-    const startIdx = ymIndex(presentISO), endIdx = ymIndex(pathEnd);
-    for (let idx = startIdx; idx <= endIdx; idx++) {
-      const iso = ymToISO(idx);
-      const v = presentValue * valueMultiplier(PROPERTY.purchaseDate, iso, gby, presentISO);
-      pts.push({ date: iso, value: v });
-    }
-    return pts;
-  }
-  const forecastPaths = {
-    base: buildPath(FORECAST.scenarios.base),
-    optimistic: buildPath(FORECAST.scenarios.optimistic),
-    pessimistic: buildPath(FORECAST.scenarios.pessimistic),
-    active: buildPath(growthByYear),
-  };
-
   return {
     meta: META,
     presentValue,
@@ -168,7 +149,6 @@ export function runModel(data, overrides = {}) {
     windows: scored,
     ranked,
     best,
-    forecastPaths,
     cgtCfg,
     inputs: { property: PROPERTY, mortgage, sellingCfg },
   };

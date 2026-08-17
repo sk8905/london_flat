@@ -198,7 +198,7 @@ a.badge:hover { text-decoration: none; border-color: var(--brand); color: var(--
 .calc.mini td { padding: 5px 0; font-size: 13px; }
 .calc.mini td.num { font-size: 13.5px; }
 
-/* flat value header (replaces the boxed val-box) */
+/* flat value header */
 .val-lead { border-left: 3px solid var(--brand); padding: 1px 0 2px 14px; margin-bottom: 10px; }
 .val-lead .val-head { font-size: 10.5px; text-transform: uppercase; letter-spacing: .05em; color: var(--brand); font-weight: 700; }
 .val-lead .val-main { font-size: 20px; font-weight: 800; letter-spacing: -0.02em; margin: 0; color: var(--brand-ink); }
@@ -300,7 +300,7 @@ a.badge:hover { text-decoration: none; border-color: var(--brand); color: var(--
 #lm-fc-table .rank-table th, #lm-fc-table .rank-table td { text-align: left; }
 .rank-badge { display: inline-grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; background: var(--line); color: var(--ink-soft); font-size: 9.5px; font-weight: 700; margin-right: 6px; vertical-align: middle; }
 
-/* stat rows (replace tiles) */
+/* stat rows */
 .statrows { display: grid; grid-template-columns: 1fr 1fr; gap: 0 24px; }
 .statrow { display: grid; grid-template-columns: 1fr auto; align-items: baseline; column-gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--line-soft); }
 .sr-label { color: var(--ink-soft); font-size: 12.5px; }
@@ -412,8 +412,8 @@ input[type="range"] { accent-color: var(--brand); height: 5px; }
   .content { padding: 16px 14px 40px; }
   .page-head { flex-wrap: wrap; row-gap: 6px; margin-bottom: 10px; padding-bottom: 8px; }
   .page-sub { display: none; }
-  /* all three rate chips fit on one row (no horizontal scroll): short labels,
-     each chip fills an equal third of the row, and the daily delta is hidden. */
+  /* all four rate chips fit on one row (no horizontal scroll): short labels,
+     each chip fills an equal quarter of the row, and the daily delta is hidden. */
   .topbar-right { flex-basis: 100%; flex-wrap: nowrap; gap: 5px; }
   .topbar-right .badge { flex: 1 1 0; justify-content: center; }
   .topbar-right .badge-delta { display: none; }

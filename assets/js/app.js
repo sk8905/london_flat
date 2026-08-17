@@ -1029,7 +1029,7 @@ function renderLocalMarket(r) {
       lo.push(Math.round(netAt(DATA.FORECAST.scenarios.pessimistic, iso)));
       hi.push(Math.round(netAt(DATA.FORECAST.scenarios.optimistic, iso)));
     }
-    const cashIn = (P.purchasePrice - M.principal) + (P.sdltPaid || 0) + (P.otherBuyCosts || 0);
+    const cashIn = cashInvested(r).total;
     const bestIdx = Math.max(0, Math.min(OUT, ymIndex(r.best.window.date) - startIdx));
     C.lineChart(procHost, {
       series: [{ name: "Net proceeds (base)", color: "#2f7d57", points: labels.map((l, i) => ({ x: l, y: base[i] })), dots: false }],
@@ -1134,7 +1134,7 @@ function renderLocalMarket(r) {
   // spread (~1.04pp). The curve prices SONIA broadly flat near ~4%, so the fix
   // holds ~5% and edges up by 2030 — this is the market path, not an assumption.
   // deltas vs now: 2028 ≈ +0.0pp, 2030 ≈ +0.2pp (fwd 2y swap 4.02→4.02→4.24%).
-  const OIS = DATA.RATES.oisFix2yForecast || { asOf: "2026-06", d28: 0.0, d30: 0.2 };
+  const OIS = DATA.RATES.oisFix2yForecast || { asOf: "2026-06", d30: 0.2 };
   const r30 = Math.round((baseRate + OIS.d30) * 100) / 100;
   // Two points: now (curve is flat through ~2028) and 2030. The "now" dot is left
   // unlabelled because the vertical "now ~5.0%" marker already names it — labelling

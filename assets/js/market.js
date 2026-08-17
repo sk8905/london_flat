@@ -35,11 +35,11 @@
 // =============================================================================
 
 // N1 7TX postcode centroid (City Road Basin / Wenlock, Islington).
-export const CENTER = { lat: 51.5346, lng: -0.0899 };
+const CENTER = { lat: 51.5346, lng: -0.0899 };
 export const RADIUS_KM = 2.0;
 
 // Haversine great-circle distance in km between two {lat,lng} points.
-export function haversineKm(a, b) {
+function haversineKm(a, b) {
   const R = 6371;
   const toRad = (d) => (d * Math.PI) / 180;
   const dLat = toRad(b.lat - a.lat);
@@ -51,7 +51,7 @@ export function haversineKm(a, b) {
 }
 
 // Distance from the N1 7TX centroid, in km, rounded to 2dp. NaN-safe.
-export function distFromCentre(pt) {
+function distFromCentre(pt) {
   if (!pt || !Number.isFinite(pt.lat) || !Number.isFinite(pt.lng)) return null;
   return Math.round(haversineKm(CENTER, pt) * 100) / 100;
 }
