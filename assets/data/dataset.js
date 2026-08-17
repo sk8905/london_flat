@@ -10,8 +10,8 @@
 // =============================================================================
 
 export const META = {
-  asOf: "2026-08-16",
-  build: "v86 · 2026-08-16", // bump on each change so the footer confirms the live build
+  asOf: "2026-08-17",
+  build: "v87 · 2026-08-17", // bump on each change so the footer confirms the live build
   currency: "GBP",
   disclaimer:
     "This tool is an informational model, not financial, tax, mortgage or legal advice. " +
@@ -43,15 +43,21 @@ export const PROPERTY = {
 // -----------------------------------------------------------------------------
 export const COMPARABLES = {
   sources: ["soldPriceData", "hpiMar2026", "onsIslington"],
-  asOf: "2026-04-11",
+  asOf: "2026-08-04",
   note:
-    "Actual SOLD prices, not asking prices or forecasts. Half of 1,923 N1 (Islington) Land " +
-    "Registry sales completed at £8,350–£11,790/m² (interquartile range); the median is ~£10,000/m². " +
-    "N1 flats were broadly flat in value over the year to March 2026, and the N1 7TX postcode " +
-    "12-month average sold price was ~£1.07m. Your flat is a 2020-built 2-bed/2-bath of 91.45 m², " +
-    "which typically sits in the upper half of the range (new-build premium, maturing with age).",
+    "Actual SOLD prices, not asking prices or forecasts. N1 postcode-district £/m² (Land Registry " +
+    "sold price ÷ EPC floor area, via housemetric.co.uk, calculated 4 Aug 2026, n=1,931 sales/24m): " +
+    "interquartile range £8,360–£11,850/m², median £9,930/m² — barely moved from the prior £8,350– " +
+    "£11,790/£9,900 read (n=1,923, 11 Apr 2026). The tighter N1 7 (Old Street) sector cut around N1 " +
+    "7TX reads £8,240–£11,110/m² (median £9,910, n=259). N1 flats were broadly flat in value over " +
+    "the year to March 2026. Your flat is a 2020-built 2-bed/2-bath of 91.45 m², which typically " +
+    "sits in the upper half of the range (new-build premium, maturing with age). The old ~£1.07m " +
+    "\"N1 7TX 12-month average\" figure is dropped: N1 7TX is a single 35-flat building (3 Bracklyn " +
+    "Street) whose only two 2025 sales (the pair that made up that £1.07m average) were 1-bed flats " +
+    "(£570k, £580k) and have since rolled out of any 12-month window — no 2-bed has sold in that " +
+    "single building in the last year, so a postcode-specific average isn't a meaningful comparator.",
   // N1 sold price per square metre (Land Registry-derived).
-  perSqm: { low: 8350, median: 9900, high: 11790 },
+  perSqm: { low: 8360, median: 9930, high: 11850 },
 };
 
 export const MORTGAGE = {
@@ -312,13 +318,16 @@ export const POLICY_FACTORS = [
     direction: -1,
     weightHint: "medium",
     summary:
-      "The conflict has escalated rather than resolved: Brent crude is ~$88.5/bbl and UK wholesale " +
-      "gas ~149p/therm (14 Aug, both up sharply from $84/136p on 28 Jul) as Iran–Oman talks on " +
-      "reopening the Strait of Hormuz remain deadlocked and the IEA warns of the widest global " +
-      "supply deficit in five years. The Bank called it 'the dominant source of uncertainty' for " +
-      "inflation at its 29 Jul hold (3 of 9 MPC members voted to hike). It has pushed mortgage " +
-      "swap and fixed rates up through summer 2026 and cooled Islington prices sharply — a real " +
-      "downside risk, now visibly showing up in the price data, not just a forecast risk.",
+      "The conflict remains unresolved: Brent crude is ~$88.4/bbl (17 Aug, flat since 14 Aug) and " +
+      "UK wholesale gas ~155p/therm (17 Aug, up ~4% from 149p on 14 Aug, still up sharply from " +
+      "$84/136p on 28 Jul). Iran and Oman are reported (Bloomberg, 15 Aug) to be nearing an interim " +
+      "deal on a temporary shipping route through the Strait of Hormuz, but Iran says full reopening " +
+      "stays conditional on further US concessions and ship attacks in the region are reported to be " +
+      "continuing even as the routing talks progress — a partial de-escalation signal, not a " +
+      "resolution. The Bank called the conflict 'the dominant source of uncertainty' for inflation " +
+      "at its 29 Jul hold (3 of 9 MPC members voted to hike). It has pushed mortgage swap and fixed " +
+      "rates up through summer 2026 and cooled Islington prices sharply — a real downside risk, now " +
+      "visibly showing up in the price data, not just a forecast risk.",
     effective: "2026-07-29",
   },
 ];
