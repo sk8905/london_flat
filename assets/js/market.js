@@ -24,7 +24,10 @@
 // Comparables endpoint seeded across the 2 km ring (centroid, Wharf Road, Haggerston
 // and Angel) so both sides of the Islington/Hackney border are covered; sold prices are
 // HMLR-confirmed completions (spot-checked against HM Land Registry Price Paid Data)
-// and £/m² uses EPC-register floor areas. RENT current listings + yoYPct are live
+// and £/m² uses EPC-register floor areas. SALES.rows was topped up again 2026-08-10 and
+// 2026-08-17 by pulling HM Land Registry Price Paid Data directly (no HOMEDATA_KEY in
+// this environment) — same council-filtered, EPC-derived-£/m² standard. RENT current
+// listings + yoYPct are live
 // (Homedata Live Listings, geocoded via postcodes.io; yoYPct from ONS PIPR). HPI is
 // the official UK HPI (HM Land Registry / ONS, 2026-05, provisional). NEW_BUILDS is
 // live from PlanIt planning records (completion years are estimates). Still curated
@@ -85,10 +88,23 @@ export function withinRadius(rows, km = RADIUS_KM) {
 // is EPC-derived. `askingPrice` is omitted where Homedata held no listing price
 // (so vs-asking derives as null, not a false 0). lat/lng are the Homedata records.
 export const SALES = {
-  asOf: "2026-07-26",
+  asOf: "2026-08-17",
   curated: false,
   sources: ["landRegPP", "epcRegister", "homedata"],
   rows: [
+    // Manually added 2026-08-17 (no HOMEDATA_KEY in this environment, so pulled directly from HM
+    // Land Registry Price Paid Data — landregistry.data.gov.uk/app/ppd/ppd_data.csv, each row spot-
+    // checked address/price/date against the raw PPD CSV — plus EPC-register floor areas and agent
+    // particulars for bed/bath counts. Mono Tower & Duo Tower are the two Hoxton Press hexagonal
+    // towers (Karakusevic Carson / David Chipperfield, completed 2018–19) — genuinely new-build.
+    { addr: "Flat 16 Arbon Court, Linton Street", beds: 2, baths: 1, type: "Purpose-built", sqm: 62,
+      price: 675000, soldDate: "2026-05-29", lat: 51.536342, lng: -0.092221 },
+    { addr: "Apartment 13 Elmore House, 110 Elmore Street", beds: 2, baths: 1, type: "Purpose-built", sqm: 63,
+      price: 620000, soldDate: "2026-05-19", lat: 51.542512, lng: -0.090636 },
+    { addr: "Flat 2 Duo Tower, Penn Street", beds: 2, baths: 2, type: "New build", sqm: 75,
+      price: 765000, soldDate: "2026-04-27", lat: 51.536316, lng: -0.08569 },
+    { addr: "Flat 58 Mono Tower, Penn Street", beds: 2, baths: 2, type: "New build", sqm: 78,
+      price: 842000, soldDate: "2026-04-24", lat: 51.536443, lng: -0.086291 },
     { addr: "Top Floor Flat, 30 Duncan Terrace", beds: 2, baths: 1, type: "Purpose-built", sqm: 62,
       askingPrice: 875000, price: 845000, listedDate: "2025-10-01", soldDate: "2026-03-27", lat: 51.53322, lng: -0.10366 },
     // Manually added 2026-08-10 (no HOMEDATA_KEY in this environment, so pulled directly):
@@ -211,8 +227,10 @@ export const LISTINGS_PER_MONTH = {
 // arrears; the newest month is PROVISIONAL and gets revised, so YoY can be volatile).
 // Pulled from landregistry.data.gov.uk/data/ukhpi. `n17txAvg12m` is now the
 // trailing-12-month MEDIAN completed flat-sale price within 2 km of the centroid
-// (Homedata/HMLR completions, council-filtered, n=13) — a hyper-local anchor for a
-// 2-bed flat buyer, which reads lower than the whole-postcode figure that included houses.
+// (Homedata/HMLR completions, council-filtered, n=17 as of 2026-08-17 — the 4 new
+// 2026-08-17 sold-comp additions plus the 13 prior rows still inside the trailing
+// 12-month window) — a hyper-local anchor for a 2-bed flat buyer, which reads lower
+// than the whole-postcode figure that included houses.
 export const HPI = {
   asOf: "2026-05-01",
   curated: false,
@@ -221,7 +239,7 @@ export const HPI = {
   islingtonYoYPct: -6.4,
   islingtonFlatsAvg: 557257, // Islington flats/maisonettes (UK HPI)
   islingtonFlatsYoYPct: -7.0,
-  n17txAvg12m: 671000, // 2 km trailing-12m median completed flat sale (Homedata/HMLR, council-filtered, n=13)
+  n17txAvg12m: 675000, // 2 km trailing-12m median completed flat sale (Homedata/HMLR, council-filtered, n=17)
   londonAvg: 544814,
   londonYoYPct: -3.7,
   englandAvg: 292095,
