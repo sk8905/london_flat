@@ -644,8 +644,8 @@ function renderBreakEven(r) {
 // Total cash you sank in at purchase: deposit + SDLT + other buying costs.
 function cashInvested(r) {
   const deposit = r.inputs.property.purchasePrice - r.inputs.mortgage.principal;
-  const buyCosts = (r.inputs.property.sdltPaid || 0) + (r.inputs.property.otherBuyCosts || 0);
-  return { deposit, buyCosts, total: deposit + buyCosts };
+  const sdltPlusBuyCosts = (r.inputs.property.sdltPaid || 0) + (r.inputs.property.otherBuyCosts || 0);
+  return { deposit, buyCosts: sdltPlusBuyCosts, total: deposit + sdltPlusBuyCosts };
 }
 
 function balanceNow(r) {

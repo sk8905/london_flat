@@ -212,7 +212,7 @@ export const LISTINGS_PER_MONTH = {
 // Pulled from landregistry.data.gov.uk/data/ukhpi. `n17txAvg12m` is now the
 // trailing-12-month MEDIAN completed flat-sale price within 2 km of the centroid
 // (Homedata/HMLR completions, council-filtered, n=13) — a hyper-local anchor for a
-// 2-bed flat buyer, which reads lower than the whole-postcode figure that included houses.
+// 2-bed flat buyer, which now reads a touch above the whole-borough figure that includes houses.
 export const HPI = {
   asOf: "2026-05-01",
   curated: false,

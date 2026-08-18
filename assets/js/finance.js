@@ -19,7 +19,7 @@ export function ymToISO(index) {
   return y + "-" + String(m).padStart(2, "0");
 }
 // Calendar year from an ISO date string.
-export function yearOfISO(iso) { return parseInt(iso.slice(0, 4), 10); }
+function yearOfISO(iso) { return parseInt(iso.slice(0, 4), 10); }
 
 // Annual growth (%) for the calendar year of an ISO date, from a scenario map
 // { year: pct, ... } — falls back to the last defined year if dateISO is beyond it.
@@ -210,7 +210,7 @@ export function interestPaidToDate(mortgage, saleDateISO) {
 // `fromISO` to `toISO` — the "rent saved" by owning instead of renting. Anchored so
 // the most recent month equals `monthlyRent` (a current market level) and grown /
 // discounted at `growthPct`/yr for earlier months. Timezone-safe integer month math.
-export function rentPaidToDate(monthlyRent, growthPct, fromISO, toISO) {
+function rentPaidToDate(monthlyRent, growthPct, fromISO, toISO) {
   const months = monthsBetween(fromISO, toISO);
   if (months <= 0 || !(monthlyRent > 0)) return 0;
   const g = (growthPct || 0) / 100;
