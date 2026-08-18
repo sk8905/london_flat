@@ -10,8 +10,8 @@
 // =============================================================================
 
 export const META = {
-  asOf: "2026-08-16",
-  build: "v86 · 2026-08-16", // bump on each change so the footer confirms the live build
+  asOf: "2026-08-18",
+  build: "v87 · 2026-08-18", // bump on each change so the footer confirms the live build
   currency: "GBP",
   disclaimer:
     "This tool is an informational model, not financial, tax, mortgage or legal advice. " +
@@ -124,13 +124,16 @@ export const RATES = {
   // 2-year GBP interest-rate swap (SONIA) — the wholesale rate UK lenders price
   // fixed-rate mortgages and real-estate lending off. Sits above Bank Rate when
   // the market expects cuts to be slow; the key driver of fixed mortgage pricing.
-  // Re-verified this run against two cross-checked sources (propertyresearch.uk,
-  // bluegamma.io), both quoting the same 13 Aug 2026 close: 4.16%, up 8bps from the
-  // prior 4.08% reading. Recent daily moves were small ("stable over 5 days" per
-  // propertyresearch.uk), consistent with the Middle East swap-rate volatility
-  // easing slightly since its early-Aug peak.
-  swap2yrNow: 4.16,
-  swap2yrAsOf: "2026-08-13",
+  // Re-verified this run: bluegamma.io's dated close is 4.21% as of 17 Aug 2026
+  // 17:00 London (the latest close available; 15-16 Aug was the weekend, 18 Aug's
+  // close isn't posted yet), up 5bps from the prior 4.16% reading. Cross-checked
+  // against propertyresearch.uk, whose page was still showing its 14 Aug 2026
+  // reading of 4.20% ("stable over 5 days", +4.6bps that trading day) at fetch
+  // time — same magnitude and direction, so treated as corroborating rather than
+  // contradicting. Below this dataset's own 10bps alert threshold, but a real,
+  // sourced move worth recording.
+  swap2yrNow: 4.21,
+  swap2yrAsOf: "2026-08-17",
   // Current average 2-year fixed REMORTGAGE rate at ~70% LTV (the band that fits
   // this flat). Live-refreshed from Bank of England quoted mortgage rates,
   // interpolated between the published 60% and 75% LTV series. Snapshot fallback:
@@ -152,7 +155,7 @@ export const RATES = {
   // the Worker also supplies the prior day's figure for the live series.
   baseRatePrev: 3.75,
   remortgage70Prev: 4.79,
-  swap2yrPrev: 4.08,
+  swap2yrPrev: 4.16,
   cpiPct: 2.6, // CPI to June 2026 (ONS, down from 2.8% in May)
   nextDecision: "2026-09-17",
   // Bank Rate path (history + light forward estimate)
