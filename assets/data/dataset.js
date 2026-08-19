@@ -180,7 +180,6 @@ export const RATES = {
     { date: "2026-07", rate: 5.6 }, // ticked back up (5.57% 22 Jul → ~5.60% 28 Jul)
     { date: "2026-08", rate: 5.61 }, // first weekly fall in over a month (14 Aug, Moneyfacts)
   ],
-  yourRate: MORTGAGE.ratePct,
 };
 
 // -----------------------------------------------------------------------------

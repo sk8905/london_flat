@@ -434,7 +434,8 @@ function dayDelta(now, prev) {
   return (Number.isFinite(now) && Number.isFinite(prev) && prev !== 0) ? ((now - prev) / prev) * 100 : null;
 }
 
-// Render all three rate badges: source-linked label + day-over-day % change.
+// Render all four rate badges (base, remortgage, swap + the Islington-flats-YoY
+// chip): source-linked label + day-over-day % change.
 function renderRateBadges() {
   const R = DATA.RATES;
   setRateBadge("live-rate", pct(R.baseRateNow) + " base",
