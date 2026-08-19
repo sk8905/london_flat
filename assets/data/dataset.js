@@ -10,8 +10,8 @@
 // =============================================================================
 
 export const META = {
-  asOf: "2026-08-16",
-  build: "v86 · 2026-08-16", // bump on each change so the footer confirms the live build
+  asOf: "2026-08-19",
+  build: "v87 · 2026-08-19", // bump on each change so the footer confirms the live build
   currency: "GBP",
   disclaimer:
     "This tool is an informational model, not financial, tax, mortgage or legal advice. " +
@@ -124,13 +124,14 @@ export const RATES = {
   // 2-year GBP interest-rate swap (SONIA) — the wholesale rate UK lenders price
   // fixed-rate mortgages and real-estate lending off. Sits above Bank Rate when
   // the market expects cuts to be slow; the key driver of fixed mortgage pricing.
-  // Re-verified this run against two cross-checked sources (propertyresearch.uk,
-  // bluegamma.io), both quoting the same 13 Aug 2026 close: 4.16%, up 8bps from the
-  // prior 4.08% reading. Recent daily moves were small ("stable over 5 days" per
-  // propertyresearch.uk), consistent with the Middle East swap-rate volatility
-  // easing slightly since its early-Aug peak.
-  swap2yrNow: 4.16,
-  swap2yrAsOf: "2026-08-13",
+  // Re-verified this run against propertyresearch.uk's 17 Aug 2026 close: 4.23%,
+  // up 7bps from the prior 13 Aug 4.16% reading ("2Y, 5Y and 10Y swap rates all
+  // moved higher" over the preceding 5 days). Reverses the brief easing seen
+  // mid-Aug — Brent crude and UK wholesale gas both pushed higher again over the
+  // same window (see macroRisk below), so this reads as the Middle East swap-rate
+  // shock re-accelerating rather than a one-off print.
+  swap2yrNow: 4.23,
+  swap2yrAsOf: "2026-08-17",
   // Current average 2-year fixed REMORTGAGE rate at ~70% LTV (the band that fits
   // this flat). Live-refreshed from Bank of England quoted mortgage rates,
   // interpolated between the published 60% and 75% LTV series. Snapshot fallback:
@@ -152,7 +153,7 @@ export const RATES = {
   // the Worker also supplies the prior day's figure for the live series.
   baseRatePrev: 3.75,
   remortgage70Prev: 4.79,
-  swap2yrPrev: 4.08,
+  swap2yrPrev: 4.16,
   cpiPct: 2.6, // CPI to June 2026 (ONS, down from 2.8% in May)
   nextDecision: "2026-09-17",
   // Bank Rate path (history + light forward estimate)
@@ -311,10 +312,10 @@ export const POLICY_FACTORS = [
     direction: -1,
     weightHint: "medium",
     summary:
-      "The conflict has escalated rather than resolved: Brent crude is ~$88.5/bbl and UK wholesale " +
-      "gas ~149p/therm (14 Aug, both up sharply from $84/136p on 28 Jul) as Iran–Oman talks on " +
-      "reopening the Strait of Hormuz remain deadlocked and the IEA warns of the widest global " +
-      "supply deficit in five years. The Bank called it 'the dominant source of uncertainty' for " +
+      "The conflict has escalated further: Brent crude is ~$90.9/bbl and UK wholesale gas " +
+      "~153p/therm (18 Aug, both up again from $88.5/149p on 14 Aug) as the US and Iran remain " +
+      "at a stalemate over the Strait of Hormuz, with attacks on shipping in the strait " +
+      "continuing through the month. The Bank called it 'the dominant source of uncertainty' for " +
       "inflation at its 29 Jul hold (3 of 9 MPC members voted to hike). It has pushed mortgage " +
       "swap and fixed rates up through summer 2026 and cooled Islington prices sharply — a real " +
       "downside risk, now visibly showing up in the price data, not just a forecast risk.",
