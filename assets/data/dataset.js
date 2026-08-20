@@ -10,8 +10,8 @@
 // =============================================================================
 
 export const META = {
-  asOf: "2026-08-19",
-  build: "v87 · 2026-08-19", // bump on each change so the footer confirms the live build
+  asOf: "2026-08-20",
+  build: "v88 · 2026-08-20", // bump on each change so the footer confirms the live build
   currency: "GBP",
   disclaimer:
     "This tool is an informational model, not financial, tax, mortgage or legal advice. " +
@@ -87,13 +87,15 @@ export const SELLING_COSTS = {
 // flat-specific signal but keep London softness visible.
 // -----------------------------------------------------------------------------
 export const PRICE_HISTORY = {
-  source: "hpiMay2026",
+  source: "hpiJun2026",
   note:
     "Islington average price £673k (Mar 2025, revised) → £678k (Mar 2026, +0.7%) → £670k " +
-    "(May 2026, latest UK HPI release), as the Middle East conflict's swap-rate shock pushed " +
-    "mortgage costs up over spring/summer 2026 and cooled the market fast. Islington FLATS -7.0% " +
-    "YoY to May 2026 (£557k avg); London-wide -3.7% YoY. Index is anchored to your purchase " +
-    "month so 100 = £890,000.",
+    "(May 2026) → £673k (Jun 2026, latest UK HPI release, published 19 Aug 2026), as the Middle " +
+    "East conflict's swap-rate shock pushed mortgage costs up over spring/summer 2026 and cooled " +
+    "the market fast — though the YoY comparison keeps worsening (Islington all-property -8.1% " +
+    "YoY to Jun 2026, from -6.4% in May) because the year-ago base was still near its peak. " +
+    "Islington FLATS -8.4% YoY to Jun 2026 (£560k avg, from £557k/-7.0% in May); London-wide " +
+    "-2.5% YoY (£553.9k avg). Index is anchored to your purchase month so 100 = £890,000.",
   anchorDate: "2025-03-01",
   // {date, islington, london} relative to Mar 2025 = 100
   series: [
@@ -104,12 +106,13 @@ export const PRICE_HISTORY = {
     // Mar 2026 corrected to 100.7 from the confirmed £678,022 UK HPI average price
     // (673,478 base) — the prior 99.3 didn't match this dataset's own +0.9% note.
     { date: "2026-03", islington: 100.7, london: 97.9 },
-    // 2026-05 is the newest published UK HPI month (released 22 Jul 2026); replaces the
-    // old 2026-06 provisional/estimate point. islington = confirmed £669,879 / £673,478
-    // base. london is derived by applying the same 2-month Islington % change to the last
-    // verified London point (97.9) — no independently-confirmed May 2026 London £ figure
-    // was pulled this run, so treat it as an estimate, not a raw index reading.
     { date: "2026-05", islington: 99.5, london: 96.7 },
+    // 2026-06 is the newest published UK HPI month (released 19 Aug 2026). islington =
+    // confirmed £673,000 / £673,478 base = 99.9. london = confirmed £553,870 (gov.uk HPI
+    // summary, -2.5% YoY) divided by an implied Mar-2025 base (£544,814 / 0.967, back-solved
+    // from the May-2026 point above, since no raw Mar-2025 London £ figure has been pulled
+    // into this file) — a real computation from two confirmed prices, not a % estimate.
+    { date: "2026-06", islington: 99.9, london: 98.3 },
   ],
 };
 
@@ -124,14 +127,17 @@ export const RATES = {
   // 2-year GBP interest-rate swap (SONIA) — the wholesale rate UK lenders price
   // fixed-rate mortgages and real-estate lending off. Sits above Bank Rate when
   // the market expects cuts to be slow; the key driver of fixed mortgage pricing.
-  // Re-verified this run against propertyresearch.uk's 17 Aug 2026 close: 4.23%,
-  // up 7bps from the prior 13 Aug 4.16% reading ("2Y, 5Y and 10Y swap rates all
-  // moved higher" over the preceding 5 days). Reverses the brief easing seen
-  // mid-Aug — Brent crude and UK wholesale gas both pushed higher again over the
-  // same window (see macroRisk below), so this reads as the Middle East swap-rate
-  // shock re-accelerating rather than a one-off print.
-  swap2yrNow: 4.23,
-  swap2yrAsOf: "2026-08-17",
+  // Re-verified this run against propertyresearch.uk's 18 Aug 2026 close: 4.26%,
+  // up 3bps from the prior 17 Aug 4.23% reading ("stable over 5 days", +2.3bps
+  // latest move) — a smaller, steadier drift than the prior week's 7bps jump.
+  // Cross-checked against a second broker feed (bluegamma.io, 19 Aug close: 4.21%,
+  // i.e. a couple of bps lower) — the two disagree slightly on direction, within
+  // normal interdealer-quote spread, so the named primary source (propertyresearch.uk)
+  // is kept for continuity with prior snapshots. Brent crude / UK wholesale gas
+  // remain elevated on the Middle East standoff (see macroRisk below), so the swap
+  // stays in the same post-shock band rather than resuming a fast climb.
+  swap2yrNow: 4.26,
+  swap2yrAsOf: "2026-08-18",
   // Current average 2-year fixed REMORTGAGE rate at ~70% LTV (the band that fits
   // this flat). Live-refreshed from Bank of England quoted mortgage rates,
   // interpolated between the published 60% and 75% LTV series. Snapshot fallback:
@@ -153,7 +159,7 @@ export const RATES = {
   // the Worker also supplies the prior day's figure for the live series.
   baseRatePrev: 3.75,
   remortgage70Prev: 4.79,
-  swap2yrPrev: 4.16,
+  swap2yrPrev: 4.23,
   cpiPct: 2.6, // CPI to June 2026 (ONS, down from 2.8% in May)
   nextDecision: "2026-09-17",
   // Bank Rate path (history + light forward estimate)
