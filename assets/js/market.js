@@ -207,25 +207,27 @@ export const LISTINGS_PER_MONTH = {
 // England), so the local-market view has an official price-level anchor. From
 // the UK HPI (HM Land Registry / ONS). `flatsIndex` isolates the flat market.
 // -----------------------------------------------------------------------------
-// LIVE (UK HPI, month 2026-05, HM Land Registry / ONS — published ~2 months in
-// arrears; the newest month is PROVISIONAL and gets revised, so YoY can be volatile).
-// Pulled from landregistry.data.gov.uk/data/ukhpi. `n17txAvg12m` is now the
-// trailing-12-month MEDIAN completed flat-sale price within 2 km of the centroid
-// (Homedata/HMLR completions, council-filtered, n=13) — a hyper-local anchor for a
-// 2-bed flat buyer, which now reads a touch above the whole-borough figure that includes houses.
+// LIVE (UK HPI, month 2026-06, HM Land Registry / ONS — published 19 Aug 2026, ~2
+// months in arrears; the newest month is PROVISIONAL and gets revised, so YoY can
+// be volatile). Pulled from gov.uk's UK HPI June 2026 release + the ONS Islington
+// local-housing-prices tool (borough E09000019). `n17txAvg12m` is unchanged this
+// run (no new comps landed within 2 km) — still the trailing-12-month MEDIAN
+// completed flat-sale price within 2 km of the centroid (Homedata/HMLR completions,
+// council-filtered, n=13) — a hyper-local anchor for a 2-bed flat buyer, which now
+// reads a touch above the whole-borough figure that includes houses.
 export const HPI = {
-  asOf: "2026-05-01",
+  asOf: "2026-06-01",
   curated: false,
   sources: ["landRegPP", "onsRents"],
-  islingtonAvg: 669879,
-  islingtonYoYPct: -6.4,
-  islingtonFlatsAvg: 557257, // Islington flats/maisonettes (UK HPI)
-  islingtonFlatsYoYPct: -7.0,
+  islingtonAvg: 673000,
+  islingtonYoYPct: -8.1,
+  islingtonFlatsAvg: 560000, // Islington flats/maisonettes (UK HPI)
+  islingtonFlatsYoYPct: -8.4,
   n17txAvg12m: 671000, // 2 km trailing-12m median completed flat sale (Homedata/HMLR, council-filtered, n=13)
-  londonAvg: 544814,
-  londonYoYPct: -3.7,
-  englandAvg: 292095,
-  englandYoYPct: 2.3,
+  londonAvg: 553870,
+  londonYoYPct: -2.5,
+  englandAvg: 293000,
+  englandYoYPct: 1.8,
 };
 
 // -----------------------------------------------------------------------------
