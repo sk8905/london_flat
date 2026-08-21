@@ -26,7 +26,7 @@
 // HMLR-confirmed completions (spot-checked against HM Land Registry Price Paid Data)
 // and £/m² uses EPC-register floor areas. RENT current listings + yoYPct are live
 // (Homedata Live Listings, geocoded via postcodes.io; yoYPct from ONS PIPR). HPI is
-// the official UK HPI (HM Land Registry / ONS, 2026-05, provisional). NEW_BUILDS is
+// the official UK HPI (HM Land Registry / ONS, 2026-06, provisional). NEW_BUILDS is
 // live from PlanIt planning records (completion years are estimates). Still curated
 // & FLAGGED: LISTINGS_PER_MONTH (a clean monthly census isn't cheaply
 // reconstructable — see its note), FORECASTS (third-party analyst forecasts), and
@@ -121,6 +121,15 @@ export const SALES = {
       askingPrice: 725000, price: 710000, listedDate: "2024-10-31", soldDate: "2025-03-14", lat: 51.53612, lng: -0.08881 },
     { addr: "Flat A, 225 New North Road", beds: 2, baths: 1, type: "Purpose-built", sqm: 75,
       price: 911500, soldDate: "2024-12-13", lat: 51.53609, lng: -0.09008 },
+    // Manually added 2026-08-21 (no HOMEDATA_KEY in this environment, so pulled directly):
+    // HM Land Registry Price Paid Data + EPC register floor areas. baths inferred from
+    // other confirmed units in the same block (Homedata gave no per-unit bath count).
+    { addr: "Flat 12, Gainsborough Studios West, 1 Poole Street", beds: 2, baths: 2, type: "Purpose-built", sqm: 68,
+      price: 551000, soldDate: "2026-01-23", lat: 51.535815, lng: -0.089114 },
+    { addr: "Flat 63, Sledge Tower, Dalston Square", beds: 2, baths: 2, type: "New build", sqm: 74,
+      price: 745000, soldDate: "2025-03-17", lat: 51.545122, lng: -0.074864 },
+    { addr: "Flat 66, Sledge Tower, Dalston Square", beds: 2, baths: 2, type: "New build", sqm: 63,
+      price: 674000, soldDate: "2025-02-28", lat: 51.545122, lng: -0.074864 },
   ],
 };
 
@@ -207,23 +216,29 @@ export const LISTINGS_PER_MONTH = {
 // England), so the local-market view has an official price-level anchor. From
 // the UK HPI (HM Land Registry / ONS). `flatsIndex` isolates the flat market.
 // -----------------------------------------------------------------------------
-// LIVE (UK HPI, month 2026-05, HM Land Registry / ONS — published ~2 months in
+// LIVE (UK HPI, month 2026-06, HM Land Registry / ONS — published ~2 months in
 // arrears; the newest month is PROVISIONAL and gets revised, so YoY can be volatile).
-// Pulled from landregistry.data.gov.uk/data/ukhpi. `n17txAvg12m` is now the
-// trailing-12-month MEDIAN completed flat-sale price within 2 km of the centroid
-// (Homedata/HMLR completions, council-filtered, n=13) — a hyper-local anchor for a
-// 2-bed flat buyer, which now reads a touch above the whole-borough figure that includes houses.
+// Pulled from landregistry.data.gov.uk/data/ukhpi (release published 19 Aug 2026).
+// `n17txAvg12m` is now the trailing-12-month MEDIAN completed flat-sale price within
+// 2 km of the centroid (Homedata/HMLR completions, council-filtered, n=14 after the
+// 2026-08-21 sold-comp addition) — a hyper-local anchor for a 2-bed flat buyer, which
+// now reads a touch above the whole-borough figure that includes houses.
+// islingtonYoYPct is the ALL-PROPERTY figure (volatile month to month in a small
+// borough due to mix effects — this run's YoY base of £733k in Jun 2025 is well above
+// the Mar-2025 anchor, so treat it as noisy); islingtonFlatsYoYPct is the more
+// representative read for a 2-bed flat. englandAvg/englandYoYPct were NOT
+// independently re-verified this run — still May 2026 vintage, flag for next refresh.
 export const HPI = {
-  asOf: "2026-05-01",
+  asOf: "2026-06-01",
   curated: false,
   sources: ["landRegPP", "onsRents"],
-  islingtonAvg: 669879,
-  islingtonYoYPct: -6.4,
-  islingtonFlatsAvg: 557257, // Islington flats/maisonettes (UK HPI)
-  islingtonFlatsYoYPct: -7.0,
-  n17txAvg12m: 671000, // 2 km trailing-12m median completed flat sale (Homedata/HMLR, council-filtered, n=13)
-  londonAvg: 544814,
-  londonYoYPct: -3.7,
+  islingtonAvg: 673384,
+  islingtonYoYPct: -8.1,
+  islingtonFlatsAvg: 560000, // Islington flats/maisonettes (UK HPI)
+  islingtonFlatsYoYPct: -8.4,
+  n17txAvg12m: 670500, // 2 km trailing-12m median completed flat sale (Homedata/HMLR, council-filtered, n=14)
+  londonAvg: 554000,
+  londonYoYPct: -2.5,
   englandAvg: 292095,
   englandYoYPct: 2.3,
 };
@@ -240,9 +255,9 @@ export const HPI = {
 // above the old curated series — the City Road Basin is dominated by premium
 // new-build towers, and portal ASKING rents sit above ONS achieved rents.
 // `yoYPct` is LIVE: ONS Price Index of Private Rents (PIPR), Islington-specific
-// (borough E09000019 via the ONS local housing-prices tool), +5.4% in the 12
-// months to June 2026 (£2,843, up from £2,697) — this run found the borough
-// breakdown, replacing the London-wide +2.2% proxy used previously. The
+// (borough E09000019 via the ONS local housing-prices tool), +5.9% in the 12
+// months to July 2026 (£2,854, up from £2,694), released 19 Aug 2026 — up from
+// +5.4%/£2,843 the prior month. The
 // historical quarterly `series` before 2026-07 is still retained estimates —
 // there is no allow-listed source for a 2 km 2-bed rent history — so only the
 // final `2026-07` point is a live measurement.
@@ -261,7 +276,7 @@ export const RENT = {
     { month: "2026-07", rent: 3600 }, // LIVE — Homedata live-listings median (n=205, 2 km, council-filtered)
   ],
   currentAvg2bed: 3600, // LIVE — median of 205 in-radius 2-bed asking rents (2 km, council-filtered)
-  yoYPct: 5.4, // LIVE — ONS PIPR, Islington private rents (E09000019), 12 months to June 2026
+  yoYPct: 5.9, // LIVE — ONS PIPR, Islington private rents (E09000019), 12 months to July 2026
   listings: [
     { addr: "New North Road, N1 7BH", beds: 2, baths: 1, pcm: 2750, lat: 51.53656, lng: -0.08998 },
     { addr: "Angel Wharf, N1 7ER", beds: 2, baths: 2, pcm: 3950, lat: 51.53363, lng: -0.09323 },
