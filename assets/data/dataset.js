@@ -147,7 +147,7 @@ export const RATES = {
   // 4.24% (2030), i.e. broadly flat then edging up — so the fix holds ~5%, ~5.2%
   // by 2030. Refresh from the monthly OIS spreadsheet. NOT re-pulled this run —
   // still June 2026 vintage; flag for next refresh.
-  oisFix2yForecast: { asOf: "BoE OIS, Jun 2026", d28: 0.0, d30: 0.2 },
+  oisFix2yForecast: { asOf: "BoE OIS, Jun 2026", d30: 0.2 },
   // Previous CALENDAR-DAY values, so each badge can show a day-over-day % change.
   // The daily 08:00 routine rolls "*Now" into "*Prev" before writing the new value;
   // the Worker also supplies the prior day's figure for the live series.
