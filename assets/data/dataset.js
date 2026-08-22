@@ -12,11 +12,6 @@
 export const META = {
   asOf: "2026-08-21",
   build: "v88 · 2026-08-21", // bump on each change so the footer confirms the live build
-  currency: "GBP",
-  disclaimer:
-    "This tool is an informational model, not financial, tax, mortgage or legal advice. " +
-    "Figures are curated snapshots and forward-looking estimates that will go stale. " +
-    "Verify against the linked sources and a qualified adviser before acting.",
 };
 
 // -----------------------------------------------------------------------------
@@ -24,8 +19,6 @@ export const META = {
 // -----------------------------------------------------------------------------
 export const PROPERTY = {
   postcode: "N1 7TX",
-  area: "Islington",
-  propertyType: "flat",
   purchaseDate: "2025-03-01",
   purchasePrice: 890000,
   isPrimaryResidence: true, // -> CGT exempt via Private Residence Relief
@@ -130,7 +123,6 @@ export const PRICE_HISTORY = {
 // -----------------------------------------------------------------------------
 export const RATES = {
   source: "boeJuly2026",
-  rateSource: "rightmoveRates",
   baseRateNow: 3.75, // BoE Bank Rate, held 29 Jul 2026 (6-3 vote); live-refreshable
   baseRateAsOf: "2026-07-30",
   // 2-year GBP interest-rate swap (SONIA) — the wholesale rate UK lenders price
@@ -164,7 +156,6 @@ export const RATES = {
   baseRatePrev: 3.75,
   remortgage70Prev: 4.79,
   swap2yrPrev: 4.23,
-  cpiPct: 2.9, // CPI to July 2026 (ONS, released 19 Aug 2026, up from 2.6% in June — energy/housing driven)
   nextDecision: "2026-09-17",
   // Bank Rate path (history + light forward estimate)
   baseSeries: [

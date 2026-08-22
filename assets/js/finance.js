@@ -160,9 +160,7 @@ export function economicsForWindow(opts) {
   const net = saleValue - outstanding - erc - costs.total - cgt;
 
   return {
-    windowDate, saleValue, outstanding, erc, costs, cgt, net, insideFix,
-    valueMult: mult,
-    equityGainVsPurchase: saleValue - property.purchasePrice,
+    windowDate, saleValue, outstanding, erc, costs, cgt, net,
   };
 }
 

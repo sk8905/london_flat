@@ -412,7 +412,6 @@ export function salesStats(km = RADIUS_KM) {
     medianDaysOnMarket: median(dom),
     medianVsAskingPct: median(vap),
     belowAsking,
-    aboveAsking: withAsking - belowAsking - rows.filter((r) => r.vsAsking === 0).length,
     withAsking,
     pctBelowAsking: withAsking ? Math.round((belowAsking / withAsking) * 100) : null,
     rows,

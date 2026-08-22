@@ -58,8 +58,6 @@ export function runModel(data, overrides = {}) {
     compVal: compVal ? Math.round(compVal) : null,
     compLow: area && perSqm ? Math.round(area * perSqm.low) : null,
     compHigh: area && perSqm ? Math.round(area * perSqm.high) : null,
-    blendedVal,
-    area,
     perSqm,
     purchasePerSqm: area ? Math.round(PROPERTY.purchasePrice / area) : null,
     impliedPerSqm: area ? Math.round(presentValue / area) : null,

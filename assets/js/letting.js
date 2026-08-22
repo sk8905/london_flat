@@ -110,8 +110,6 @@ export function rentVsSell(opts) {
   }
   const cumulativeNetRent = cumNet;
   const cumulativePrincipal = years.reduce((s, y) => s + y.principal, 0); // equity built via repayments
-  const cumulativeInterest = years.reduce((s, y) => s + y.interest, 0);
-  const cumulativeTax = years.reduce((s, y) => s + y.tax, 0);
 
   // ---- sale at the horizon (with partial-PRR CGT) ---------------------------
   const saleValue = presentValue * valueMultiplier(property.purchaseDate, saleDate, growthByYear, presentISO);
@@ -145,7 +143,6 @@ export function rentVsSell(opts) {
     saleDate, years: yearsF,
     yearsTable: years,
     cumulativeNetRent: fin(cumulativeNetRent), cumulativePrincipal: fin(cumulativePrincipal),
-    cumulativeInterest: fin(cumulativeInterest), cumulativeTax: fin(cumulativeTax),
     interestOnly: !!letCfg.interestOnly,
     sale: { saleValue: fin(saleValue), outstanding: fin(outstanding), erc: fin(erc), costs, cgt: fin(cgt),
             chargeableFraction, netSaleProceeds: fin(netSaleProceeds),
