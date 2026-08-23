@@ -330,14 +330,18 @@ export const NEW_BUILDS = {
 // attribution; update by re-reading each publisher's latest release.
 // -----------------------------------------------------------------------------
 export const FORECASTS = {
-  asOf: "2026-08-15",
+  asOf: "2026-08-23",
   curated: true,
   sources: ["ricsSurvey", "rightmoveListings"],
   rows: [
-    { source: "RICS Residential Survey", short: "RICS", horizon: "Next 12m (London)", priceYoY: null,
-      activity: "Price balance around neutral; sales expectations modestly positive as rates ease.",
+    { source: "RICS Residential Survey", short: "RICS", horizon: "Next 3-12m (UK)", priceYoY: null,
+      activity: "Buyer enquiries and agreed sales still firmly negative; near-term sales expectations " +
+        "have turned slightly negative too.",
       url: "https://www.rics.org/news-insights/market-surveys/uk-residential-market-survey",
-      note: "London net price balance near zero; 12-month sales expectations positive." },
+      note: "July 2026 survey (published 13 Aug 2026): new buyer enquiries balance -28% (unchanged from " +
+        "June), agreed sales balance -12%, near-term (3-month) sales expectations balance -2% — a reversal " +
+        "from the previously-read modestly-positive expectations. The pace of decline is easing vs March's " +
+        "-41% enquiries low, but the market reads weaker than the prior note implied, not improving." },
     { source: "Savills (mainstream London)", short: "Savills", horizon: "2026", priceYoY: -2.0,
       activity: "Subdued transactions; recovery weighted to H2.",
       url: "https://www.savills.co.uk/research_articles/229130/391249-0",
