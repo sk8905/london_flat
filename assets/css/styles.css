@@ -417,7 +417,6 @@ input[type="range"] { accent-color: var(--brand); height: 5px; }
   .topbar-right { flex-basis: 100%; flex-wrap: nowrap; gap: 5px; }
   .topbar-right .badge { flex: 1 1 0; justify-content: center; }
   .topbar-right .badge-delta { display: none; }
-  .page-title { font-size: 18px; }
   .badge { font-size: 10.5px; padding: 4px 5px; white-space: nowrap; }
   .panel { padding: 15px 15px; }
   .cards { grid-template-columns: repeat(2, 1fr); }
@@ -439,7 +438,6 @@ input[type="range"] { accent-color: var(--brand); height: 5px; }
   .cards { grid-template-columns: 1fr; }
 }
 @media (max-width: 520px) {
-  .card-value { font-size: 18px; }
   .brand-sub { display: none; }
   /* smaller chart labels so dense month/date axes don't crowd on phones */
   .axis-x, .axis-y { font-size: 10.5px; }

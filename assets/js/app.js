@@ -383,18 +383,16 @@ function renderFreshness() {
 
 // Coalesce rapid slider 'input' events into one render per animation frame, so a
 // continuous drag can never queue dozens of full recomputes and lock the main thread.
-let _rerenderQueued = false;
-function scheduleRerender() {
-  if (_rerenderQueued) return;
-  _rerenderQueued = true;
-  requestAnimationFrame(() => { _rerenderQueued = false; rerender(); });
-}
-let _lettingQueued = false;
-function scheduleLetting() {
-  if (_lettingQueued) return;
-  _lettingQueued = true;
-  requestAnimationFrame(() => { _lettingQueued = false; rerenderLetting(); });
-}
+const debounceRAF = (fn) => {
+  let queued = false;
+  return () => {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(() => { queued = false; fn(); });
+  };
+};
+const scheduleRerender = debounceRAF(() => rerender());
+const scheduleLetting = debounceRAF(() => rerenderLetting());
 
 function rerender() {
   const result = runModel(effectiveData(), currentOverrides());
@@ -1443,12 +1441,7 @@ function buildRentBuyControls() {
   $("#rb-opp").addEventListener("input", (e) => { RB.opportunityRate = num(e.target.value, RB.opportunityRate); scheduleRentBuy(); });
 }
 
-let _rbQueued = false;
-function scheduleRentBuy() {
-  if (_rbQueued) return;
-  _rbQueued = true;
-  requestAnimationFrame(() => { _rbQueued = false; rerenderRentBuy(); });
-}
+const scheduleRentBuy = debounceRAF(() => rerenderRentBuy());
 function rerenderRentBuy() {
   renderRentBuy(runModel(effectiveData(), currentOverrides()));
 }
