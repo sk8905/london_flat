@@ -10,8 +10,8 @@
 // =============================================================================
 
 export const META = {
-  asOf: "2026-08-23",
-  build: "v90 · 2026-08-23", // bump on each change so the footer confirms the live build
+  asOf: "2026-08-25",
+  build: "v91 · 2026-08-25", // bump on each change so the footer confirms the live build
 };
 
 // -----------------------------------------------------------------------------
@@ -313,15 +313,18 @@ export const POLICY_FACTORS = [
     direction: -1,
     weightHint: "medium",
     summary:
-      "The conflict has escalated further: Brent crude is ~$94/bbl and UK wholesale gas " +
-      "~160p/therm (21-22 Aug, both up again from $90.9/153p on 18 Aug) after the UAE suspended " +
-      "trade and financial ties with Iran, a UAE-linked vessel was attacked in the Strait of " +
-      "Hormuz, and the US floated further Iran-isolation measures. The Bank called it 'the " +
-      "dominant source of uncertainty' for inflation at its 30 Jul hold (3 of 9 MPC members voted " +
-      "to hike). It has pushed mortgage swap and fixed rates up through summer 2026 and cooled " +
-      "Islington prices sharply — a real downside risk, now visibly showing up in the price data, " +
-      "not just a forecast risk.",
-    effective: "2026-07-30",
+      "The conflict has shifted from a military to a financial front: on 24 Aug the US Treasury " +
+      "(Bessent) unveiled 'Operation Economic Outcast', a sweeping new Iran sanctions campaign " +
+      "targeting shipping, oil, crypto, gold and aviation and, for the first time, catching " +
+      "Chinese/Hong Kong firms in the net — a bid to choke off Iranian oil revenue without " +
+      "further strikes. Brent crude eased to ~$92/bbl (-2.5% on the day) on the news, but UK " +
+      "wholesale gas kept climbing to ~165p/therm (+1.4%), both still well above the pre-conflict " +
+      "baseline. The Bank called the conflict 'the dominant source of uncertainty' for inflation " +
+      "at its 30 Jul hold (3 of 9 MPC members voted to hike); the next decision is 17 Sep. It has " +
+      "pushed mortgage swap and fixed rates up through summer 2026 and cooled Islington prices " +
+      "sharply — a real downside risk, now visibly showing up in the price data, not just a " +
+      "forecast risk.",
+    effective: "2026-08-24",
   },
 ];
 
