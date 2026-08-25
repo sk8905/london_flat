@@ -283,7 +283,7 @@ a.badge:hover { text-decoration: none; border-color: var(--brand); color: var(--
 .table-wrap { overflow-x: auto; margin-top: 6px; }
 .rank-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
 .rank-table th, .rank-table td { text-align: left; padding: 5px 9px; border-bottom: 1px solid var(--line-soft); line-height: 1.3; white-space: nowrap; }
-.rank-table td.date-cell { font-weight: 700; color: var(--ink); white-space: nowrap; }
+.rank-table td.date-cell { font-weight: 700; color: var(--ink); }
 
 /* frozen first column (address stays visible on horizontal scroll) */
 .sticky-first th:first-child, .sticky-first td:first-child {
@@ -295,9 +295,6 @@ a.badge:hover { text-decoration: none; border-color: var(--brand); color: var(--
 .sort-th:hover { color: var(--ink); }
 .sort-th.sorted { color: var(--ink); }
 .sort-ar { font-size: 8px; margin-left: 3px; color: var(--brand); vertical-align: middle; }
-/* new-build & forecast tables: left-align every column */
-#lm-nb-table .rank-table th, #lm-nb-table .rank-table td,
-#lm-fc-table .rank-table th, #lm-fc-table .rank-table td { text-align: left; }
 .rank-badge { display: inline-grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; background: var(--line); color: var(--ink-soft); font-size: 9.5px; font-weight: 700; margin-right: 6px; vertical-align: middle; }
 
 /* stat rows */
@@ -353,14 +350,10 @@ a.src-line:hover, .src-line a:hover { text-decoration: underline; }
 .val-lead .val-note { font-size: 11px; color: var(--ink-soft); margin-top: 4px; }
 @media (max-width: 620px) { .statrows { grid-template-columns: 1fr; } .statrows.sr-2 { grid-template-columns: 1fr 1fr; } }
 .rank-table th { font-size: 11px; text-transform: uppercase; letter-spacing: .03em; color: var(--muted); font-weight: 700; }
-.rank-table td:nth-child(n+3), .rank-table th:nth-child(n+3) { text-align: left; font-variant-numeric: tabular-nums; }
-.rank-table td:first-child, .rank-table th:first-child { text-align: left; }
+.rank-table td:nth-child(n+3), .rank-table th:nth-child(n+3) { font-variant-numeric: tabular-nums; }
 .best-row { background: var(--pos-bg); }
 .best-row td { font-weight: 600; }
 .neg-cell { color: var(--neg); }
-.comps-table th:nth-child(6), .comps-table td:nth-child(6) { text-align: left; }
-.comps-table th:nth-child(4), .comps-table td:nth-child(4),
-.comps-table th:nth-child(5), .comps-table td:nth-child(5) { text-align: left; }
 
 /* ---------- letting ---------- */
 .letting-lead { font-size: 15px; color: var(--ink); max-width: none; margin: 4px 0 18px; }

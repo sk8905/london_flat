@@ -1001,7 +1001,7 @@ function renderLocalMarket(r) {
   if (kpis) kpis.innerHTML =
     group("Price",
       kpiRow("Median £/m²", medianPsm ? gbp(medianPsm) : "—", yourPsm ? "you paid " + gbp(yourPsm) : "", { id: "psm", dir: trends.dir.psm, goodIsUp: true, series: trends.psm.map((x) => x.v) }) +
-      kpiRow("Islington flats", H0 ? gbp(H0.islingtonFlatsAvg) : "—", H0 ? signed(H0.islingtonFlatsYoYPct, (x) => x.toFixed(1) + "%") + " YoY" : "")) +
+      kpiRow("Islington flats", gbp(H0.islingtonFlatsAvg), signed(H0.islingtonFlatsYoYPct, (x) => x.toFixed(1) + "%") + " YoY")) +
     group("Speed",
       kpiRow("Median days on market", estDays != null ? estDays + " days" : "—", "list → sold", { id: "dom", dir: trends.dir.dom, goodIsUp: false, series: trends.dom.map((x) => x.v) }) +
       kpiRow("Sold below asking", stats.pctBelowAsking != null ? stats.pctBelowAsking + "%" : "—", stats.medianVsAskingPct != null ? "median " + signed(stats.medianVsAskingPct, (x) => x.toFixed(1)) + "%" : "", { id: "vsask", dir: trends.dir.vsAsk, goodIsUp: true, series: trends.vsAsk.map((x) => x.v) })) +

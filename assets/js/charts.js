@@ -61,7 +61,7 @@ function niceTicks(min, max, count = 5) {
 // ---------------------------------------------------------------------------
 // Multi-series line chart with optional shaded band (scenario range).
 // opts: { series:[{name,color,dashed,points:[{x:label,y:number}]}],
-//         band:{lower:[..], upper:[..], color}, yFormat, title, height }
+//         band:{lower:[..], upper:[..], color}, yFormat, height }
 // x is taken from the first series' point labels (categorical, evenly spaced).
 // ---------------------------------------------------------------------------
 export function lineChart(container, opts) {

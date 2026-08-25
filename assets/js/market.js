@@ -222,7 +222,7 @@ export const LISTINGS_PER_MONTH = {
 // `n17txAvg12m` is now the trailing-12-month MEDIAN completed flat-sale price within
 // 2 km of the centroid (Homedata/HMLR completions, council-filtered, n=14 after the
 // 2026-08-21 sold-comp addition) — a hyper-local anchor for a 2-bed flat buyer, which
-// now reads a touch above the whole-borough figure that includes houses.
+// now reads a touch below the whole-borough figure that includes houses.
 // islingtonYoYPct is the ALL-PROPERTY figure (volatile month to month in a small
 // borough due to mix effects — this run's YoY base of £733k in Jun 2025 is well above
 // the Mar-2025 anchor, so treat it as noisy); islingtonFlatsYoYPct is the more
