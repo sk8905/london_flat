@@ -592,66 +592,51 @@ function renderBreakEven(r) {
   const rentSaved = be.rentSaved;
   const monthsOwned = monthsBetween(p.purchaseDate, DATA.META.asOf);
 
-  // One priced scenario row inside a tier card: a label, the break-even price, and
-  // how that price compares with today's estimated value.
-  const scnRow = (label, scn, accent) => {
-    const gap = scn.breakEvenPrice - value;
-    const over = gap > 0;
-    return `<div class="be-scn${accent ? " be-scn-alt" : ""}">
-      <div class="be-scn-top">
-        <span class="be-scn-label">${label}</span>
-        <span class="be-scn-price">${gbp(scn.breakEvenPrice)}</span>
-      </div>
-      <div class="be-scn-gap"><span class="pill pill-${over ? "neg" : "pos"}">${
-        over ? gbp(gap) + " above" : gbp(-gap) + " below"} value</span></div>
-    </div>`;
+  // Compact £k delta for the "vs today's value" gap in each matrix cell.
+  const kfmt = (v) => {
+    const a = Math.abs(v);
+    return a >= 1000 ? "£" + Math.round(a / 1000) + "k" : "£" + Math.round(a);
+  };
+  // A matrix cell: the break-even price and its signed gap vs today's value
+  // (green = below value / easily achievable, red = above).
+  const cell = (scn) => {
+    const gap = scn.breakEvenPrice - value, over = gap > 0;
+    return `<div class="bem-price">${gbp(scn.breakEvenPrice)}</div>
+      <div class="bem-delta ${over ? "neg" : "pos"}">${over ? "+" : "−"}${kfmt(gap)} <span class="bem-vv">vs value</span></div>`;
   };
 
-  // A tier card: two scenarios — pure recoup, and the same target net of rent saved.
-  const tierCard = (num, name, recoups, tier) => `<div class="be-tier">
-      <div class="be-tier-head">
-        <span class="be-tier-num">${num}</span>
-        <div>
-          <div class="be-tier-name">${name}</div>
-          <div class="be-tier-recoups">Get back ${recoups}</div>
-        </div>
-      </div>
-      <div class="be-scn-table">
-        ${scnRow("Sale price to recoup that cash", tier.recoup, false)}
-        ${scnRow(`Net of ${gbp(rentSaved)} rent saved vs renting`, tier.vsRent, true)}
-      </div>
-    </div>`;
-
-  const cashCosts = gbp(ci.deposit + ci.sdlt + ci.buyingCosts);
-  const cashAll = gbp(ci.deposit + ci.sdlt + ci.buyingCosts + ci.interestPaid);
+  // Rows = cumulative cash targets; columns = recoup vs. net-of-rent-saved.
+  const rows = [
+    ["i", "Deposit", ci.deposit, t.deposit],
+    ["ii", "+ Buying costs", ci.deposit + ci.sdlt + ci.buyingCosts, t.costs],
+    ["iii", "+ Interest paid", ci.deposit + ci.sdlt + ci.buyingCosts + ci.interestPaid, t.all],
+  ];
 
   host.innerHTML = `
-    <p class="letting-lead">Three break-even sale prices, depending on how much of your own cash you want back before a sale
-      "washes its face". Each shows <strong>two scenarios</strong>: the sale price to recoup that cash, and — because owning has
-      spared you rent — a lower price once the <strong>${gbp(rentSaved)}</strong> rent you'd have paid is credited. Both assume a
-      sale <strong>today</strong> (est. value ${gbp(value)}), after clearing the mortgage and every selling cost.</p>
-    <div class="be-tiers">
-      ${tierCard("i", "Deposit back", `your ${gbp(ci.deposit)} deposit`, t.deposit)}
-      ${tierCard("ii", "Deposit + purchase costs back", `deposit + SDLT + buying costs (${cashCosts})`, t.costs)}
-      ${tierCard("iii", "All cash back", `the above + mortgage interest paid so far (${cashAll})`, t.all)}
-    </div>
-    <div class="table-wrap"><table class="rank-table kv">
-      <thead><tr><th>Cash each scenario returns</th><th>Amount</th></tr></thead>
+    <p class="letting-lead">How high must the sale price be to get your own cash back? Rows are cumulative cash targets;
+      columns are two views — the raw price to recoup it, and a lower price once the <strong>${gbp(rentSaved)}</strong> rent
+      you'd otherwise have paid is credited. Sale assumed <strong>today</strong>; est. value <strong>${gbp(value)}</strong>.</p>
+    <table class="be-matrix">
+      <thead><tr>
+        <th class="bem-corner">Cash to get back</th>
+        <th>Sell to<br>recoup it</th>
+        <th class="bem-alt">Net of rent<br>saved vs renting</th>
+      </tr></thead>
       <tbody>
-        <tr><td>Deposit <span class="muted small">— target (i)</span></td><td>${gbp(ci.deposit)}</td></tr>
-        <tr><td>+ Stamp Duty (SDLT)</td><td>${gbp(ci.sdlt)}</td></tr>
-        <tr><td>+ Other buying costs <span class="muted small">— target (ii)</span></td><td>${gbp(ci.buyingCosts)}</td></tr>
-        <tr class="best-row"><td>+ Mortgage interest paid to date <span class="muted small">— target (iii)</span></td><td>${gbp(ci.interestPaid)}</td></tr>
-        <tr><td>Rent saved <span class="muted small">— credited in the "vs renting" scenario</span></td><td>−${gbp(rentSaved)}</td></tr>
+        ${rows.map(([num, name, cash, tier]) => `<tr>
+          <th class="bem-rowhead"><span class="bem-num">${num}</span><span class="bem-rowname">${name}</span><span class="bem-cash">${gbp(cash)}</span></th>
+          <td>${cell(tier.recoup)}</td>
+          <td class="bem-alt">${cell(tier.vsRent)}</td>
+        </tr>`).join("")}
       </tbody>
-    </table></div>
-    <p class="muted small">Every price also has to cover the <strong>${gbp(ci.outstanding)} outstanding mortgage</strong>${
-      ci.erc > 0 ? ", the " + gbp(ci.erc) + " early-repayment charge" : ""}, the estate-agent fee (incl VAT), legal, EPC${
-      p.isPrimaryResidence ? "" : " and Capital Gains Tax"} — that is why each break-even sits above the cash it returns. The
-      <strong>vs-renting</strong> figure credits the rent you'd have paid living elsewhere: ${gbp(rentSaved)} over ${monthsOwned}
-      months, at today's ~${gbp(MKT.RENT.currentAvg2bed)}/mo local 2-bed rent (grown ${MKT.RENT.yoYPct}%/yr) — a real saving that
-      lowers the price at which owning beats having rented. All assume a sale <strong>today</strong>; break-evens drift up the
-      longer you hold as interest mounts, while rent saved keeps growing — see the recoup-all line on the proceeds chart below.</p>`;
+    </table>
+    <p class="muted small">Targets build up: <strong>(i)</strong> deposit, <strong>(ii)</strong> + SDLT &amp; buying costs,
+      <strong>(iii)</strong> + mortgage interest paid so far. Every break-even also covers the ${gbp(ci.outstanding)} outstanding
+      mortgage${ci.erc > 0 ? ", " + gbp(ci.erc) + " ERC" : ""}, agent fee (incl VAT), legal, EPC${
+      p.isPrimaryResidence ? "" : " and CGT"} — hence each price sits above the cash it returns. <strong>Rent saved</strong> =
+      ${gbp(rentSaved)} over ${monthsOwned} months at ~${gbp(MKT.RENT.currentAvg2bed)}/mo (local 2-bed, grown ${MKT.RENT.yoYPct}%/yr),
+      lowering the price at which owning beats having rented. Deltas are vs today's value — <span class="be-k-pos">green</span>
+      below it, <span class="be-k-neg">red</span> above.</p>`;
 }
 
 // Total cash you sank in at purchase: deposit + SDLT + other buying costs.

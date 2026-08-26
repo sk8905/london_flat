@@ -214,25 +214,30 @@ a.badge:hover { text-decoration: none; border-color: var(--brand); color: var(--
 .card.gold { border-color: var(--accent); } .card.gold .card-value { color: var(--accent); }
 .delta.up { color: var(--pos); font-weight: 700; } .delta.down { color: var(--neg); font-weight: 700; }
 
-/* ---------- break-even tiers ---------- */
-.be-tiers { display: flex; flex-direction: column; gap: 10px; margin: 12px 0 16px; }
-.be-tier { display: flex; flex-direction: column; gap: 10px;
-  padding: 13px 15px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--panel); }
-.be-tier:last-child { border-left: 3px solid var(--brand); }
-.be-tier-head { display: flex; align-items: flex-start; gap: 11px; }
-.be-tier-num { flex: none; width: 26px; height: 26px; border-radius: 999px; display: grid; place-items: center;
-  background: var(--brand-bg); color: var(--brand); font-weight: 800; font-size: 12px; font-style: italic; }
-.be-tier-name { font-weight: 700; font-size: 15px; color: var(--ink); line-height: 1.25; }
-.be-tier-recoups { font-size: 12.5px; color: var(--muted); margin-top: 2px; line-height: 1.35; }
-.be-scn-table { padding-left: 37px; }
-.be-scn { padding: 8px 0; border-top: 1px dashed var(--line); }
-.be-scn:first-child { border-top: none; padding-top: 2px; }
-.be-scn-alt .be-scn-label { color: var(--brand); font-weight: 600; }
-.be-scn-top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
-.be-scn-label { font-size: 12.5px; color: var(--ink-soft); line-height: 1.3; }
-.be-scn-price { font-size: 21px; font-weight: 800; letter-spacing: -0.02em; color: var(--ink); line-height: 1.05; white-space: nowrap; }
-.be-scn-gap { text-align: right; margin-top: 3px; }
-.be-scn-gap .pill { margin: 0; }
+/* ---------- break-even scenario matrix ---------- */
+.be-matrix { width: 100%; border-collapse: collapse; table-layout: fixed; margin: 10px 0 12px; }
+.be-matrix thead th { font-size: 11.5px; font-weight: 700; color: var(--ink-soft); line-height: 1.2;
+  text-align: right; vertical-align: bottom; padding: 0 8px 8px; border-bottom: 2px solid var(--line); }
+.be-matrix thead th.bem-corner { text-align: left; color: var(--muted); font-weight: 600; }
+.be-matrix tbody th, .be-matrix tbody td { padding: 11px 8px; border-bottom: 1px solid var(--line-soft);
+  vertical-align: middle; text-align: right; }
+.be-matrix tbody tr:last-child th, .be-matrix tbody tr:last-child td { border-bottom: none; }
+.bem-corner { width: 40%; }
+.bem-rowhead { text-align: left; }
+.bem-num { display: inline-grid; place-items: center; width: 19px; height: 19px; border-radius: 999px;
+  background: var(--brand-bg); color: var(--brand); font-size: 10.5px; font-weight: 800; font-style: italic;
+  vertical-align: middle; margin-right: 6px; }
+.bem-rowname { font-weight: 700; font-size: 12.5px; color: var(--ink); }
+.bem-cash { display: block; font-size: 11px; color: var(--muted); margin-left: 25px; margin-top: 1px; }
+.bem-price { font-size: 16px; font-weight: 800; letter-spacing: -0.02em; color: var(--ink); line-height: 1.1; white-space: nowrap; }
+.bem-delta { font-size: 10.5px; font-weight: 600; margin-top: 2px; white-space: nowrap; }
+.bem-delta.pos, .be-k-pos { color: var(--pos); } .bem-delta.neg, .be-k-neg { color: var(--neg); }
+.be-k-pos, .be-k-neg { font-weight: 700; }
+.be-matrix .bem-alt { background: var(--brand-bg); }
+.be-matrix thead th.bem-alt { border-bottom-color: var(--brand); }
+/* On the narrowest phones drop the "vs value" suffix (the note explains it) so the
+   delta never crowds the right edge; colour + sign still convey it. */
+@media (max-width: 440px) { .bem-vv { display: none; } }
 
 /* ---------- charts ---------- */
 .chart-wrap { margin: 14px 0 4px; }
@@ -437,4 +442,18 @@ input[type="range"] { accent-color: var(--brand); height: 5px; }
   .bar-label { font-size: 9px; }
   .bar-value { font-size: 11px; }
   .kpi-trend .spark { width: 46px; }
+}
+
+/* ---------- desktop: slightly larger type + more generous margins ---------- */
+@media (min-width: 761px) {
+  body { font-size: 14px; }
+  .wrap { padding: 0 44px; }
+  .panel { padding: 26px 32px; }
+  .be-matrix tbody th, .be-matrix tbody td { padding: 14px 14px; }
+  .be-matrix thead th { font-size: 13px; padding-bottom: 10px; }
+  .bem-rowname { font-size: 14px; }
+  .bem-cash { font-size: 12.5px; }
+  .bem-price { font-size: 20px; }
+  .bem-delta { font-size: 12px; }
+  .bem-num { width: 21px; height: 21px; font-size: 11.5px; }
 }
