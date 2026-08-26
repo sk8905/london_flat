@@ -481,3 +481,23 @@ input[type="range"] { accent-color: var(--brand); height: 5px; }
   .beg-num { width: 19px; height: 19px; font-size: 10.5px; }
   .beg-betag { font-size: 9.5px; }
 }
+
+/* ---------- desktop dashboard: flow each tab's panels into columns so several
+   sections are visible at once, instead of one tall scroll. Panels stay whole
+   (no mid-panel breaks); a panel tagged .dash-wide spans the full width. -------- */
+@media (min-width: 1024px) {
+  .wrap.content { max-width: 1180px; }
+  .tab.active {
+    column-count: 2; column-gap: 24px;
+    /* balance the two columns to similar height */
+    column-fill: balance;
+  }
+  .tab.active > .panel {
+    break-inside: avoid; -webkit-column-break-inside: avoid; page-break-inside: avoid;
+    margin-bottom: 24px;
+  }
+  .tab.active > .panel.dash-wide { column-span: all; }
+}
+@media (min-width: 1500px) {
+  .wrap.content { max-width: 1340px; }
+}
