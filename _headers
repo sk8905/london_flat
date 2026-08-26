@@ -1,6 +1,6 @@
-# Cloudflare (Pages / Workers static assets) — always revalidate so a new
-# deploy can never be masked by a stale browser cache. ETags still allow fast
-# 304s when nothing changed.
+# Cloudflare Pages headers (unused in production — this repo deploys via the
+# Worker's [assets] binding, which ignores this file; worker.js sets the same
+# no-cache policy directly). Kept in case of a future Pages-only deploy.
 /*
   Cache-Control: no-cache, must-revalidate
   X-Content-Type-Options: nosniff

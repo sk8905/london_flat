@@ -106,7 +106,6 @@ export function rentVsSell(opts) {
     y.tax = Math.max(0, grossTax - financeCredit);
     y.netCashFlow = y.grossRent - y.opex - y.mortgagePaid - y.tax;
     cumNet += y.netCashFlow;
-    y.cumNet = cumNet;
   }
   const cumulativeNetRent = cumNet;
   const cumulativePrincipal = years.reduce((s, y) => s + y.principal, 0); // equity built via repayments

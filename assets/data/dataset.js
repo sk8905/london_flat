@@ -156,32 +156,6 @@ export const RATES = {
   baseRatePrev: 3.75,
   remortgage70Prev: 4.79,
   swap2yrPrev: 4.24,
-  nextDecision: "2026-09-17",
-  // Bank Rate path (history + light forward estimate)
-  baseSeries: [
-    { date: "2024-08", rate: 5.0 },
-    { date: "2024-11", rate: 4.75 },
-    { date: "2025-02", rate: 4.5 },
-    { date: "2025-05", rate: 4.25 },
-    { date: "2025-08", rate: 4.0 },
-    { date: "2025-11", rate: 3.75 },
-    { date: "2026-06", rate: 3.75 },
-    { date: "2026-07", rate: 3.75 }, // held, 6-3 vote (3 wanted +0.25 to 4.00%)
-  ],
-  // Average market fixes, week ending 21 Aug 2026 (Moneyfacts averages,
-  // whole-of-market, via Mortgage Strategy) — second consecutive weekly FALL
-  // (2yr 5.61%→5.60%, 5yr 5.64%→5.63%), both marginal (-1bp each).
-  avg2yrFix: 5.60,
-  avg5yrFix: 5.63,
-  fix2yrSeries: [
-    { date: "2025-09", rate: 5.05 },
-    { date: "2025-12", rate: 5.20 },
-    { date: "2026-03", rate: 5.78 }, // Middle East shock pushed swaps up
-    { date: "2026-05", rate: 5.78 },
-    { date: "2026-06", rate: 5.55 }, // easing back
-    { date: "2026-07", rate: 5.6 }, // ticked back up (5.57% 22 Jul → ~5.60% 28 Jul)
-    { date: "2026-08", rate: 5.60 }, // second straight weekly fall (21 Aug, Moneyfacts, from 5.61% 14 Aug)
-  ],
 };
 
 // -----------------------------------------------------------------------------

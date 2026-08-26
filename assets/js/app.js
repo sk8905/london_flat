@@ -485,7 +485,6 @@ async function refreshLiveRates() {
     const seen = [];
     if (d.live && Number.isFinite(d.baseRateNow)) { DATA.RATES.baseRateNow = d.baseRateNow; if (d.baseRateAsOf) DATA.RATES.baseRateAsOf = d.baseRateAsOf; if (Number.isFinite(d.baseRatePrev)) DATA.RATES.baseRatePrev = d.baseRatePrev; seen.push(boeToISO(d.baseRateAsOf)); }
     if (d.remortgageLive && Number.isFinite(d.remortgage70Now)) { DATA.RATES.remortgage70Now = d.remortgage70Now; if (d.remortgage70AsOf) DATA.RATES.remortgage70AsOf = d.remortgage70AsOf; if (Number.isFinite(d.remortgage70Prev)) DATA.RATES.remortgage70Prev = d.remortgage70Prev; seen.push(boeToISO(d.remortgage70AsOf)); }
-    if (d.swapLive && Number.isFinite(d.swap2yrNow)) { DATA.RATES.swap2yrNow = d.swap2yrNow; if (d.swap2yrAsOf) DATA.RATES.swap2yrAsOf = d.swap2yrAsOf; if (Number.isFinite(d.swap2yrPrev)) DATA.RATES.swap2yrPrev = d.swap2yrPrev; seen.push(boeToISO(d.swap2yrAsOf)); }
     _liveDates = seen.filter(Boolean);
     renderRateBadges();
     renderFreshness();

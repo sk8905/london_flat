@@ -75,7 +75,7 @@ export function rentVsBuy(opts) {
     if (k % 12 === 0) {
       if (bucket) years.push(bucket);
       bucket = { label: ymToISO(idx), months: 0, rent: 0, interest: 0, principal: 0,
-                 mortgage: 0, serviceMaint: 0, ownCash: 0 };
+                 serviceMaint: 0, ownCash: 0 };
       if (k > 0) rentMonthly *= 1 + (rentCfg.rentGrowthPct || 0) / 100;
     }
     // switch to remortgage rate once the fix ends
@@ -96,7 +96,6 @@ export function rentVsBuy(opts) {
     bucket.rent += rentMonthly;
     bucket.interest += interest;
     bucket.principal += principalPaid;
-    bucket.mortgage += interest + principalPaid;
     bucket.serviceMaint += scMonthly + maintMonthly;
     bucket.ownCash += interest + principalPaid + scMonthly + maintMonthly;
     bucket.months += 1;
