@@ -296,6 +296,19 @@ function nativeNotify(fresh) {
   } catch (_) {}
 }
 
+// Show £/m² on a sale notification even if it was logged before that detail existed:
+// match the sale back to the current dataset by address and splice £/m² in before
+// the trailing "(month)". New notifications already carry it, so the guard skips them.
+function notifDisplayText(n) {
+  if (n.type !== "sale" || /\/m²/.test(n.text)) return n.text;
+  const addr = String(n.id || "").replace(/^sale:/, "").split("|")[0];
+  const row = (MKT.SALES.rows || []).find((x) => x.addr === addr);
+  if (!row || !(row.sqm > 0)) return n.text;
+  const psm = " · " + gbp(Math.round(row.price / row.sqm)) + "/m²";
+  const at = n.text.lastIndexOf(" (");
+  return at === -1 ? n.text + psm : n.text.slice(0, at) + psm + n.text.slice(at);
+}
+
 function renderNotifications() {
   const log = loadNotifLog();
   const unread = log.filter((n) => !n.read).length;
@@ -306,7 +319,7 @@ function renderNotifications() {
   if (list) {
     list.innerHTML = log.length
       ? log.map((n) => `<div class="notif-item ${n.read ? "" : "unread"}"><span class="notif-dot notif-${n.type}"></span>
-          <div><div class="notif-text">${n.text}</div><div class="notif-time">${fmtNotifDate(n.ts)}</div></div></div>`).join("")
+          <div><div class="notif-text">${notifDisplayText(n)}</div><div class="notif-time">${fmtNotifDate(n.ts)}</div></div></div>`).join("")
       : `<div class="notif-empty">You're all caught up. You'll be alerted here whenever a new N1 sale is added, the BoE base rate changes, or the 2-year swap moves by 10bps or more.</div>`;
   }
   const foot = $("#notif-foot");
