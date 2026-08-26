@@ -237,7 +237,7 @@ function notifySignature() {
   return {
     baseRate: r.baseRateNow, baseRateAsOf: r.baseRateAsOf,
     swap: r.swap2yrNow, swapAsOf: r.swap2yrAsOf,
-    comps: (MKT.SALES.rows || []).map((x) => ({ key: x.addr + "|" + x.soldDate + "|" + x.price, addr: x.addr, price: x.price, date: x.soldDate })),
+    comps: (MKT.SALES.rows || []).map((x) => ({ key: x.addr + "|" + x.soldDate + "|" + x.price, addr: x.addr, price: x.price, date: x.soldDate, sqm: x.sqm })),
   };
 }
 function loadNotifLog() { try { return JSON.parse(localStorage.getItem(NOTIF_LOG_KEY)) || []; } catch (_) { return []; } }
@@ -263,8 +263,10 @@ function detectNotifications() {
         "2-year GBP swap moved " + (bps >= 0 ? "+" : "") + bps + "bps: " + pct(prev.swap) + " → " + pct(cur.swap) + ".");
     }
     const prevKeys = new Set((prev.comps || []).map((c) => c.key));
-    cur.comps.filter((c) => !prevKeys.has(c.key)).forEach((c) =>
-      add("sale:" + c.key, "sale", "New N1 sale: " + c.addr + " — " + gbp(c.price) + " (" + monthName(c.date) + ")."));
+    cur.comps.filter((c) => !prevKeys.has(c.key)).forEach((c) => {
+      const psm = c.sqm > 0 ? " · " + gbp(Math.round(c.price / c.sqm)) + "/m²" : "";
+      add("sale:" + c.key, "sale", "New N1 sale: " + c.addr + " — " + gbp(c.price) + psm + " (" + monthName(c.date) + ").");
+    });
   }
 
   try { localStorage.setItem(NOTIF_SNAP_KEY, JSON.stringify(cur)); } catch (_) {}
