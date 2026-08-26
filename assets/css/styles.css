@@ -214,30 +214,35 @@ a.badge:hover { text-decoration: none; border-color: var(--brand); color: var(--
 .card.gold { border-color: var(--accent); } .card.gold .card-value { color: var(--accent); }
 .delta.up { color: var(--pos); font-weight: 700; } .delta.down { color: var(--neg); font-weight: 700; }
 
-/* ---------- break-even scenario matrix ---------- */
-.be-matrix { width: 100%; border-collapse: collapse; table-layout: fixed; margin: 10px 0 12px; }
-.be-matrix thead th { font-size: 11.5px; font-weight: 700; color: var(--ink-soft); line-height: 1.2;
-  text-align: right; vertical-align: bottom; padding: 0 8px 8px; border-bottom: 2px solid var(--line); }
-.be-matrix thead th.bem-corner { text-align: left; color: var(--muted); font-weight: 600; }
-.be-matrix tbody th, .be-matrix tbody td { padding: 11px 8px; border-bottom: 1px solid var(--line-soft);
-  vertical-align: middle; text-align: right; }
-.be-matrix tbody tr:last-child th, .be-matrix tbody tr:last-child td { border-bottom: none; }
-.bem-corner { width: 40%; }
-.bem-rowhead { text-align: left; }
-.bem-num { display: inline-grid; place-items: center; width: 19px; height: 19px; border-radius: 999px;
-  background: var(--brand-bg); color: var(--brand); font-size: 10.5px; font-weight: 800; font-style: italic;
-  vertical-align: middle; margin-right: 6px; }
-.bem-rowname { font-weight: 700; font-size: 12.5px; color: var(--ink); }
-.bem-cash { display: block; font-size: 11px; color: var(--muted); margin-left: 25px; margin-top: 1px; }
-.bem-price { font-size: 16px; font-weight: 800; letter-spacing: -0.02em; color: var(--ink); line-height: 1.1; white-space: nowrap; }
-.bem-delta { font-size: 10.5px; font-weight: 600; margin-top: 2px; white-space: nowrap; }
-.bem-delta.pos, .be-k-pos { color: var(--pos); } .bem-delta.neg, .be-k-neg { color: var(--neg); }
-.be-k-pos, .be-k-neg { font-weight: 700; }
-.be-matrix .bem-alt { background: var(--brand-bg); }
-.be-matrix thead th.bem-alt { border-bottom-color: var(--brand); }
-/* On the narrowest phones drop the "vs value" suffix (the note explains it) so the
-   delta never crowds the right edge; colour + sign still convey it. */
-@media (max-width: 440px) { .bem-vv { display: none; } }
+/* ---------- break-even heat-grid ---------- */
+.be-k-pos { color: var(--pos); font-weight: 700; } .be-k-neg { color: var(--neg); font-weight: 700; }
+.be-rent-toggle { margin: 4px 0 12px; }
+.be-grid { width: 100%; border-collapse: separate; border-spacing: 0; table-layout: fixed; margin: 2px 0 12px; }
+.be-grid thead th { font-size: 11.5px; font-weight: 700; color: var(--ink); line-height: 1.25;
+  text-align: center; vertical-align: bottom; padding: 4px 6px 8px; border-bottom: 2px solid var(--line); }
+.be-grid thead th.beg-corner { text-align: left; color: var(--muted); font-weight: 600; font-size: 11px; }
+.beg-corner { width: 31%; }
+.beg-num { display: inline-grid; place-items: center; width: 17px; height: 17px; border-radius: 999px;
+  background: var(--brand-bg); color: var(--brand); font-size: 9.5px; font-weight: 800; font-style: italic; vertical-align: middle; }
+.beg-behead { display: block; font-size: 10px; font-weight: 700; color: var(--brand-dark); margin-top: 3px; white-space: nowrap; }
+.be-grid tbody th, .be-grid tbody td { padding: 9px 5px; border-bottom: 1px solid var(--line-soft); vertical-align: middle; }
+.be-grid tbody tr:last-child th, .be-grid tbody tr:last-child td { border-bottom: none; }
+.beg-rowhead { text-align: left; font-weight: 700; font-size: 12px; color: var(--ink); white-space: nowrap; }
+.beg-cell { text-align: center; position: relative; font-size: 12.5px; font-weight: 700; color: var(--ink); }
+.beg-be { box-shadow: inset 0 0 0 2px var(--brand); }
+.beg-betag { display: block; font-size: 8.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em;
+  color: var(--brand-dark); margin-top: 1px; }
+.beg-valrow th, .beg-valrow td { border-top: 2px solid var(--ink); }
+.beg-valrow .beg-rowhead { color: var(--brand-dark); }
+.beg-valtag { display: block; font-size: 9.5px; font-weight: 600; color: var(--muted); text-transform: none; letter-spacing: 0; }
+@media (max-width: 430px) {
+  .be-grid tbody th, .be-grid tbody td { padding: 8px 3px; }
+  .beg-corner { width: 30%; }
+  .beg-rowhead { font-size: 11.5px; }
+  .beg-cell { font-size: 11.5px; }
+  .beg-behead { font-size: 9.5px; }
+  .be-grid thead th { font-size: 11px; padding-left: 3px; padding-right: 3px; }
+}
 
 /* ---------- charts ---------- */
 .chart-wrap { margin: 14px 0 4px; }
@@ -449,11 +454,11 @@ input[type="range"] { accent-color: var(--brand); height: 5px; }
   body { font-size: 14px; }
   .wrap { padding: 0 44px; }
   .panel { padding: 26px 32px; }
-  .be-matrix tbody th, .be-matrix tbody td { padding: 14px 14px; }
-  .be-matrix thead th { font-size: 13px; padding-bottom: 10px; }
-  .bem-rowname { font-size: 14px; }
-  .bem-cash { font-size: 12.5px; }
-  .bem-price { font-size: 20px; }
-  .bem-delta { font-size: 12px; }
-  .bem-num { width: 21px; height: 21px; font-size: 11.5px; }
+  .be-grid tbody th, .be-grid tbody td { padding: 12px 12px; }
+  .be-grid thead th { font-size: 13px; }
+  .beg-behead { font-size: 11px; }
+  .beg-rowhead { font-size: 14px; }
+  .beg-cell { font-size: 14px; }
+  .beg-num { width: 19px; height: 19px; font-size: 10.5px; }
+  .beg-betag { font-size: 9.5px; }
 }

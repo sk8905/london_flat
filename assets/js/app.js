@@ -5,7 +5,7 @@
 import * as DATA from "../data/dataset.js";
 import { runModel, signalLabel, FACTOR_LABELS } from "./model.js";
 import * as C from "./charts.js";
-import { monthlyPayment, monthsBetween, ymIndex, ymToISO, breakEvenRecoupAll, interestPaidToDate, economicsForWindow } from "./finance.js";
+import { monthlyPayment, monthsBetween, ymIndex, ymToISO, breakEvenRecoupAll, interestPaidToDate, economicsForWindow, sellingCosts, saleCGT } from "./finance.js";
 import { rentVsSell } from "./letting.js";
 import { rentVsBuy } from "./ownrent.js";
 import * as MKT from "./market.js";
@@ -579,64 +579,112 @@ function renderPaid(r) {
       Edit any figure on the <strong>Inputs</strong> tab — saved in this browser.</p>`;
 }
 
-// Break-even sale price, shown for three cumulative cash-recoup targets.
+// Break-even grid: candidate sale prices (rows) × three cumulative cash targets
+// (columns). A "rent saved" layer toggles whether the rent you'd otherwise have paid
+// is credited against each target. Each cell shows the surplus/shortfall at that
+// price; the break-even cell (where a column first turns positive) is ringed.
+let beRentCredit = false;
+
 function renderBreakEven(r) {
   const host = $("#breakeven-body");
   if (!host) return;
-  const p = r.inputs.property, m = r.inputs.mortgage;
+  const p = r.inputs.property, m = r.inputs.mortgage, cfg = r.inputs.sellingCfg;
   const rentCfg = { monthlyRent: MKT.RENT.currentAvg2bed, growthPct: MKT.RENT.yoYPct };
   const be = breakEvenRecoupAll({
-    property: p, mortgage: m, sellingCfg: r.inputs.sellingCfg, saleDateISO: DATA.META.asOf, cgtCfg: r.cgtCfg, rentCfg,
+    property: p, mortgage: m, sellingCfg: cfg, saleDateISO: DATA.META.asOf, cgtCfg: r.cgtCfg, rentCfg,
   });
-  const t = be.tiers, ci = be.inputs, value = r.presentValue;
-  const rentSaved = be.rentSaved;
+  const ci = be.inputs, value = r.presentValue, rentSaved = be.rentSaved;
   const monthsOwned = monthsBetween(p.purchaseDate, DATA.META.asOf);
+  const credit = beRentCredit ? rentSaved : 0;
 
-  // Compact £k delta for the "vs today's value" gap in each matrix cell.
   const kfmt = (v) => {
     const a = Math.abs(v);
     return a >= 1000 ? "£" + Math.round(a / 1000) + "k" : "£" + Math.round(a);
   };
-  // A matrix cell: the break-even price and its signed gap vs today's value
-  // (green = below value / easily achievable, red = above).
-  const cell = (scn) => {
-    const gap = scn.breakEvenPrice - value, over = gap > 0;
-    return `<div class="bem-price">${gbp(scn.breakEvenPrice)}</div>
-      <div class="bem-delta ${over ? "neg" : "pos"}">${over ? "+" : "−"}${kfmt(gap)} <span class="bem-vv">vs value</span></div>`;
+
+  // Net proceeds if you sold TODAY at a given price: price less the (price-independent)
+  // outstanding balance & ERC and the (price-dependent) selling costs and CGT.
+  const netAt = (price) => {
+    const sc = sellingCosts(price, cfg).total;
+    const cgt = saleCGT(p, price, sc, r.cgtCfg);
+    return price - ci.outstanding - ci.erc - sc - cgt;
   };
 
-  // Rows = cumulative cash targets; columns = recoup vs. net-of-rent-saved.
-  const rows = [
-    ["i", "Deposit", ci.deposit, t.deposit],
-    ["ii", "+ Buying costs", ci.deposit + ci.sdlt + ci.buyingCosts, t.costs],
-    ["iii", "+ Interest paid", ci.deposit + ci.sdlt + ci.buyingCosts + ci.interestPaid, t.all],
-  ];
+  // Three cumulative targets; the break-even price for the ACTIVE rent state.
+  const scn = [
+    { key: "i", name: "Deposit", base: ci.deposit, tier: be.tiers.deposit },
+    { key: "ii", name: "+ Buying costs", base: ci.deposit + ci.sdlt + ci.buyingCosts, tier: be.tiers.costs },
+    { key: "iii", name: "+ Interest", base: ci.deposit + ci.sdlt + ci.buyingCosts + ci.interestPaid, tier: be.tiers.all },
+  ].map((s) => ({
+    ...s,
+    target: Math.max(0, s.base - credit),
+    beP: (beRentCredit ? s.tier.vsRent : s.tier.recoup).breakEvenPrice,
+  }));
+
+  // Price ladder: round steps spanning every break-even and today's value, with the
+  // exact current-value row spliced in. Highest price at the top.
+  const STEP = 25000;
+  const allBE = scn.flatMap((s) => [s.tier.recoup.breakEvenPrice, s.tier.vsRent.breakEvenPrice]);
+  const loR = Math.floor((Math.min(...allBE, value) - 12000) / STEP) * STEP;
+  const hiR = Math.ceil((Math.max(...allBE, value) + 12000) / STEP) * STEP;
+  const set = [];
+  for (let px = hiR; px >= loR; px -= STEP) set.push(px);
+  set.push(value);
+  set.sort((a, b) => b - a);
+  const rows = [];
+  for (const px of set) {
+    if (rows.length && Math.abs(rows[rows.length - 1].price - px) < 5000) {
+      if (Math.abs(px - value) < 1) rows[rows.length - 1].isValue = true;
+      continue;
+    }
+    rows.push({ price: px, isValue: Math.abs(px - value) < 1 });
+  }
+  // Break-even row per scenario = the lowest-priced row that recoups (surplus ≥ 0).
+  scn.forEach((s) => {
+    let beRow = null;
+    for (const row of rows) if (netAt(row.price) - s.target >= 0) beRow = row.price;
+    s.beRowPrice = beRow;
+  });
+
+  const cellFor = (s, price) => {
+    const surplus = netAt(price) - s.target, pos = surplus >= 0;
+    const a = Math.min(0.82, Math.max(0.05, Math.abs(surplus) / 130000));
+    const bg = pos ? `rgba(47,125,87,${a})` : `rgba(176,69,69,${a})`;
+    const isBE = price === s.beRowPrice;
+    return `<td class="beg-cell${isBE ? " beg-be" : ""}" style="background:${bg}">${
+      pos ? "+" : "−"}${kfmt(surplus)}${isBE ? '<span class="beg-betag">break-even</span>' : ""}</td>`;
+  };
 
   host.innerHTML = `
-    <p class="letting-lead">How high must the sale price be to get your own cash back? Rows are cumulative cash targets;
-      columns are two views — the raw price to recoup it, and a lower price once the <strong>${gbp(rentSaved)}</strong> rent
-      you'd otherwise have paid is credited. Sale assumed <strong>today</strong>; est. value <strong>${gbp(value)}</strong>.</p>
-    <table class="be-matrix">
+    <p class="letting-lead">What sale price do you need? Rows are candidate sale prices; columns are the three cash targets you
+      might want back. Each cell is your <strong>surplus or shortfall</strong> at that price — read down a column to where it turns
+      <span class="be-k-pos">green</span>: that's the <strong>break-even</strong> (ringed). Sold today; est. value ${gbp(value)}.</p>
+    <div class="toggle be-rent-toggle" id="be-rent-toggle">
+      <button type="button" class="toggle-btn ${beRentCredit ? "" : "active"}" data-be-rent="0">Recoup the cash</button>
+      <button type="button" class="toggle-btn ${beRentCredit ? "active" : ""}" data-be-rent="1">Credit rent saved</button>
+    </div>
+    <div class="table-wrap"><table class="be-grid">
       <thead><tr>
-        <th class="bem-corner">Cash to get back</th>
-        <th>Sell to<br>recoup it</th>
-        <th class="bem-alt">Net of rent<br>saved vs renting</th>
+        <th class="beg-corner">Sale price</th>
+        ${scn.map((s) => `<th><span class="beg-num">${s.key}</span> ${s.name}<span class="beg-behead">B/E ${gbp(s.beP)}</span></th>`).join("")}
       </tr></thead>
       <tbody>
-        ${rows.map(([num, name, cash, tier]) => `<tr>
-          <th class="bem-rowhead"><span class="bem-num">${num}</span><span class="bem-rowname">${name}</span><span class="bem-cash">${gbp(cash)}</span></th>
-          <td>${cell(tier.recoup)}</td>
-          <td class="bem-alt">${cell(tier.vsRent)}</td>
+        ${rows.map((row) => `<tr class="${row.isValue ? "beg-valrow" : ""}">
+          <th class="beg-rowhead">${gbp(row.price)}${row.isValue ? '<span class="beg-valtag">est. value now</span>' : ""}</th>
+          ${scn.map((s) => cellFor(s, row.price)).join("")}
         </tr>`).join("")}
       </tbody>
-    </table>
-    <p class="muted small">Targets build up: <strong>(i)</strong> deposit, <strong>(ii)</strong> + SDLT &amp; buying costs,
-      <strong>(iii)</strong> + mortgage interest paid so far. Every break-even also covers the ${gbp(ci.outstanding)} outstanding
-      mortgage${ci.erc > 0 ? ", " + gbp(ci.erc) + " ERC" : ""}, agent fee (incl VAT), legal, EPC${
-      p.isPrimaryResidence ? "" : " and CGT"} — hence each price sits above the cash it returns. <strong>Rent saved</strong> =
-      ${gbp(rentSaved)} over ${monthsOwned} months at ~${gbp(MKT.RENT.currentAvg2bed)}/mo (local 2-bed, grown ${MKT.RENT.yoYPct}%/yr),
-      lowering the price at which owning beats having rented. Deltas are vs today's value — <span class="be-k-pos">green</span>
-      below it, <span class="be-k-neg">red</span> above.</p>`;
+    </table></div>
+    <p class="muted small">Cells show net proceeds (price − ${gbp(ci.outstanding)} mortgage${
+      ci.erc > 0 ? " − " + gbp(ci.erc) + " ERC" : ""} − agent fee incl VAT − legal − EPC${
+      p.isPrimaryResidence ? "" : " − CGT"}) minus each cash target. Targets build up: <strong>(i)</strong> deposit
+      (${gbp(ci.deposit)}), <strong>(ii)</strong> + SDLT &amp; buying costs, <strong>(iii)</strong> + mortgage interest paid so far.
+      <strong>Credit rent saved</strong> subtracts the ${gbp(rentSaved)} rent you'd have paid over ${monthsOwned} months
+      (~${gbp(MKT.RENT.currentAvg2bed)}/mo local 2-bed, grown ${MKT.RENT.yoYPct}%/yr), lowering every break-even — the price at
+      which owning beats having rented.</p>`;
+
+  host.querySelectorAll("#be-rent-toggle .toggle-btn").forEach((b) =>
+    b.addEventListener("click", () => { beRentCredit = b.dataset.beRent === "1"; renderBreakEven(r); }));
 }
 
 // Total cash you sank in at purchase: deposit + SDLT + other buying costs.
