@@ -130,6 +130,17 @@ export const SALES = {
       price: 745000, soldDate: "2025-03-17", lat: 51.545122, lng: -0.074864 },
     { addr: "Flat 66, Sledge Tower, Dalston Square", beds: 2, baths: 2, type: "New build", sqm: 63,
       price: 674000, soldDate: "2025-02-28", lat: 51.545122, lng: -0.074864 },
+    // Manually added 2026-08-26 (no HOMEDATA_KEY in this environment, so pulled directly):
+    // HM Land Registry-confirmed completions (via Rightmove sold-price history) + EPC
+    // register floor areas. baths inferred from other 2-bed units in the same block
+    // (EPC certificates don't record bathroom counts) — Thomas Tower and Labyrinth
+    // Tower 2-bed listings in this scheme are consistently en-suite + family bathroom.
+    { addr: "Flat 24, Gainsborough Studios North, 1 Poole Street", beds: 2, baths: 1, type: "New build", sqm: 75,
+      price: 700000, soldDate: "2026-01-16", lat: 51.53612, lng: -0.08881 },
+    { addr: "Flat 16, Labyrinth Tower, Dalston Square", beds: 2, baths: 2, type: "New build", sqm: 73,
+      price: 575000, soldDate: "2026-02-05", lat: 51.545061, lng: -0.073901 },
+    { addr: "Flat 54, Thomas Tower, Dalston Square", beds: 2, baths: 2, type: "New build", sqm: 64,
+      price: 538000, soldDate: "2026-05-15", lat: 51.545644, lng: -0.074857 },
   ],
 };
 
@@ -220,8 +231,8 @@ export const LISTINGS_PER_MONTH = {
 // arrears; the newest month is PROVISIONAL and gets revised, so YoY can be volatile).
 // Pulled from landregistry.data.gov.uk/data/ukhpi (release published 19 Aug 2026).
 // `n17txAvg12m` is now the trailing-12-month MEDIAN completed flat-sale price within
-// 2 km of the centroid (Homedata/HMLR completions, council-filtered, n=14 after the
-// 2026-08-21 sold-comp addition) — a hyper-local anchor for a 2-bed flat buyer, which
+// 2 km of the centroid (Homedata/HMLR completions, council-filtered, n=16 after the
+// 2026-08-26 sold-comp additions) — a hyper-local anchor for a 2-bed flat buyer, which
 // now reads a touch below the whole-borough figure that includes houses.
 // islingtonYoYPct is the ALL-PROPERTY figure (volatile month to month in a small
 // borough due to mix effects — this run's YoY base of £733k in Jun 2025 is well above
@@ -236,7 +247,7 @@ export const HPI = {
   islingtonYoYPct: -8.1,
   islingtonFlatsAvg: 560000, // Islington flats/maisonettes (UK HPI)
   islingtonFlatsYoYPct: -8.4,
-  n17txAvg12m: 670500, // 2 km trailing-12m median completed flat sale (Homedata/HMLR, council-filtered, n=14)
+  n17txAvg12m: 660000, // 2 km trailing-12m median completed flat sale (Homedata/HMLR, council-filtered, n=16)
   londonAvg: 554000,
   londonYoYPct: -2.5,
   englandAvg: 292095,

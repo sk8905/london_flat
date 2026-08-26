@@ -10,8 +10,8 @@
 // =============================================================================
 
 export const META = {
-  asOf: "2026-08-25",
-  build: "v91 · 2026-08-25", // bump on each change so the footer confirms the live build
+  asOf: "2026-08-26",
+  build: "v92 · 2026-08-26", // bump on each change so the footer confirms the live build
 };
 
 // -----------------------------------------------------------------------------
