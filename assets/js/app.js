@@ -582,8 +582,61 @@ function renderPaid(r) {
 // Break-even grid: candidate sale prices (rows) × three cumulative cash targets
 // (columns). A "rent saved" layer toggles whether the rent you'd otherwise have paid
 // is credited against each target. Each cell shows the surplus/shortfall at that
-// price; the break-even cell (where a column first turns positive) is ringed.
+// price; the break-even cell (where a column first turns positive) is ringed. Hover
+// (or tap) a cell to see the full net-proceeds-minus-target waterfall behind it.
 let beRentCredit = false;
+let _begCells = {};   // cell id -> breakdown, rebuilt each render
+let _begTip = null;   // singleton tooltip element (appended to <body>)
+let _begActiveId = null;
+let _begDocWired = false;
+
+function ensureBegTip() {
+  if (_begTip && document.body.contains(_begTip)) return _begTip;
+  _begTip = document.createElement("div");
+  _begTip.className = "beg-tip";
+  _begTip.hidden = true;
+  document.body.appendChild(_begTip);
+  return _begTip;
+}
+
+function begHideTip() {
+  if (_begTip) _begTip.hidden = true;
+  _begActiveId = null;
+  document.querySelectorAll(".beg-cell.beg-hot").forEach((c) => c.classList.remove("beg-hot"));
+}
+
+// Waterfall HTML for one cell's breakdown.
+function begTipHtml(d) {
+  const line = (l, v, sign) => `<div class="bt-row"><span>${l}</span><span class="${
+    sign === "-" ? "bt-neg" : sign === "+" ? "bt-pos" : ""}">${sign === "-" ? "−" : sign === "+" ? "+" : ""}${gbp(Math.abs(v))}</span></div>`;
+  const rows = [`<div class="bt-row bt-strong"><span>Sale price</span><span>${gbp(d.price)}</span></div>`];
+  rows.push(line("Outstanding mortgage", d.outstanding, "-"));
+  if (d.erc > 0) rows.push(line("Early-repayment charge", d.erc, "-"));
+  rows.push(line(`Agent fee (${(d.agentRate * 100).toFixed(2)}% incl VAT)`, d.agent, "-"));
+  rows.push(line("Legal / conveyancing", d.legal, "-"));
+  rows.push(line("EPC &amp; misc", d.misc, "-"));
+  if (d.cgt > 0) rows.push(line("Capital Gains Tax", d.cgt, "-"));
+  rows.push(`<div class="bt-row bt-sub"><span>= Net proceeds</span><span>${gbp(d.net)}</span></div>`);
+  rows.push(line(`Cash target (${d.scnKey})`, d.base, "-"));
+  if (d.credit > 0) rows.push(line("Rent saved credit", d.credit, "+"));
+  const pos = d.surplus >= 0;
+  rows.push(`<div class="bt-row bt-total"><span>${pos ? "Surplus" : "Shortfall"}</span><span class="${
+    pos ? "bt-pos" : "bt-neg"}">${pos ? "+" : "−"}${gbp(Math.abs(d.surplus))}</span></div>`);
+  return `<div class="bt-head">At ${gbp(d.price)} · ${d.scnName}${d.credit > 0 ? " · after rent saved" : ""}</div>${rows.join("")}`;
+}
+
+function positionBegTip(tip, cellEl) {
+  tip.style.visibility = "hidden";
+  tip.hidden = false;
+  const r = cellEl.getBoundingClientRect(), tw = tip.offsetWidth, th = tip.offsetHeight;
+  let left = r.left + r.width / 2 - tw / 2;
+  left = Math.max(8, Math.min(left, window.innerWidth - tw - 8));
+  let top = r.top - th - 8;
+  if (top < 8) top = r.bottom + 8; // flip below if no room above
+  tip.style.left = Math.round(left) + "px";
+  tip.style.top = Math.round(top) + "px";
+  tip.style.visibility = "visible";
+}
 
 function renderBreakEven(r) {
   const host = $("#breakeven-body");
@@ -646,12 +699,22 @@ function renderBreakEven(r) {
     s.beRowPrice = beRow;
   });
 
-  const cellFor = (s, price) => {
-    const surplus = netAt(price) - s.target, pos = surplus >= 0;
+  _begCells = {};
+  const cellFor = (s, price, rowIdx) => {
+    const scz = sellingCosts(price, cfg);
+    const cgt = saleCGT(p, price, scz.total, r.cgtCfg);
+    const net = price - ci.outstanding - ci.erc - scz.total - cgt;
+    const surplus = net - s.target, pos = surplus >= 0;
+    const id = "r" + rowIdx + s.key;
+    _begCells[id] = {
+      price, outstanding: ci.outstanding, erc: ci.erc, agent: scz.agent, legal: scz.legal,
+      misc: scz.misc, cgt, net, agentRate: ci.agentRate,
+      scnKey: s.key, scnName: s.name, base: s.base, credit, surplus,
+    };
     const a = Math.min(0.82, Math.max(0.05, Math.abs(surplus) / 130000));
     const bg = pos ? `rgba(47,125,87,${a})` : `rgba(176,69,69,${a})`;
     const isBE = price === s.beRowPrice;
-    return `<td class="beg-cell${isBE ? " beg-be" : ""}" style="background:${bg}">${
+    return `<td class="beg-cell${isBE ? " beg-be" : ""}" data-beg="${id}" style="background:${bg}">${
       pos ? "+" : "−"}${kfmt(surplus)}${isBE ? '<span class="beg-betag">break-even</span>' : ""}</td>`;
   };
 
@@ -669,9 +732,9 @@ function renderBreakEven(r) {
         ${scn.map((s) => `<th><span class="beg-num">${s.key}</span> ${s.name}<span class="beg-behead">B/E ${gbp(s.beP)}</span></th>`).join("")}
       </tr></thead>
       <tbody>
-        ${rows.map((row) => `<tr class="${row.isValue ? "beg-valrow" : ""}">
+        ${rows.map((row, ri) => `<tr class="${row.isValue ? "beg-valrow" : ""}">
           <th class="beg-rowhead">${gbp(row.price)}${row.isValue ? '<span class="beg-valtag">est. value now</span>' : ""}</th>
-          ${scn.map((s) => cellFor(s, row.price)).join("")}
+          ${scn.map((s) => cellFor(s, row.price, ri)).join("")}
         </tr>`).join("")}
       </tbody>
     </table></div>
@@ -685,6 +748,39 @@ function renderBreakEven(r) {
 
   host.querySelectorAll("#be-rent-toggle .toggle-btn").forEach((b) =>
     b.addEventListener("click", () => { beRentCredit = b.dataset.beRent === "1"; renderBreakEven(r); }));
+
+  // Hover (desktop) or tap (touch) a cell to reveal the calculation behind it.
+  const grid = host.querySelector(".be-grid"), tip = ensureBegTip();
+  begHideTip();
+  const show = (cellEl) => {
+    const id = cellEl.dataset.beg, d = _begCells[id];
+    if (!d) return;
+    if (id !== _begActiveId) {
+      tip.innerHTML = begTipHtml(d);
+      _begActiveId = id;
+      grid.querySelectorAll(".beg-hot").forEach((c) => c.classList.remove("beg-hot"));
+      cellEl.classList.add("beg-hot");
+    }
+    positionBegTip(tip, cellEl);
+  };
+  grid.addEventListener("mousemove", (e) => {
+    const c = e.target.closest(".beg-cell");
+    if (c) show(c); else begHideTip();
+  });
+  grid.addEventListener("mouseleave", begHideTip);
+  grid.addEventListener("click", (e) => {
+    const c = e.target.closest(".beg-cell");
+    if (!c) return;
+    if (c.dataset.beg === _begActiveId && !tip.hidden) begHideTip(); else { begHideTip(); show(c); }
+  });
+  // One-time global handlers: dismiss the tip on an outside tap or on scroll.
+  if (!_begDocWired) {
+    _begDocWired = true;
+    document.addEventListener("click", (e) => {
+      if (!e.target.closest(".be-grid") && !e.target.closest(".beg-tip")) begHideTip();
+    });
+    window.addEventListener("scroll", () => { if (_begTip && !_begTip.hidden) begHideTip(); }, { passive: true });
+  }
 }
 
 // Total cash you sank in at purchase: deposit + SDLT + other buying costs.
