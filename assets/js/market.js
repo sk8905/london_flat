@@ -85,7 +85,7 @@ export function withinRadius(rows, km = RADIUS_KM) {
 // is EPC-derived. `askingPrice` is omitted where Homedata held no listing price
 // (so vs-asking derives as null, not a false 0). lat/lng are the Homedata records.
 export const SALES = {
-  asOf: "2026-07-26",
+  asOf: "2026-08-27",
   curated: false,
   sources: ["landRegPP", "epcRegister", "homedata"],
   rows: [
@@ -141,6 +141,13 @@ export const SALES = {
       price: 575000, soldDate: "2026-02-05", lat: 51.545061, lng: -0.073901 },
     { addr: "Flat 54, Thomas Tower, Dalston Square", beds: 2, baths: 2, type: "New build", sqm: 64,
       price: 538000, soldDate: "2026-05-15", lat: 51.545644, lng: -0.074857 },
+    // Manually added 2026-08-27 (no HOMEDATA_KEY in this environment, so pulled directly):
+    // Rightmove sold-price history (19 May 2026) + EPC register (property type "Mid-floor
+    // flat (purpose-built)", confirming Elmore House — 16 numbered apartments plus a Lodge —
+    // is a purpose-built block, not a Victorian conversion; sqm is the EPC figure, not
+    // Zoopla's listing-derived 72 sqm). Beds/baths per Zoopla listing schema data.
+    { addr: "Apartment 13, 110 Elmore House, Elmore Street", beds: 2, baths: 2, type: "Purpose-built", sqm: 63,
+      price: 620000, soldDate: "2026-05-19", lat: 51.542512, lng: -0.090636 },
   ],
 };
 
@@ -231,8 +238,8 @@ export const LISTINGS_PER_MONTH = {
 // arrears; the newest month is PROVISIONAL and gets revised, so YoY can be volatile).
 // Pulled from landregistry.data.gov.uk/data/ukhpi (release published 19 Aug 2026).
 // `n17txAvg12m` is now the trailing-12-month MEDIAN completed flat-sale price within
-// 2 km of the centroid (Homedata/HMLR completions, council-filtered, n=16 after the
-// 2026-08-26 sold-comp additions) — a hyper-local anchor for a 2-bed flat buyer, which
+// 2 km of the centroid (Homedata/HMLR completions, council-filtered, n=17 after the
+// 2026-08-27 Elmore House addition) — a hyper-local anchor for a 2-bed flat buyer, which
 // now reads a touch below the whole-borough figure that includes houses.
 // islingtonYoYPct is the ALL-PROPERTY figure (volatile month to month in a small
 // borough due to mix effects — this run's YoY base of £733k in Jun 2025 is well above
@@ -247,7 +254,7 @@ export const HPI = {
   islingtonYoYPct: -8.1,
   islingtonFlatsAvg: 560000, // Islington flats/maisonettes (UK HPI)
   islingtonFlatsYoYPct: -8.4,
-  n17txAvg12m: 660000, // 2 km trailing-12m median completed flat sale (Homedata/HMLR, council-filtered, n=16)
+  n17txAvg12m: 650000, // 2 km trailing-12m median completed flat sale (Homedata/HMLR, council-filtered, n=17)
   londonAvg: 554000,
   londonYoYPct: -2.5,
   englandAvg: 292095,
