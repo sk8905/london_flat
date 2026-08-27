@@ -215,7 +215,7 @@ a.badge:hover { text-decoration: none; border-color: var(--brand); color: var(--
 .delta.up { color: var(--pos); font-weight: 700; } .delta.down { color: var(--neg); font-weight: 700; }
 
 /* ---------- break-even heat-grid ---------- */
-.be-k-pos { color: var(--pos); font-weight: 700; } .be-k-neg { color: var(--neg); font-weight: 700; }
+.be-k-pos { color: var(--pos); font-weight: 700; }
 .be-rent-toggle { margin: 4px 0 12px; }
 .be-grid { width: 100%; border-collapse: separate; border-spacing: 0; table-layout: fixed; margin: 2px 0 12px; }
 .be-grid thead th { font-size: 11.5px; font-weight: 700; color: var(--ink); line-height: 1.25;

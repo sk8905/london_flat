@@ -1013,10 +1013,10 @@ function applyCompFilters(rows, youSqm) {
 
 // Trend arrow + colour. `goodIsUp` flips the colour meaning (e.g. rising DOM is bad).
 function trendMeta(dir, goodIsUp) {
-  if (Math.abs(dir) < 1e-9) return { arrow: "→", cls: "flat", color: "var(--muted)" };
+  if (Math.abs(dir) < 1e-9) return { arrow: "→", color: "var(--muted)" };
   const up = dir > 0;
   const good = goodIsUp ? up : !up;
-  return { arrow: up ? "↑" : "↓", cls: good ? "up" : "down", color: good ? "var(--pos)" : "var(--neg)" };
+  return { arrow: up ? "↑" : "↓", color: good ? "var(--pos)" : "var(--neg)" };
 }
 
 // Sell-timing verdict at the top of Local market — a compact read of the composite
