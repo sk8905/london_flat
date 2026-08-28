@@ -128,19 +128,26 @@ export const RATES = {
   // 2-year GBP interest-rate swap (SONIA) — the wholesale rate UK lenders price
   // fixed-rate mortgages and real-estate lending off. Sits above Bank Rate when
   // the market expects cuts to be slow; the key driver of fixed mortgage pricing.
-  // Re-verified this run against propertyresearch.uk's 20 Aug 2026 close: 4.23%,
-  // down ~1bp from the prior 19 Aug 4.24% reading — a small, sub-threshold move (the
-  // in-app alert fires at 10bps) that reads as the swap-rate shock holding near its
-  // recent high rather than easing meaningfully. No newer print found as of this run.
+  // Re-verified this run against propertyresearch.uk's 26 Aug 2026 close: still
+  // 4.23%, unchanged since the 20 Aug reading — a sub-threshold move (the in-app
+  // alert fires at 10bps). Two other trackers (mfbrokers.co.uk/Chatham Financial,
+  // easfinance.co.uk) read 4.15-4.16% for mid/late-Aug, a ~7-8bp spread against
+  // propertyresearch.uk not reconciled this run; kept the established source for
+  // methodology consistency but flagging the discrepancy for a future check.
   swap2yrNow: 4.23,
-  swap2yrAsOf: "2026-08-20",
+  swap2yrAsOf: "2026-08-26",
   // Current average 2-year fixed REMORTGAGE rate at ~70% LTV (the band that fits
   // this flat). Live-refreshed from Bank of England quoted mortgage rates,
-  // interpolated between the published 60% and 75% LTV series. Snapshot fallback:
-  // re-verified this run against the newly-published BoE IADB month (IUMBV37 60%
-  // LTV = 4.68%, IUMBV34 75% LTV = 4.79%, both 2026-07-31, vs the prior 2026-06-30
-  // reading of 4.76%/4.81%) — interpolated 70% LTV = 4.75%, down from 4.79%.
-  remortgage70Now: 4.75,
+  // interpolated between the published 60% and 75% LTV series. CORRECTED
+  // 2026-08-28: the snapshot (and worker.js) had been interpolating IUMBV37
+  // against IUMBV34, but BoE's own column descriptions confirm IUMBV37 is the
+  // 3-year/75%-LTV series, not 2-year/60%-LTV — the two products don't share a
+  // term, so the prior "4.75%" reading was computed from a mismatched pair. The
+  // correct 2yr/60%-LTV code is IUMZICQ. Re-run with the right series (IUMZICQ
+  // 60% LTV = 4.61%, IUMBV34 75% LTV = 4.79%, both 2026-07-31) gives interpolated
+  // 70% LTV = 4.73%; the prior month (2026-06-30: IUMZICQ 4.60%, IUMBV34 4.81%)
+  // gives 4.74%, used below as remortgage70Prev.
+  remortgage70Now: 4.73,
   remortgage70AsOf: "2026-07",
   // Forecast 2-yr-fix path from the Bank of England OIS instantaneous forward
   // curve (month-end 2026-06, statistics/yield-curves). Change vs the current fix,
@@ -154,7 +161,7 @@ export const RATES = {
   // The daily 08:00 routine rolls "*Now" into "*Prev" before writing the new value;
   // the Worker also supplies the prior day's figure for the live series.
   baseRatePrev: 3.75,
-  remortgage70Prev: 4.79,
+  remortgage70Prev: 4.74,
   swap2yrPrev: 4.24,
 };
 
@@ -291,14 +298,22 @@ export const POLICY_FACTORS = [
       "(Bessent) unveiled 'Operation Economic Outcast', a sweeping new Iran sanctions campaign " +
       "targeting shipping, oil, crypto, gold and aviation and, for the first time, catching " +
       "Chinese/Hong Kong firms in the net — a bid to choke off Iranian oil revenue without " +
-      "further strikes. Brent crude eased to ~$92/bbl (-2.5% on the day) on the news, but UK " +
-      "wholesale gas kept climbing to ~165p/therm (+1.4%), both still well above the pre-conflict " +
-      "baseline. The Bank called the conflict 'the dominant source of uncertainty' for inflation " +
-      "at its 30 Jul hold (3 of 9 MPC members voted to hike); the next decision is 17 Sep. It has " +
-      "pushed mortgage swap and fixed rates up through summer 2026 and cooled Islington prices " +
-      "sharply — a real downside risk, now visibly showing up in the price data, not just a " +
-      "forecast risk.",
-    effective: "2026-08-24",
+      "further strikes. The read since has been genuinely mixed, not one-directional: Brent " +
+      "crude actually fell through the week to ~$87-89/bbl by 26-27 Aug (markets reading the " +
+      "sanctions as less forceful than feared, plus talk of a diplomatic off-ramp), but UK " +
+      "wholesale gas diverged upward to ~169p/therm on 26 Aug — its highest since Jan 2023 — on " +
+      "Persian Gulf supply concerns. The Strait of Hormuz remains the live flashpoint: Iran said " +
+      "on 26 Aug it 'remains closed' despite an Oman-brokered deal, with regional powers reported " +
+      "seeking an off-ramp as of 27 Aug — fluid and unresolved. The Bank called the conflict 'the " +
+      "dominant source of uncertainty' for inflation at its 30 Jul hold (3 of 9 MPC members voted " +
+      "to hike); a Reuters poll (13-18 Aug) has ~90% of economists expecting another hold at the " +
+      "17 Sep decision. Separately, Andy Burnham became PM on 20 Jul 2026 (Chancellor John " +
+      "Healey); the Autumn Budget is confirmed for 28 Oct 2026 — the earliest Autumn Budget since " +
+      "2021 — with stamp-duty changes explicitly ruled out but unconfirmed industry speculation " +
+      "of a lower mansion-tax threshold (from £2m to as low as £1.5m). Together this is a real " +
+      "downside risk to mortgage pricing and Budget-driven policy, now visibly showing up in the " +
+      "price data, not just a forecast risk.",
+    effective: "2026-08-27",
   },
 ];
 

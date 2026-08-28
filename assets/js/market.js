@@ -349,7 +349,7 @@ export const NEW_BUILDS = {
 // attribution; update by re-reading each publisher's latest release.
 // -----------------------------------------------------------------------------
 export const FORECASTS = {
-  asOf: "2026-08-23",
+  asOf: "2026-08-28",
   curated: true,
   sources: ["ricsSurvey", "rightmoveListings"],
   rows: [
@@ -363,20 +363,27 @@ export const FORECASTS = {
         "-41% enquiries low, but the market reads weaker than the prior note implied, not improving." },
     { source: "Savills (mainstream London)", short: "Savills", horizon: "2026", priceYoY: -2.0,
       activity: "Subdued transactions; recovery weighted to H2.",
-      url: "https://www.savills.co.uk/research_articles/229130/391249-0",
+      url: "https://www.savills.co.uk/research_articles/229130/393563-0/uk-housing-market-update---august-2026",
       note: "Revised Jun 2026: 2026 −2%, 2027 +2.5%, 2028 +5%, 2029 +6%, 2030 +6% — 18.5% cumulative " +
-        "to 2030, down from the prior 22.2% forecast." },
+        "to 2030, down from the prior 22.2% forecast. Their Aug 2026 update reiterates these " +
+        "numbers (no revision) but flags annual growth actually landed at +1.8% in July, down from " +
+        "+2.2% in June, and now expects the BoE to hold Bank Rate at 3.75% 'well into 2027' rather " +
+        "than cutting sooner." },
     { source: "Knight Frank (Greater London)", short: "Knight Frank", horizon: "2026", priceYoY: 1.5,
       activity: "Downgraded on higher mortgage rates and weaker sentiment; demand cooling near-term.",
       url: "https://www.knightfrank.co.uk/research/article/2026/4/uk-housing-market-forecast-q2-2026",
       note: "UK national revised down to +1.5% 2026 (from +3%), +3% 2027, +4% 2028; Greater London " +
         "specifically also cut from +3% but the exact revised GL figure wasn't published — flagged, not verified." },
-    { source: "Zoopla", short: "Zoopla", horizon: "2026", priceYoY: 1.0,
-      activity: "Growth cooling through the year; London and the South East flat to modestly down.",
+    { source: "Zoopla", short: "Zoopla", horizon: "2026", priceYoY: 0.9,
+      activity: "Growth cooling faster than expected; London running ~1% below a year ago even as " +
+        "buyer search activity picks up.",
       url: "https://www.zoopla.co.uk/discover/property-news/house-price-index/",
-      note: "Updated 30 Jul 2026: UK annual growth has slowed to 1.3%, and Zoopla expects it to " +
-        "ease further to ~1% by year-end (from +1.5% expected earlier in 2026). London home values " +
-        "down ~£3,270 YTD to June 2026 — London/SE seen flat or modestly down for H2." },
+      note: "Updated 27 Aug 2026 (4 weeks to 16 Aug 2026): UK annual growth has slowed further to " +
+        "0.9% (from 1.3% at the 30 Jul update, easing faster than the ~1%-by-year-end path Zoopla " +
+        "had projected). London prices now ~1% lower YoY. 5-year fixed mortgage rates have risen " +
+        "from <4% in Jan to ~4.8%, cutting borrowing power ~9% for a given payment. Search volume " +
+        "is up 7% YoY (strongest in 12 months) but agreed sales remain down 6% YoY — demand " +
+        "interest without matching completions." },
     { source: "Foxtons / local agents (Islington)", short: "Foxtons", horizon: "Next 12m", priceYoY: 1.0,
       activity: "Steady 2-bed demand from professionals; new-build supply caps upside.",
       url: "https://www.foxtons.co.uk/discover/house-price-index",
