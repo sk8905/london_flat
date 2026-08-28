@@ -21,20 +21,24 @@ const FALLBACK = {
   baseRateAsOf: "2026-07-30",
   baseRatePrev: 3.75,
   swap2yrNow: 4.23,
-  swap2yrAsOf: "2026-08-20",
+  swap2yrAsOf: "2026-08-26",
   swap2yrPrev: 4.24,
-  remortgage70Now: 4.75,
+  remortgage70Now: 4.73,
   remortgage70AsOf: "2026-07",
-  remortgage70Prev: 4.79,
+  remortgage70Prev: 4.74,
 };
 
 // Bank of England Interactive Database (IADB) series we pull, all in one request:
 //   IUDBEDR — official Bank Rate (updates on MPC decisions)
-//   IUMBV37 — quoted 2-year fixed mortgage, 60% LTV (monthly)
+//   IUMZICQ — quoted 2-year fixed mortgage, 60% LTV (monthly)
 //   IUMBV34 — quoted 2-year fixed mortgage, 75% LTV (monthly)
 // The 70% LTV remortgage rate is linearly interpolated between the 60% and 75%
 // series. If a series returns nothing, we fall back to the snapshot for it.
-const SERIES = { base: "IUDBEDR", ltv60: "IUMBV37", ltv75: "IUMBV34" };
+// Fixed 2026-08-28: ltv60 previously pointed at IUMBV37, which BoE's own column
+// descriptions confirm is actually the 3-year/75%-LTV series, not 2-year/60%-LTV
+// — so the badge was silently interpolating between a 3yr and a 2yr product.
+// IUMZICQ is the correct 2yr/60%-LTV code (verified via the BoE IADB CSV export).
+const SERIES = { base: "IUDBEDR", ltv60: "IUMZICQ", ltv75: "IUMBV34" };
 const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 const JSON_HEADERS = {
