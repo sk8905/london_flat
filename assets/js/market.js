@@ -232,7 +232,8 @@ export const LISTINGS_PER_MONTH = {
 // -----------------------------------------------------------------------------
 // HPI — latest House Price Index figures for the local geography (Islington +
 // England), so the local-market view has an official price-level anchor. From
-// the UK HPI (HM Land Registry / ONS). `flatsIndex` isolates the flat market.
+// the UK HPI (HM Land Registry / ONS). `islingtonFlatsAvg`/`islingtonFlatsYoYPct`
+// isolate the flat market.
 // -----------------------------------------------------------------------------
 // LIVE (UK HPI, month 2026-06, HM Land Registry / ONS — published ~2 months in
 // arrears; the newest month is PROVISIONAL and gets revised, so YoY can be volatile).
