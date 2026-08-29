@@ -60,7 +60,7 @@ export const MORTGAGE = {
   // ERC: 1% of the outstanding balance while still inside the current fixed period.
   ercPctWhileFixed: 1.0,
   // Assumed remortgage rate once the fix ends (editable). Anchored to the
-  // current ~5.6% 2yr fix with a modest easing assumption by spring 2027.
+  // current ~4.75% 2yr fix with a modest easing assumption by spring 2027.
   remortgageRatePctAssumed: 5.1,
   // The NEW deal taken when the current fix ends also has its own fixed term and
   // ERC — selling inside it triggers that charge too. Set the term to 0 (or the
