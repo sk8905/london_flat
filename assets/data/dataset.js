@@ -10,8 +10,8 @@
 // =============================================================================
 
 export const META = {
-  asOf: "2026-08-27",
-  build: "v99 · 2026-08-27", // bump on each change so the footer confirms the live build
+  asOf: "2026-08-29",
+  build: "v100 · 2026-08-29", // bump on each change so the footer confirms the live build
 };
 
 // -----------------------------------------------------------------------------
@@ -128,12 +128,12 @@ export const RATES = {
   // 2-year GBP interest-rate swap (SONIA) — the wholesale rate UK lenders price
   // fixed-rate mortgages and real-estate lending off. Sits above Bank Rate when
   // the market expects cuts to be slow; the key driver of fixed mortgage pricing.
-  // Re-verified this run against propertyresearch.uk's 20 Aug 2026 close: 4.23%,
-  // down ~1bp from the prior 19 Aug 4.24% reading — a small, sub-threshold move (the
+  // Re-verified this run against propertyresearch.uk's 27 Aug 2026 close: 4.21%,
+  // down ~2bp from the prior 20 Aug 4.23% reading — a small, sub-threshold move (the
   // in-app alert fires at 10bps) that reads as the swap-rate shock holding near its
   // recent high rather than easing meaningfully. No newer print found as of this run.
-  swap2yrNow: 4.23,
-  swap2yrAsOf: "2026-08-20",
+  swap2yrNow: 4.21,
+  swap2yrAsOf: "2026-08-27",
   // Current average 2-year fixed REMORTGAGE rate at ~70% LTV (the band that fits
   // this flat). Live-refreshed from Bank of England quoted mortgage rates,
   // interpolated between the published 60% and 75% LTV series. Snapshot fallback:
@@ -155,7 +155,7 @@ export const RATES = {
   // the Worker also supplies the prior day's figure for the live series.
   baseRatePrev: 3.75,
   remortgage70Prev: 4.79,
-  swap2yrPrev: 4.24,
+  swap2yrPrev: 4.23,
 };
 
 // -----------------------------------------------------------------------------
@@ -291,13 +291,17 @@ export const POLICY_FACTORS = [
       "(Bessent) unveiled 'Operation Economic Outcast', a sweeping new Iran sanctions campaign " +
       "targeting shipping, oil, crypto, gold and aviation and, for the first time, catching " +
       "Chinese/Hong Kong firms in the net — a bid to choke off Iranian oil revenue without " +
-      "further strikes. Brent crude eased to ~$92/bbl (-2.5% on the day) on the news, but UK " +
-      "wholesale gas kept climbing to ~165p/therm (+1.4%), both still well above the pre-conflict " +
-      "baseline. The Bank called the conflict 'the dominant source of uncertainty' for inflation " +
-      "at its 30 Jul hold (3 of 9 MPC members voted to hike); the next decision is 17 Sep. It has " +
-      "pushed mortgage swap and fixed rates up through summer 2026 and cooled Islington prices " +
-      "sharply — a real downside risk, now visibly showing up in the price data, not just a " +
-      "forecast risk.",
+      "further strikes. Markets have read it as a financial rather than a physical-supply threat: " +
+      "Brent crude eased further to ~$88-89/bbl by 27-28 Aug (from ~$92 right after the " +
+      "announcement), but UK wholesale gas kept climbing to ~170.5p/therm (28 Aug) — its highest " +
+      "since January 2023 — as Strait-of-Hormuz risk and early autumn European demand both bite. " +
+      "Two unclaimed strikes disabled tankers off Oman near the Strait of Hormuz on 24-25 Aug, a " +
+      "fresh escalation, though Qatar's PM visited Tehran on 27 Aug pushing de-escalation and " +
+      "freedom of navigation. The Bank called the conflict 'the dominant source of uncertainty' " +
+      "for inflation at its 30 Jul hold (3 of 9 MPC members voted to hike); the next decision is " +
+      "17 Sep, with no fresh MPC commentary since. It has pushed mortgage swap and fixed rates up " +
+      "through summer 2026 and cooled Islington prices sharply — a real downside risk, now " +
+      "visibly showing up in the price data, not just a forecast risk.",
     effective: "2026-08-24",
   },
 ];
