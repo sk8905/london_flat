@@ -149,6 +149,11 @@ export const SALES = {
     { addr: "Apartment 13, 110 Elmore House, Elmore Street", beds: 2, baths: 2, type: "Purpose-built", sqm: 63,
       price: 620000, soldDate: "2026-05-19", lat: 51.542512, lng: -0.090636 },
   ],
+  // Re-checked 2026-08-29 against HM Land Registry Price Paid Data across every block above
+  // plus the nearest new-build pipeline scheme: no new qualifying 2-bed new-build/purpose-built
+  // completion since Elmore House. Two post-2026-05-19 registrations turned up but don't qualify
+  // (Flat 9, The Cooper Building — 1-bed; 113 Tottenham Road — subdivided conversion, not
+  // purpose-built; Flat 419, Union Wharf — 3-bed). SALES.asOf left unchanged.
 };
 
 // -----------------------------------------------------------------------------
@@ -349,7 +354,7 @@ export const NEW_BUILDS = {
 // attribution; update by re-reading each publisher's latest release.
 // -----------------------------------------------------------------------------
 export const FORECASTS = {
-  asOf: "2026-08-23",
+  asOf: "2026-08-29",
   curated: true,
   sources: ["ricsSurvey", "rightmoveListings"],
   rows: [
@@ -374,9 +379,9 @@ export const FORECASTS = {
     { source: "Zoopla", short: "Zoopla", horizon: "2026", priceYoY: 1.0,
       activity: "Growth cooling through the year; London and the South East flat to modestly down.",
       url: "https://www.zoopla.co.uk/discover/property-news/house-price-index/",
-      note: "Updated 30 Jul 2026: UK annual growth has slowed to 1.3%, and Zoopla expects it to " +
-        "ease further to ~1% by year-end (from +1.5% expected earlier in 2026). London home values " +
-        "down ~£3,270 YTD to June 2026 — London/SE seen flat or modestly down for H2." },
+      note: "Updated 27 Aug 2026: UK annual growth slowed further to 0.9% in the 12 months to " +
+        "July 2026 (from 1.3% in June), tracking toward Zoopla's ~1% year-end expectation. London " +
+        "home values down ~£3,270 YTD to June 2026 — London/SE seen flat or modestly down for H2." },
     { source: "Foxtons / local agents (Islington)", short: "Foxtons", horizon: "Next 12m", priceYoY: 1.0,
       activity: "Steady 2-bed demand from professionals; new-build supply caps upside.",
       url: "https://www.foxtons.co.uk/discover/house-price-index",
