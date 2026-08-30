@@ -146,8 +146,8 @@ export const RATES = {
   // curve (month-end 2026-06, statistics/yield-curves). Change vs the current fix,
   // in percentage points, at ~2028 and ~2030: the 2-yr swap forward starting in T
   // years (avg instantaneous fwd over [T,T+2]) moves 4.02% (now) → 4.02% (2028) →
-  // 4.24% (2030), i.e. broadly flat then edging up — so the fix holds ~5%, ~5.2%
-  // by 2030. Refresh from the monthly OIS spreadsheet. NOT re-pulled this run —
+  // 4.24% (2030), i.e. broadly flat then edging up — so the fix holds ~4.75% now,
+  // ~4.95% by 2030. Refresh from the monthly OIS spreadsheet. NOT re-pulled this run —
   // still June 2026 vintage; flag for next refresh.
   oisFix2yForecast: { asOf: "BoE OIS, Jun 2026", d30: 0.2 },
   // Previous CALENDAR-DAY values, so each badge can show a day-over-day % change.
