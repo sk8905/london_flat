@@ -10,8 +10,8 @@
 // =============================================================================
 
 export const META = {
-  asOf: "2026-08-27",
-  build: "v99 · 2026-08-27", // bump on each change so the footer confirms the live build
+  asOf: "2026-08-30",
+  build: "v100 · 2026-08-30", // bump on each change so the footer confirms the live build
 };
 
 // -----------------------------------------------------------------------------
@@ -128,12 +128,12 @@ export const RATES = {
   // 2-year GBP interest-rate swap (SONIA) — the wholesale rate UK lenders price
   // fixed-rate mortgages and real-estate lending off. Sits above Bank Rate when
   // the market expects cuts to be slow; the key driver of fixed mortgage pricing.
-  // Re-verified this run against propertyresearch.uk's 20 Aug 2026 close: 4.23%,
-  // down ~1bp from the prior 19 Aug 4.24% reading — a small, sub-threshold move (the
-  // in-app alert fires at 10bps) that reads as the swap-rate shock holding near its
-  // recent high rather than easing meaningfully. No newer print found as of this run.
-  swap2yrNow: 4.23,
-  swap2yrAsOf: "2026-08-20",
+  // Re-verified this run against bluegamma.io's 27 Aug 2026 17:00 London close:
+  // 4.19%, down ~4bps from the prior 4.23% reading — a small, sub-threshold move (the
+  // in-app alert fires at 10bps) consistent with the swap-rate shock easing gradually
+  // rather than reversing. No newer print found as of this run.
+  swap2yrNow: 4.19,
+  swap2yrAsOf: "2026-08-27",
   // Current average 2-year fixed REMORTGAGE rate at ~70% LTV (the band that fits
   // this flat). Live-refreshed from Bank of England quoted mortgage rates,
   // interpolated between the published 60% and 75% LTV series. Snapshot fallback:
@@ -155,7 +155,7 @@ export const RATES = {
   // the Worker also supplies the prior day's figure for the live series.
   baseRatePrev: 3.75,
   remortgage70Prev: 4.79,
-  swap2yrPrev: 4.24,
+  swap2yrPrev: 4.23,
 };
 
 // -----------------------------------------------------------------------------
