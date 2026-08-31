@@ -10,8 +10,8 @@
 // =============================================================================
 
 export const META = {
-  asOf: "2026-08-30",
-  build: "v100 · 2026-08-30", // bump on each change so the footer confirms the live build
+  asOf: "2026-08-31",
+  build: "v101 · 2026-08-31", // bump on each change so the footer confirms the live build
 };
 
 // -----------------------------------------------------------------------------
@@ -287,18 +287,21 @@ export const POLICY_FACTORS = [
     direction: -1,
     weightHint: "medium",
     summary:
-      "The conflict has shifted from a military to a financial front: on 24 Aug the US Treasury " +
-      "(Bessent) unveiled 'Operation Economic Outcast', a sweeping new Iran sanctions campaign " +
-      "targeting shipping, oil, crypto, gold and aviation and, for the first time, catching " +
-      "Chinese/Hong Kong firms in the net — a bid to choke off Iranian oil revenue without " +
-      "further strikes. Brent crude eased to ~$92/bbl (-2.5% on the day) on the news, but UK " +
-      "wholesale gas kept climbing to ~165p/therm (+1.4%), both still well above the pre-conflict " +
-      "baseline. The Bank called the conflict 'the dominant source of uncertainty' for inflation " +
-      "at its 30 Jul hold (3 of 9 MPC members voted to hike); the next decision is 17 Sep. It has " +
-      "pushed mortgage swap and fixed rates up through summer 2026 and cooled Islington prices " +
-      "sharply — a real downside risk, now visibly showing up in the price data, not just a " +
-      "forecast risk.",
-    effective: "2026-08-24",
+      "The conflict now runs on two fronts. On 24 Aug the US Treasury (Bessent) unveiled " +
+      "'Operation Economic Outcast', a sweeping new Iran sanctions campaign targeting shipping, " +
+      "oil, crypto, gold and aviation and, for the first time, catching Chinese/Hong Kong firms " +
+      "in the net. Markets read it as less severe than feared: Brent crude, which had eased to " +
+      "~$92/bbl on the announcement, drifted further to ~$89-90/bbl by 28-30 Aug (>5% weekly " +
+      "fall) and UK wholesale gas eased to ~163p/therm (28 Aug), both still above the " +
+      "pre-conflict baseline. But the physical front escalated in parallel — on 28-29 Aug Iran's " +
+      "IRGC claimed 'decisive control' of the Strait of Hormuz, with transiting shipping volume " +
+      "running at roughly half its pre-war level. The Bank called the conflict 'the dominant " +
+      "source of uncertainty' for inflation at its 30 Jul hold (3 of 9 MPC members voted to " +
+      "hike); the next decision is 17 Sep. It has pushed mortgage swap and fixed rates up " +
+      "through summer 2026 and cooled Islington prices sharply — a real downside risk, now " +
+      "visibly showing up in the price data, and the Hormuz claims mean the shipping/energy risk " +
+      "hasn't resolved even as the sanctions-driven price spike has partly unwound.",
+    effective: "2026-08-28",
   },
 ];
 
