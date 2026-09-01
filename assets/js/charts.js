@@ -1,5 +1,5 @@
 // =============================================================================
-// charts.js  —  Tiny dependency-free SVG charts (line, band, bar, scatter map, sparkline)
+// charts.js  —  Tiny dependency-free SVG charts (line, dual-axis line, band, bar, scatter map, sparkline)
 // -----------------------------------------------------------------------------
 // All charts render into a container as inline SVG with a viewBox, so they scale
 // fluidly. No external libraries — works offline and inside Zero Trust.

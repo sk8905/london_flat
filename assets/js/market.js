@@ -19,8 +19,9 @@
 // that catches shared-ownership resales. If a legitimate private comp is missing,
 // check it wasn't caught by that screen.
 //
-// Provenance: as of the 2026-07-26 pull, SALES, LISTINGS, RENT (current level +
-// listings) and HPI are LIVE (curated:false). SALES/LISTINGS come from the Homedata
+// Provenance: SALES, LISTINGS, RENT (current level + listings) and HPI are LIVE
+// (curated:false) — see each block's own `asOf` (SALES was last extended
+// 2026-08-27; LISTINGS/RENT/HPI reflect the 2026-07-26 pull). SALES/LISTINGS come from the Homedata
 // Comparables endpoint seeded across the 2 km ring (centroid, Wharf Road, Haggerston
 // and Angel) so both sides of the Islington/Hackney border are covered; sold prices are
 // HMLR-confirmed completions (spot-checked against HM Land Registry Price Paid Data)
