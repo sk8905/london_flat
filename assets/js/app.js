@@ -374,8 +374,9 @@ async function loadIdentity() {
   }
 }
 
-// Data-freshness line: when this view loaded, and the newest dated item the
-// notifications watch (most recent sale, base-rate date or 2yr-swap date).
+// Data-freshness line: when this view loaded, and the newest dated item across
+// sales, base rate, swap and remortgage rate (a superset of what the
+// notifications bell watches — see notifySignature, which skips remortgage rate).
 function renderFreshness() {
   const r = $("#id-refresh");
   if (r) {
