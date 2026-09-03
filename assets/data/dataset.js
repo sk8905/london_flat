@@ -10,8 +10,8 @@
 // =============================================================================
 
 export const META = {
-  asOf: "2026-09-01",
-  build: "v102 · 2026-09-01", // bump on each change so the footer confirms the live build
+  asOf: "2026-09-03",
+  build: "v103 · 2026-09-03", // bump on each change so the footer confirms the live build
 };
 
 // -----------------------------------------------------------------------------
@@ -128,17 +128,17 @@ export const RATES = {
   // 2-year GBP interest-rate swap (SONIA) — the wholesale rate UK lenders price
   // fixed-rate mortgages and real-estate lending off. Sits above Bank Rate when
   // the market expects cuts to be slow; the key driver of fixed mortgage pricing.
-  // Re-verified this run against bluegamma.io's 31 Aug 2026 17:00 London close:
-  // 4.25%, up ~6bps from the prior 4.19% reading — a small, sub-threshold move (the
-  // in-app alert fires at 10bps), consistent with the fresh 30 Aug US-Iran escalation
-  // (see POLICY_FACTORS.macroRisk) nudging swaps back up after several weeks of
-  // gradual easing. Note: investing.com's GBP 2yr IRS series is quoting ~30bps
-  // higher over the same days (e.g. 4.54% on 31 Aug) — kept on bluegamma.io for
-  // continuity with prior snapshots since that gap looks like a quoting-basis/staleness
-  // issue on investing.com's side, not a real market split; flag for a closer look
-  // if it persists.
-  swap2yrNow: 4.25,
-  swap2yrAsOf: "2026-08-31",
+  // Re-verified this run against bluegamma.io's 2 Sep 2026 17:00 London close:
+  // 4.35%, up 10bps from the prior 4.25% reading — hits the in-app 10bps alert
+  // threshold exactly, driven by the fresh Iran escalation (see
+  // POLICY_FACTORS.macroRisk): a US strike on a wedding in Kuhestak (Iran) on
+  // 1 Sep, followed by Iranian strikes on Kuwait/Bahrain and drones intercepted
+  // over Iraqi Kurdistan on 2 Sep, sent Brent to ~$95/bbl, its highest in ~6
+  // weeks. Note: investing.com's GBP 2yr IRS series is quoting ~13bps higher
+  // over the same day (4.48% on 2 Sep) — the same quoting-basis gap flagged in
+  // prior runs, kept on bluegamma.io for continuity.
+  swap2yrNow: 4.35,
+  swap2yrAsOf: "2026-09-02",
   // Current average 2-year fixed REMORTGAGE rate at ~70% LTV (the band that fits
   // this flat). Live-refreshed from Bank of England quoted mortgage rates,
   // interpolated between the published 60% and 75% LTV series. Snapshot fallback:
@@ -160,7 +160,7 @@ export const RATES = {
   // the Worker also supplies the prior day's figure for the live series.
   baseRatePrev: 3.75,
   remortgage70Prev: 4.79,
-  swap2yrPrev: 4.19,
+  swap2yrPrev: 4.25,
 };
 
 // -----------------------------------------------------------------------------
@@ -292,25 +292,21 @@ export const POLICY_FACTORS = [
     direction: -1,
     weightHint: "medium",
     summary:
-      "The conflict escalated again right at month-end. After a lull since late July, on 30 Aug " +
-      "US forces struck two Iranian missile launchers on Larak Island (Strait of Hormuz), citing " +
-      "IRGC preparations to fire sea-mine-carrying rockets into the strait; Iran retaliated hours " +
-      "later with a missile/drone barrage ('Punishment of the Aggressor') on the Jordanian King " +
-      "Hussein and Al Azraq air bases (Jordan's air defences say they intercepted the missiles) " +
-      "and a claimed strike near a US-linked UAE base (UAE denies it was hit) — the first " +
-      "US-Iran kinetic exchange in about a month. Brent crude jumped ~3% to ~$90.6-90.9/bbl and " +
-      "European wholesale gas broke above €69/MWh, its highest since Jan 2023, on fears of " +
-      "renewed LNG-export delays from the Gulf; both remain above the pre-conflict baseline. " +
-      "CENTCOM says it has since de-mined the strait for safe commercial transit, a partial " +
-      "de-escalation on the shipping side even as the direct-strike risk just resurfaced. This " +
-      "sits on top of the 24 Aug 'Operation Economic Outcast' Iran-sanctions campaign (Treasury), " +
-      "which markets had read as less severe than feared. The Bank called the conflict 'the " +
-      "dominant source of uncertainty' for inflation at its 30 Jul hold (3 of 9 MPC members voted " +
-      "to hike); the next decision is 17 Sep. It has pushed mortgage swap and fixed rates up " +
-      "through summer 2026 (the 2yr swap ticked back up to 4.25% on the 30 Aug news — see " +
-      "RATES.swap2yrNow) and cooled Islington prices sharply — a real downside risk that hasn't " +
-      "resolved, with this week's events a reminder it can still flare without warning.",
-    effective: "2026-08-30",
+      "The conflict escalated sharply again over 30 Aug-2 Sep. After US strikes on Iranian missile " +
+      "launchers on Larak Island (30 Aug) and a retaliatory Iranian barrage on Jordan/UAE bases, a " +
+      "further US strike on the night of 1 Sep hit a wedding in Kuhestak, a coastal town on the " +
+      "Strait of Hormuz — Iranian officials say 4 killed (including 2 children) and over 68 " +
+      "wounded. Iran retaliated early on 2 Sep, firing on US Gulf allies: Kuwait and Bahrain came " +
+      "under missile/drone attack (no casualties reported), Iraqi Kurdish authorities intercepted " +
+      "drones aimed at US positions near Irbil, and Iran-backed Hezbollah fired drones at Israeli " +
+      "troops in southern Lebanon. Brent crude climbed to ~$95/bbl (WTI ~$91), its highest in about " +
+      "six weeks and up over 30% since the war began, while the Iranian rial hit a fresh record low. " +
+      "The Bank called the conflict 'the dominant source of uncertainty' for inflation at its 30 Jul " +
+      "hold (3 of 9 MPC members voted to hike); the next decision is 17 Sep. This latest flare-up " +
+      "pushed the 2yr swap up a full 10bps to 4.35% on 2 Sep (see RATES.swap2yrNow) and keeps " +
+      "mortgage and fixed rates elevated — a real downside risk for Islington prices that shows no " +
+      "sign of resolving, six months into the war.",
+    effective: "2026-09-02",
   },
 ];
 
