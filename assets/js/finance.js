@@ -170,8 +170,8 @@ export function economicsForWindow(opts) {
 // consistent with economicsForWindow's outstanding-balance figure.
 export function interestPaidToDate(mortgage, saleDateISO) {
   const io = mortgage.repaymentType === "interest_only";
-  const monthsPaidAtFix = monthsBetween(mortgage._purchaseDate || mortgage.purchaseDate, mortgage.fixEndDate);
-  const monthsPaidAtSale = monthsBetween(mortgage._purchaseDate || mortgage.purchaseDate, saleDateISO);
+  const monthsPaidAtFix = monthsBetween(mortgage._purchaseDate, mortgage.fixEndDate);
+  const monthsPaidAtSale = monthsBetween(mortgage._purchaseDate, saleDateISO);
   if (monthsPaidAtSale <= 0) return 0;
 
   // Phase 1: purchase -> min(sale, fix end), at the fixed rate.
@@ -243,12 +243,12 @@ export function breakEvenRecoupAll(opts) {
 
   // Rent you'd have paid renting an equivalent flat since purchase — a saving that
   // owning has already banked, so it lowers each break-even in the "vs renting" view.
-  const purchaseISO = mortgage._purchaseDate || mortgage.purchaseDate || property.purchaseDate;
+  const purchaseISO = mortgage._purchaseDate || property.purchaseDate;
   const rentSaved = rentCfg ? rentPaidToDate(rentCfg.monthlyRent, rentCfg.growthPct, purchaseISO, saleDateISO) : 0;
 
   // Outstanding balance and ERC at the sale date (mirrors economicsForWindow).
   const io = mortgage.repaymentType === "interest_only";
-  const purchaseDate = mortgage._purchaseDate || mortgage.purchaseDate;
+  const purchaseDate = mortgage._purchaseDate;
   const monthsPaidAtFix = monthsBetween(purchaseDate, mortgage.fixEndDate);
   const monthsPaidAtSale = monthsBetween(purchaseDate, saleDateISO);
   const saleIdx = ymIndex(saleDateISO);

@@ -103,11 +103,12 @@ export const PRICE_HISTORY = {
     // Mar 2026 corrected to 100.7 from the confirmed £678,022 UK HPI average price
     // (673,478 base) — the prior 99.3 didn't match this dataset's own +0.9% note.
     { date: "2026-03", islington: 100.7, london: 97.9 },
-    // 2026-05 is the newest published UK HPI month (released 22 Jul 2026); replaces the
-    // old 2026-06 provisional/estimate point. islington = confirmed £669,879 / £673,478
-    // base. london is derived by applying the same 2-month Islington % change to the last
-    // verified London point (97.9) — no independently-confirmed May 2026 London £ figure
-    // was pulled this run, so treat it as an estimate, not a raw index reading.
+    // 2026-05 was the newest published UK HPI month when added (released 22 Jul 2026),
+    // since superseded by the confirmed 2026-06 point below; retained as a real reading,
+    // not a placeholder. islington = confirmed £669,879 / £673,478 base. london is derived
+    // by applying the same 2-month Islington % change to the last verified London point
+    // (97.9) — no independently-confirmed May 2026 London £ figure was pulled this run,
+    // so treat it as an estimate, not a raw index reading.
     { date: "2026-05", islington: 99.5, london: 96.7 },
     // 2026-06 is the newest published UK HPI month (released 19 Aug 2026). islington =
     // confirmed £673,384 / £673,478 base ≈ 100.0. london has no independently-confirmed
