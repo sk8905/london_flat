@@ -402,7 +402,7 @@ export const median = (arr) => {
 };
 
 // Sales enriched with derived days-on-market, sold-vs-asking (£ and %), and £/m².
-export function deriveSales(km = RADIUS_KM) {
+function deriveSales(km = RADIUS_KM) {
   const rows = withinRadius(SALES.rows, km).map((r) => {
     const daysOnMarket = r.listedDate && r.soldDate ? daysBetween(r.listedDate, r.soldDate) : null;
     const vsAsking = Number.isFinite(r.askingPrice) ? r.price - r.askingPrice : null;
