@@ -351,7 +351,7 @@ export const NEW_BUILDS = {
 // attribution; update by re-reading each publisher's latest release.
 // -----------------------------------------------------------------------------
 export const FORECASTS = {
-  asOf: "2026-08-23",
+  asOf: "2026-09-06",
   curated: true,
   sources: ["ricsSurvey", "rightmoveListings"],
   rows: [
@@ -373,12 +373,13 @@ export const FORECASTS = {
       url: "https://www.knightfrank.co.uk/research/article/2026/4/uk-housing-market-forecast-q2-2026",
       note: "UK national revised down to +1.5% 2026 (from +3%), +3% 2027, +4% 2028; Greater London " +
         "specifically also cut from +3% but the exact revised GL figure wasn't published — flagged, not verified." },
-    { source: "Zoopla", short: "Zoopla", horizon: "2026", priceYoY: 1.0,
-      activity: "Growth cooling through the year; London and the South East flat to modestly down.",
+    { source: "Zoopla", short: "Zoopla", horizon: "2026", priceYoY: 0.9,
+      activity: "Growth cooling further into autumn; London the weakest major region, down YoY.",
       url: "https://www.zoopla.co.uk/discover/property-news/house-price-index/",
-      note: "Updated 30 Jul 2026: UK annual growth has slowed to 1.3%, and Zoopla expects it to " +
-        "ease further to ~1% by year-end (from +1.5% expected earlier in 2026). London home values " +
-        "down ~£3,270 YTD to June 2026 — London/SE seen flat or modestly down for H2." },
+      note: "Updated 27 Aug 2026: UK annual growth eased further to 0.9% (from 1.3% in June), " +
+        "average UK price £272,800. London -1.0% YoY — the only major region posting an outright " +
+        "fall alongside the South East. Zoopla still expects growth to settle near ~1% by " +
+        "year-end, with mortgage rates (~4.8% average) the biggest swing factor." },
     { source: "Foxtons / local agents (Islington)", short: "Foxtons", horizon: "Next 12m", priceYoY: 1.0,
       activity: "Steady 2-bed demand from professionals; new-build supply caps upside.",
       url: "https://www.foxtons.co.uk/discover/house-price-index",

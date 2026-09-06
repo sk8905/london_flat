@@ -10,8 +10,8 @@
 // =============================================================================
 
 export const META = {
-  asOf: "2026-09-04",
-  build: "v103 · 2026-09-04", // bump on each change so the footer confirms the live build
+  asOf: "2026-09-06",
+  build: "v104 · 2026-09-06", // bump on each change so the footer confirms the live build
 };
 
 // -----------------------------------------------------------------------------
@@ -293,25 +293,26 @@ export const POLICY_FACTORS = [
     direction: -1,
     weightHint: "medium",
     summary:
-      "The conflict escalated sharply again in the first days of September, well beyond the " +
-      "30 Aug flare-up. On 1 Sep CENTCOM struck a wide package of roughly 100 IRGC-linked " +
-      "targets (air-defence, radar, mine-laying, communications, anti-ship-missile and " +
-      "attack-drone facilities); Iran retaliated with strikes on US-linked bases across Jordan, " +
-      "the UAE, Bahrain, Kuwait and Iraq. On 2 Sep the US struck two Iranian government tankers " +
-      "at anchor off Iran's coast with drone-launched missiles — the first time tankers " +
-      "themselves (rather than the naval blockade) were targeted. Iran's parliamentary speaker " +
-      "says its forces remain 'in complete control' of the Strait of Hormuz and won't allow it " +
-      "to reopen; the Strait remains only partially open to shipping. Brent crude has pushed " +
-      "further up to ~$95-96/bbl (from ~$90.6-90.9 on 30 Aug) and European wholesale gas hit " +
-      "its highest level in 3+ years (~€75+/MWh) before easing back to ~€72-74/MWh on hopes the " +
-      "campaign stays contained. The Bank called the conflict 'the dominant source of " +
-      "uncertainty' for inflation at its 30 Jul hold (3 of 9 MPC members voted to hike); the " +
-      "next decision is 17 Sep, with most economists still expecting a hold. Despite the fresh " +
-      "escalation, the 2yr swap has moved only slightly (4.25% → 4.27%, see RATES.swap2yrNow) — " +
-      "the risk looks largely priced in rather than accelerating — but the conflict is still the " +
-      "dominant downside risk to both mortgage costs and Islington prices, with no resolution in " +
-      "sight.",
-    effective: "2026-09-02",
+      "The conflict escalated further in early September, beyond the 1-2 Sep strikes on IRGC " +
+      "targets and Iranian government tankers. Under a new US 'tanker for tanker' policy, on " +
+      "4 Sep American forces struck three more Iranian oil tankers (permanently disabling two, " +
+      "destroying a third) in retaliation for Iran's own attacks on shipping — Iran has now hit " +
+      "at least 13 commercial vessels since August, including the crude tanker MT Sidr, which " +
+      "left two seafarers dead. Early on 6 Sep Iran's IRGC said it fired ballistic missiles at a " +
+      "US aircraft carrier and a destroyer, claiming both were damaged and withdrew; CENTCOM says " +
+      "both vessels evaded the attack with no personnel harmed — accounts differ, but it's a real " +
+      "further escalation, and the newest development as of this update. Iran's parliamentary " +
+      "speaker says its forces remain 'in complete control' of the Strait of Hormuz and won't " +
+      "allow it to reopen; the Strait remains only partially open to shipping. Brent crude closed " +
+      "at $96.28/bbl on 4 Sep (+0.8% on the day), extending its rise from ~$90.6-90.9 on 30 Aug; " +
+      "European wholesale gas remains elevated (~€72-74/MWh) after briefly topping €75/MWh. The " +
+      "Bank called the conflict 'the dominant source of uncertainty' for inflation at its 30 Jul " +
+      "hold (3 of 9 MPC members voted to hike); the next decision is 17 Sep, with most economists " +
+      "still expecting a hold. The 2yr swap was still 4.27% as of its last verified reading (3 " +
+      "Sep, before the 6 Sep carrier incident) — not yet re-priced for the newest escalation — so " +
+      "this remains the dominant downside risk to both mortgage costs and Islington prices, with " +
+      "no resolution in sight and further volatility likely.",
+    effective: "2026-09-06",
   },
 ];
 
