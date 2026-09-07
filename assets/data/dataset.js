@@ -10,8 +10,8 @@
 // =============================================================================
 
 export const META = {
-  asOf: "2026-09-06",
-  build: "v104 · 2026-09-06", // bump on each change so the footer confirms the live build
+  asOf: "2026-09-07",
+  build: "v105 · 2026-09-07", // bump on each change so the footer confirms the live build
 };
 
 // -----------------------------------------------------------------------------
@@ -301,18 +301,22 @@ export const POLICY_FACTORS = [
       "left two seafarers dead. Early on 6 Sep Iran's IRGC said it fired ballistic missiles at a " +
       "US aircraft carrier and a destroyer, claiming both were damaged and withdrew; CENTCOM says " +
       "both vessels evaded the attack with no personnel harmed — accounts differ, but it's a real " +
-      "further escalation, and the newest development as of this update. Iran's parliamentary " +
-      "speaker says its forces remain 'in complete control' of the Strait of Hormuz and won't " +
-      "allow it to reopen; the Strait remains only partially open to shipping. Brent crude closed " +
-      "at $96.28/bbl on 4 Sep (+0.8% on the day), extending its rise from ~$90.6-90.9 on 30 Aug; " +
-      "European wholesale gas remains elevated (~€72-74/MWh) after briefly topping €75/MWh. The " +
-      "Bank called the conflict 'the dominant source of uncertainty' for inflation at its 30 Jul " +
-      "hold (3 of 9 MPC members voted to hike); the next decision is 17 Sep, with most economists " +
-      "still expecting a hold. The 2yr swap was still 4.27% as of its last verified reading (3 " +
-      "Sep, before the 6 Sep carrier incident) — not yet re-priced for the newest escalation — so " +
+      "further escalation. On 7 Sep Iran's Supreme National Security Council said it will declare " +
+      "a new 'restricted zone' starting at the line of the US Navy's blockade and stretching into " +
+      "parts of the Gulf, warning any vessel entering will be added to a sanctions list; Tehran " +
+      "separately said the Strait of Hormuz itself is now 'completely closed' under its forces' " +
+      "control, contradicting the US President's claim it remains open — the newest development " +
+      "as of this update. Brent crude has extended its climb to ~$97.39/bbl (7 Sep, up from " +
+      "$96.28 on 4 Sep and ~$90.6-90.9 on 30 Aug); European wholesale gas remains elevated " +
+      "(~€72-74/MWh) after briefly topping €75/MWh. The Bank called the conflict 'the dominant " +
+      "source of uncertainty' for inflation at its 30 Jul hold (3 of 9 MPC members voted to hike); " +
+      "the next decision is 17 Sep, with most economists still expecting a hold (a Reuters poll " +
+      "had ~90% expecting hold through year-end) but a live hike risk given persistent energy-led " +
+      "inflation pressure. The 2yr swap was still 4.27% as of its last verified reading (3 Sep, " +
+      "before the 6-7 Sep carrier/Hormuz escalation) — not yet re-priced for the newest news — so " +
       "this remains the dominant downside risk to both mortgage costs and Islington prices, with " +
       "no resolution in sight and further volatility likely.",
-    effective: "2026-09-06",
+    effective: "2026-09-07",
   },
 ];
 
