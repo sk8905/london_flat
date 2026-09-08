@@ -10,8 +10,8 @@
 // =============================================================================
 
 export const META = {
-  asOf: "2026-09-07",
-  build: "v105 · 2026-09-07", // bump on each change so the footer confirms the live build
+  asOf: "2026-09-08",
+  build: "v106 · 2026-09-08", // bump on each change so the footer confirms the live build
 };
 
 // -----------------------------------------------------------------------------
@@ -129,17 +129,17 @@ export const RATES = {
   // 2-year GBP interest-rate swap (SONIA) — the wholesale rate UK lenders price
   // fixed-rate mortgages and real-estate lending off. Sits above Bank Rate when
   // the market expects cuts to be slow; the key driver of fixed mortgage pricing.
-  // Re-verified this run against bluegamma.io's 3 Sep 2026 17:00 London close:
-  // 4.27%, up ~2bps from the prior 4.25% reading — a small, sub-threshold move (the
-  // in-app alert fires at 10bps). Swaps have held near this level through the
-  // 1-2 Sep US-Iran strikes (see POLICY_FACTORS.macroRisk) rather than spiking
-  // further, suggesting the escalation was already largely priced in. Note:
-  // investing.com's GBP 2yr IRS series is still quoting well above this (~4.48%
-  // early Sep) — kept on bluegamma.io for continuity with prior snapshots since
-  // that gap looks like a quoting-basis/staleness issue on investing.com's side,
-  // not a real market split; flag for a closer look if it persists.
-  swap2yrNow: 4.27,
-  swap2yrAsOf: "2026-09-03",
+  // Re-verified this run against bluegamma.io's 7 Sep 2026 close: 4.31%, up ~4bps
+  // from the prior 4.27% (3 Sep) reading — a small, sub-threshold move (the
+  // in-app alert fires at 10bps). The drift tracks the 6-7 Sep Hormuz/carrier
+  // escalation and Brent's climb toward $98-99 (see POLICY_FACTORS.macroRisk)
+  // rather than a sharp re-pricing. Note: investing.com's GBP 2yr IRS series was
+  // still quoting well above this (~4.48% early Sep) as of the prior run — kept
+  // on bluegamma.io for continuity with prior snapshots since that gap looks
+  // like a quoting-basis/staleness issue on investing.com's side, not a real
+  // market split; flag for a closer look if it persists.
+  swap2yrNow: 4.31,
+  swap2yrAsOf: "2026-09-07",
   // Current average 2-year fixed REMORTGAGE rate at ~70% LTV (the band that fits
   // this flat). Live-refreshed from Bank of England quoted mortgage rates,
   // interpolated between the published 60% and 75% LTV series. Snapshot fallback:
@@ -161,7 +161,7 @@ export const RATES = {
   // the Worker also supplies the prior day's figure for the live series.
   baseRatePrev: 3.75,
   remortgage70Prev: 4.79,
-  swap2yrPrev: 4.25,
+  swap2yrPrev: 4.27,
 };
 
 // -----------------------------------------------------------------------------
@@ -305,18 +305,20 @@ export const POLICY_FACTORS = [
       "a new 'restricted zone' starting at the line of the US Navy's blockade and stretching into " +
       "parts of the Gulf, warning any vessel entering will be added to a sanctions list; Tehran " +
       "separately said the Strait of Hormuz itself is now 'completely closed' under its forces' " +
-      "control, contradicting the US President's claim it remains open — the newest development " +
-      "as of this update. Brent crude has extended its climb to ~$97.39/bbl (7 Sep, up from " +
-      "$96.28 on 4 Sep and ~$90.6-90.9 on 30 Aug); European wholesale gas remains elevated " +
-      "(~€72-74/MWh) after briefly topping €75/MWh. The Bank called the conflict 'the dominant " +
-      "source of uncertainty' for inflation at its 30 Jul hold (3 of 9 MPC members voted to hike); " +
-      "the next decision is 17 Sep, with most economists still expecting a hold (a Reuters poll " +
-      "had ~90% expecting hold through year-end) but a live hike risk given persistent energy-led " +
-      "inflation pressure. The 2yr swap was still 4.27% as of its last verified reading (3 Sep, " +
-      "before the 6-7 Sep carrier/Hormuz escalation) — not yet re-priced for the newest news — so " +
-      "this remains the dominant downside risk to both mortgage costs and Islington prices, with " +
-      "no resolution in sight and further volatility likely.",
-    effective: "2026-09-07",
+      "control, contradicting the US President's claim it remains open. Brent crude has extended " +
+      "its climb to ~$98.70/bbl (8 Sep, up from ~$97.16 on 7 Sep and $96.28 on 4 Sep); European " +
+      "wholesale gas remains elevated (~€72-74/MWh) after briefly topping €75/MWh. The Bank " +
+      "called the conflict 'the dominant source of uncertainty' for inflation at its 30 Jul hold " +
+      "(3 of 9 MPC members voted to hike); the next decision is 17 Sep, with August CPI landing " +
+      "16 Sep (the day before) giving the " +
+      "Committee two more inflation prints since July — most economists still expect a hold (a " +
+      "Reuters poll had ~90% expecting hold through year-end) but a live hike risk given " +
+      "persistent energy-led inflation pressure. The 2yr swap has moved to 4.31% (7 Sep close, up " +
+      "~4bps from 4.27% on 3 Sep) — a modest re-pricing tracking the 6-8 Sep carrier/Hormuz " +
+      "escalation and Brent's climb, not a sharp jump — so this remains the dominant downside " +
+      "risk to both mortgage costs and Islington prices, with no resolution in sight and further " +
+      "volatility likely.",
+    effective: "2026-09-08",
   },
 ];
 
