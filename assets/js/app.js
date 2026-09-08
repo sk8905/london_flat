@@ -164,13 +164,13 @@ window.addEventListener("error", (e) => {
   // Only surface genuine errors thrown by THIS app's own scripts. Opaque
   // cross-origin "Script error." events (Safari extensions, content blockers,
   // injected scripts) carry no message/filename and are not actionable — ignore.
-  const msg = e && e.message ? e.message : "";
-  const ours = e && e.filename && e.filename.indexOf("/assets/js/") !== -1;
+  const msg = e.message ? e.message : "";
+  const ours = e.filename && e.filename.indexOf("/assets/js/") !== -1;
   if (!msg || /script error/i.test(msg) || !ours) return;
   showFatal(msg + (e.lineno ? " @ " + e.filename.split("/").pop() + ":" + e.lineno : ""));
 });
 window.addEventListener("unhandledrejection", (e) => {
-  const r = e && e.reason;
+  const r = e.reason;
   if (r && r.message) showFatal("promise: " + r.message); // skip opaque rejections
 });
 
