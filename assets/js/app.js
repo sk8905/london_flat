@@ -906,26 +906,26 @@ const oneWord = (a) => {
   return res;
 };
 
-// Generic click-to-sort table. cols: [{key,label,get,num,cell,tdcls}]. `state`
+// Generic click-to-sort table. cols: [{key,label,get,num,cell,tdcls}]. `sortState`
 // {key,dir} is mutated on header click; opts.rerender re-invokes the caller.
-function sortableTable(host, cols, rows, state, opts) {
+function sortableTable(host, cols, rows, sortState, opts) {
   if (!host) return;
-  const col = cols.find((c) => c.key === state.key) || cols[0];
-  const dir = state.dir === "asc" ? 1 : -1;
+  const col = cols.find((c) => c.key === sortState.key) || cols[0];
+  const dir = sortState.dir === "asc" ? 1 : -1;
   const sorted = rows.slice().sort((a, b) => {
     let va = col.get(a), vb = col.get(b);
     if (col.num) return ((va == null ? -Infinity : va) - (vb == null ? -Infinity : vb)) * dir;
     return String(va == null ? "" : va).localeCompare(String(vb == null ? "" : vb)) * dir;
   });
-  const ar = (c) => c.key === state.key ? `<span class="sort-ar">${state.dir === "asc" ? "▲" : "▼"}</span>` : "";
+  const ar = (c) => c.key === sortState.key ? `<span class="sort-ar">${sortState.dir === "asc" ? "▲" : "▼"}</span>` : "";
   host.innerHTML = `<div class="table-wrap"><table class="rank-table comps-table ${(opts && opts.cls) || ""}">
-    <thead><tr>${cols.map((c) => `<th class="sort-th${c.key === state.key ? " sorted" : ""}" data-k="${c.key}">${c.label}${ar(c)}</th>`).join("")}</tr></thead>
+    <thead><tr>${cols.map((c) => `<th class="sort-th${c.key === sortState.key ? " sorted" : ""}" data-k="${c.key}">${c.label}${ar(c)}</th>`).join("")}</tr></thead>
     <tbody>${sorted.map((x) => `<tr>${cols.map((c) => `<td class="${c.tdcls ? c.tdcls(x) : ""}">${c.cell(x)}</td>`).join("")}</tr>`).join("")}</tbody>
   </table></div>`;
   host.querySelectorAll(".sort-th").forEach((th) => th.addEventListener("click", () => {
     const k = th.dataset.k, c = cols.find((cc) => cc.key === k);
-    if (state.key === k) state.dir = state.dir === "asc" ? "desc" : "asc";
-    else { state.key = k; state.dir = c.num ? "desc" : "asc"; }
+    if (sortState.key === k) sortState.dir = sortState.dir === "asc" ? "desc" : "asc";
+    else { sortState.key = k; sortState.dir = c.num ? "desc" : "asc"; }
     opts.rerender();
   }));
 }
@@ -1128,7 +1128,7 @@ function renderLocalMarket(r) {
   // ---- clustered KPIs: Price / Speed / Supply, with trend arrows + sparklines ----
   const trends = MKT.salesTrends();
   const mos = MKT.monthsOfSupply(MKT.RADIUS_KM, DATA.META.asOf);
-  const H0 = MKT.HPI;
+  const H = MKT.HPI;
   const spk = [];
   const kpiRow = (label, value, sub, trend) => {
     let trendHtml = "";
@@ -1145,7 +1145,7 @@ function renderLocalMarket(r) {
   if (kpis) kpis.innerHTML =
     group("Price",
       kpiRow("Median £/m²", medianPsm ? gbp(medianPsm) : "—", yourPsm ? "you paid " + gbp(yourPsm) : "", { id: "psm", dir: trends.dir.psm, goodIsUp: true, series: trends.psm.map((x) => x.v) }) +
-      kpiRow("Islington flats", gbp(H0.islingtonFlatsAvg), signed(H0.islingtonFlatsYoYPct, (x) => x.toFixed(1) + "%") + " YoY")) +
+      kpiRow("Islington flats", gbp(H.islingtonFlatsAvg), signed(H.islingtonFlatsYoYPct, (x) => x.toFixed(1) + "%") + " YoY")) +
     group("Speed",
       kpiRow("Median days on market", estDays != null ? estDays + " days" : "—", "list → sold", { id: "dom", dir: trends.dir.dom, goodIsUp: false, series: trends.dom.map((x) => x.v) }) +
       kpiRow("Sold below asking", stats.pctBelowAsking != null ? stats.pctBelowAsking + "%" : "—", stats.medianVsAskingPct != null ? "median " + signed(stats.medianVsAskingPct, (x) => x.toFixed(1)) + "%" : "", { id: "vsask", dir: trends.dir.vsAsk, goodIsUp: true, series: trends.vsAsk.map((x) => x.v) })) +
@@ -1252,7 +1252,6 @@ function renderLocalMarket(r) {
     </div>`;
 
   // ---- HPI (tight rows + linked) ----
-  const H = MKT.HPI;
   const yoy = (v) => signed(v, (x) => x.toFixed(1) + "%") + " YoY";
   const hpiHost = $("#lm-hpi");
   if (hpiHost) hpiHost.innerHTML = `<div class="statrows sr-2">` +
