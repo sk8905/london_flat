@@ -1274,8 +1274,10 @@ function renderLocalMarket(r) {
   // Forecast 2-yr-fix path from the BoE OIS instantaneous forward curve (month-end
   // 2026-06): 2-yr swap forward starting in T years + the current fix-vs-swap
   // spread (~0.5pp). The curve prices SONIA broadly flat near ~4%, so the fix
-  // holds ~4.75% and edges up by 2030 — this is the market path, not an assumption.
-  // deltas vs now: 2028 ≈ +0.0pp, 2030 ≈ +0.2pp (fwd 2y swap 4.02→4.02→4.24%).
+  // holds near baseRate (RATES.remortgage70Now) and edges up by 2030 — this is
+  // the market path, not an assumption. deltas vs now: 2028 ≈ +0.0pp,
+  // 2030 ≈ +0.2pp (fwd 2y swap 4.02→4.02→4.24%); the OIS curve itself is still
+  // June-2026 vintage (see dataset.js RATES.oisFix2yForecast).
   const OIS = DATA.RATES.oisFix2yForecast || { asOf: "2026-06", d30: 0.2 };
   const r30 = Math.round((baseRate + OIS.d30) * 100) / 100;
   // Two points: now (curve is flat through ~2028) and 2030. The "now" dot is left
