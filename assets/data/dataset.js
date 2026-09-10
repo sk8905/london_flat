@@ -10,8 +10,8 @@
 // =============================================================================
 
 export const META = {
-  asOf: "2026-09-09",
-  build: "v106 · 2026-09-09", // bump on each change so the footer confirms the live build
+  asOf: "2026-09-10",
+  build: "v107 · 2026-09-10", // bump on each change so the footer confirms the live build
 };
 
 // -----------------------------------------------------------------------------
@@ -129,13 +129,14 @@ export const RATES = {
   // 2-year GBP interest-rate swap (SONIA) — the wholesale rate UK lenders price
   // fixed-rate mortgages and real-estate lending off. Sits above Bank Rate when
   // the market expects cuts to be slow; the key driver of fixed mortgage pricing.
-  // Re-verified this run against bluegamma.io's 8 Sep 2026 17:00 London close:
-  // 4.33%, up ~6bps from the prior 4.27% reading — still a sub-threshold move (the
-  // in-app alert fires at 10bps). Swaps have edged up through the 6-8 Sep
-  // Jordan/tanker escalation (see POLICY_FACTORS.macroRisk) rather than spiking
-  // sharply, suggesting most of the risk premium is already priced in.
-  swap2yrNow: 4.33,
-  swap2yrAsOf: "2026-09-08",
+  // Re-verified this run against bluegamma.io's 9 Sep 2026 17:00 London close:
+  // 4.41%, up ~8bps from the prior 4.33% reading — still a sub-threshold move (the
+  // in-app alert fires at 10bps). Swaps have edged up further through the 8-10 Sep
+  // Jordan-airbase/tanker escalation and Brent's first push above $100/bbl (see
+  // POLICY_FACTORS.macroRisk) rather than spiking sharply, suggesting most of the
+  // risk premium is still being absorbed gradually rather than repriced all at once.
+  swap2yrNow: 4.41,
+  swap2yrAsOf: "2026-09-09",
   // Current average 2-year fixed REMORTGAGE rate at ~70% LTV (the band that fits
   // this flat). Live-refreshed from Bank of England quoted mortgage rates,
   // interpolated between the published 60% and 75% LTV series. Snapshot fallback:
@@ -159,7 +160,7 @@ export const RATES = {
   // the Worker also supplies the prior day's figure for the live series.
   baseRatePrev: 3.75,
   remortgage70Prev: 4.79,
-  swap2yrPrev: 4.27,
+  swap2yrPrev: 4.33,
 };
 
 // -----------------------------------------------------------------------------
@@ -291,27 +292,30 @@ export const POLICY_FACTORS = [
     direction: -1,
     weightHint: "medium",
     summary:
-      "The conflict escalated further this week. Following the 6-7 Sep carrier/Hormuz standoff " +
-      "(Iran's IRGC firing ballistic missiles at a US carrier and destroyer; Tehran declaring a " +
-      "new 'restricted zone' and claiming the Strait of Hormuz 'completely closed'), on 8 Sep " +
-      "CENTCOM destroyed 5 more IRGC-linked oil tankers (4 in the Gulf of Oman, 1 near Kharg " +
-      "Island; crews were told to abandon ship first, no US personnel harmed) after Iran attempted " +
-      "missile strikes on a US Navy warship. Hours later Iran's IRGC fired ballistic missiles at " +
-      "US forces in Jordan, targeting the Al-Azraq airbase; Jordan's military intercepted 18 of 20 " +
-      "missiles with no loss of life. The Pentagon separately reported 30 more US troops wounded in " +
-      "the conflict. Actual Hormuz shipping traffic remains a fraction of pre-war levels (~13 " +
-      "vessels/day this week vs ~20m bbl/day of pre-war throughput) despite the US insisting the " +
-      "strait remains open. Brent crude has extended its climb to ~$99.4/bbl (9 Sep, up from " +
-      "$97.39 on 7 Sep and $96.28 on 4 Sep) — up roughly 40% since the conflict began — with US " +
-      "diesel at a record ~$5.85/gal. The Bank called the conflict 'the dominant source of " +
+      "The conflict escalated again on 9-10 Sep, now in its seventh month with no resolution in " +
+      "sight. On 9 Sep the US struck 5 more Iranian oil tankers in the Gulf of Oman; Iran retaliated " +
+      "claiming strikes on 10 vessels (reported elsewhere as 2 US-linked vessels and 8 tankers) near " +
+      "the Strait of Hormuz, with an unexplained explosion reported near the southern port of Jask. " +
+      "Yemen's Houthis — an Iranian proxy — struck a Saudi airbase at Khamis Mushait plus nearby oil " +
+      "infrastructure, wounding 73 in one of the biggest attacks on Saudi Arabia since the war began " +
+      "in February; Riyadh answered with 54 airstrikes across Yemen in 12 hours. Overnight into 10 " +
+      "Sep, Iran's IRGC struck the Muwaffaq Salti airbase in Jordan, damaging multiple US aircraft — " +
+      "one A-10 lost a wing, ~8 F-15s took lighter damage — the first confirmed US materiel losses " +
+      "of the conflict. Trump warned Iran not to 'get cute' and floated striking the fortified " +
+      "Pickaxe Mountain nuclear site near Natanz; his own advisers (Vance, Rubio) are privately " +
+      "warning him the war could run past his term, contradicting his midterm-timed prediction it " +
+      "ends 'immediately after' 3 Nov. No Iranian crude has transited Hormuz to China since the US " +
+      "naval blockade was reinstated 14 Jul. Brent crude broke above $100/bbl for the first time " +
+      "this cycle (~$100.7 on 9 Sep, ~$101 on 10 Sep, up from $99.4 on 9 Sep per the prior read and " +
+      "roughly 45% since the conflict began). The Bank called the conflict 'the dominant source of " +
       "uncertainty' for inflation at its 30 Jul hold (3 of 9 MPC members voted to hike); the next " +
-      "decision is 17 Sep, one day after the 16 Sep August-inflation print (headline CPI has " +
-      "already jumped back to 2.9%), with a live hike risk given persistent energy-led inflation " +
-      "pressure even as most economists still expect a hold. The 2yr swap has only edged up to " +
-      "4.33% (8 Sep, from 4.27% on 3 Sep) despite the escalation, suggesting much of the risk is " +
-      "already priced in — but this remains the dominant downside risk to both mortgage costs and " +
-      "Islington prices, with no resolution in sight and further volatility likely.",
-    effective: "2026-09-09",
+      "decision is 17 Sep, one day after the 16 Sep July UK-HPI/August-inflation prints, with a live " +
+      "hike risk given persistent energy-led inflation even as most economists still expect a hold. " +
+      "The 2yr swap has only edged up to 4.41% (9 Sep, from 4.33% on 8 Sep) despite the fresh " +
+      "escalation and the break above $100 oil, suggesting the market is still absorbing risk " +
+      "gradually rather than repricing all at once — but this remains the dominant downside risk to " +
+      "both mortgage costs and Islington prices.",
+    effective: "2026-09-10",
   },
 ];
 
