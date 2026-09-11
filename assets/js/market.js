@@ -351,18 +351,21 @@ export const NEW_BUILDS = {
 // attribution; update by re-reading each publisher's latest release.
 // -----------------------------------------------------------------------------
 export const FORECASTS = {
-  asOf: "2026-09-06",
+  asOf: "2026-09-10",
   curated: true,
   sources: ["ricsSurvey", "rightmoveListings"],
   rows: [
     { source: "RICS Residential Survey", short: "RICS", horizon: "Next 3-12m (UK)", priceYoY: null,
-      activity: "Buyer enquiries and agreed sales still firmly negative; near-term sales expectations " +
-        "have turned slightly negative too.",
+      activity: "Buyer enquiries and agreed sales are both improving off their lows, but the price " +
+        "balance stays firmly negative — a market stabilising in activity, not yet in price.",
       url: "https://www.rics.org/news-insights/market-surveys/uk-residential-market-survey",
-      note: "July 2026 survey (published 13 Aug 2026): new buyer enquiries balance -28% (unchanged from " +
-        "June), agreed sales balance -12%, near-term (3-month) sales expectations balance -2% — a reversal " +
-        "from the previously-read modestly-positive expectations. The pace of decline is easing vs March's " +
-        "-41% enquiries low, but the market reads weaker than the prior note implied, not improving." },
+      note: "August 2026 survey (published 10 Sep 2026): new buyer enquiries balance -19% (the least " +
+        "negative since January, a fifth straight monthly improvement, up from -28% in July), agreed " +
+        "sales balance -17% (least negative since February, vs an April low of -38%), 3-month sales " +
+        "expectations -3% (up sharply from -13% in July), 12-month sales-volume outlook +6% (up from " +
+        "+3%). The house-price balance stayed weak at -28% (barely changed from -29%), so activity is " +
+        "recovering faster than pricing — consistent with sellers still meeting price resistance even " +
+        "as more buyers re-engage." },
     { source: "Savills (mainstream London)", short: "Savills", horizon: "2026", priceYoY: -2.0,
       activity: "Subdued transactions; recovery weighted to H2.",
       url: "https://www.savills.co.uk/research_articles/229130/391249-0",
