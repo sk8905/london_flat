@@ -59,7 +59,7 @@ function distFromCentre(pt) {
 }
 
 // Keep only records inside the strict radius (default 2 km); stamps `.distKm`.
-export function withinRadius(rows, km = RADIUS_KM) {
+function withinRadius(rows, km = RADIUS_KM) {
   return (rows || [])
     .map((r) => ({ ...r, distKm: distFromCentre(r) }))
     .filter((r) => r.distKm != null && r.distKm <= km + 1e-9)

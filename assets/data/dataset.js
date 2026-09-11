@@ -3,10 +3,10 @@
 // -----------------------------------------------------------------------------
 // Every figure below is a curated snapshot; each block carries its own `source`
 // id (a short mnemonic label, e.g. "hpiMay2026") and a `note` so a human editor
-// can see provenance at a glance.
-// Anything forward-looking is flagged `estimate: true`. Edit freely — the app
-// recomputes everything from this file. Values such as the BoE Bank Rate are
-// curated snapshots here; update them and redeploy to refresh.
+// can see provenance at a glance. Forward-looking figures are flagged in prose
+// within their `note` field. Edit freely — the app recomputes everything from
+// this file. Values such as the BoE Bank Rate are curated snapshots here;
+// update them and redeploy to refresh.
 // =============================================================================
 
 export const META = {
