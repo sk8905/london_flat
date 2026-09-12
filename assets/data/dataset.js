@@ -10,8 +10,8 @@
 // =============================================================================
 
 export const META = {
-  asOf: "2026-09-11",
-  build: "v108 · 2026-09-11", // bump on each change so the footer confirms the live build
+  asOf: "2026-09-12",
+  build: "v109 · 2026-09-12", // bump on each change so the footer confirms the live build
 };
 
 // -----------------------------------------------------------------------------
@@ -322,9 +322,22 @@ export const POLICY_FACTORS = [
       "RICS August 2026 survey (published 10 Sep) shows buyer activity stabilising even against " +
       "this backdrop — enquiries -19% and agreed sales -17% (both the least negative in months), " +
       "though the price balance stayed negative at -28% — so the swap-rate shock hasn't yet visibly " +
-      "dented underlying transaction demand. This remains the dominant downside risk to both " +
-      "mortgage costs and Islington prices.",
-    effective: "2026-09-11",
+      "dented underlying transaction demand. Update (12 Sep): re-checked bluegamma.io, whose free " +
+      "tier's newest close is still 10 Sep 16:30 (4.57%) — no fresher confirmed reading was available " +
+      "this run (11-12 Sep spans a Friday close not yet published on the free tier, then the weekend), " +
+      "so the swap figure above stands unchanged and the in-app alert did not re-fire. Brent kept " +
+      "climbing into the weekend, trading around $104-106/bbl on 11 Sep across trackers (Trading " +
+      "Economics, Forbes) versus the $102.6 logged for the same day — intraday/vendor spread, not a " +
+      "correction, and consistent with the broader up-trend. Moneyfacts' Rachel Springall (9 Sep) " +
+      "said the swap-rate move 'adds pressure for a November [Bank Rate] rise,' as the 10-year gilt " +
+      "yield pushed above 5% for the first time since 2007; HSBC, NatWest, Santander, Lloyds, Halifax " +
+      "and Barclays have all repriced fixed mortgages higher since the start of September on the back " +
+      "of it. On the ground, Iranian President Pezeshkian used the 11-12 Sep BRICS summit in New Delhi " +
+      "to keep pressing India and other members on the conflict, while Iraq restrained itself from " +
+      "retaliating after Saudi Arabia said drones launched from Iraqi territory hit its East-West " +
+      "pipeline — a rare de-escalatory signal, though it does not change the underlying trajectory. " +
+      "This remains the dominant downside risk to both mortgage costs and Islington prices.",
+    effective: "2026-09-12",
   },
 ];
 
