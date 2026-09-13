@@ -10,8 +10,8 @@
 // =============================================================================
 
 export const META = {
-  asOf: "2026-09-11",
-  build: "v108 · 2026-09-11", // bump on each change so the footer confirms the live build
+  asOf: "2026-09-13",
+  build: "v109 · 2026-09-13", // bump on each change so the footer confirms the live build
 };
 
 // -----------------------------------------------------------------------------
@@ -129,16 +129,15 @@ export const RATES = {
   // 2-year GBP interest-rate swap (SONIA) — the wholesale rate UK lenders price
   // fixed-rate mortgages and real-estate lending off. Sits above Bank Rate when
   // the market expects cuts to be slow; the key driver of fixed mortgage pricing.
-  // Re-verified this run against bluegamma.io's 10 Sep 2026 17:00 London close:
-  // 4.57%, up ~16bps from the prior 4.41% reading (9 Sep) — a clear above-threshold
-  // move (the in-app alert fires at 10bps) and the sharpest single-day jump logged
-  // this run, vs the gradual creep of the prior few days. Coincides with Brent's
-  // continued push through $102/bbl (11 Sep) and no sign of de-escalation in the
-  // Jordan-airbase/tanker conflict (see POLICY_FACTORS.macroRisk) — this reading
-  // suggests the market has started repricing the risk premium more sharply rather
-  // than absorbing it gradually. Cross-checked against propertyresearch.uk (4.45%,
-  // 9 Sep) for directional sanity; bluegamma remains the primary series for
-  // day-over-day consistency with prior entries.
+  // Re-verified this run (13 Sep) against bluegamma.io: still showing its 10 Sep
+  // 2026 17:00 London close of 4.57% (the site's free tier only exposes the prior
+  // business day's close, and 11-13 Sep are Fri-close/weekend with no fresher print
+  // behind it). Cross-checked against propertyresearch.uk, which independently
+  // shows 4.65% for the same 10 Sep date — within the ~10bp cross-source spread
+  // already noted here, not a new move. No verified reading newer than 10 Sep found
+  // this run, so left unchanged; re-check once Monday 14 Sep trading closes,
+  // especially given the Oman-hosted Iran/GCC Hormuz talks that day (see
+  // POLICY_FACTORS.macroRisk) which could move the risk premium either way.
   swap2yrNow: 4.57,
   swap2yrAsOf: "2026-09-10",
   // Current average 2-year fixed REMORTGAGE rate at ~70% LTV (the band that fits
@@ -296,35 +295,32 @@ export const POLICY_FACTORS = [
     direction: -1,
     weightHint: "medium",
     summary:
-      "The conflict escalated again on 9-10 Sep, now in its seventh month with no resolution in " +
-      "sight. On 9 Sep the US struck 5 more Iranian oil tankers in the Gulf of Oman; Iran retaliated " +
-      "claiming strikes on 10 vessels (reported elsewhere as 2 US-linked vessels and 8 tankers) near " +
-      "the Strait of Hormuz, with an unexplained explosion reported near the southern port of Jask. " +
-      "Yemen's Houthis — an Iranian proxy — struck a Saudi airbase at Khamis Mushait plus nearby oil " +
-      "infrastructure, wounding 73 in one of the biggest attacks on Saudi Arabia since the war began " +
-      "in February; Riyadh answered with 54 airstrikes across Yemen in 12 hours. Overnight into 10 " +
-      "Sep, Iran's IRGC struck the Muwaffaq Salti airbase in Jordan, damaging multiple US aircraft — " +
-      "one A-10 lost a wing, ~8 F-15s took lighter damage — the first confirmed US materiel losses " +
-      "of the conflict. Trump warned Iran not to 'get cute' and floated striking the fortified " +
-      "Pickaxe Mountain nuclear site near Natanz; his own advisers (Vance, Rubio) are privately " +
-      "warning him the war could run past his term, contradicting his midterm-timed prediction it " +
-      "ends 'immediately after' 3 Nov. No Iranian crude has transited Hormuz to China since the US " +
-      "naval blockade was reinstated 14 Jul. Brent crude has kept climbing past its first break " +
-      "above $100/bbl: ~$100.7 (9 Sep) → ~$101 (10 Sep) → ~$102.6 (11 Sep), roughly 47% since the " +
-      "conflict began, with Saudi crude output down ~1.9m bpd in August to its lowest since 1990. " +
-      "The Bank called the conflict 'the dominant source of uncertainty' for inflation at its 30 Jul " +
-      "hold (3 of 9 MPC members voted to hike); the next decision is 17 Sep, one day after the 16 " +
-      "Sep July UK-HPI/August-inflation prints, with a live hike risk given persistent energy-led " +
-      "inflation even as most economists still expect a hold. The 2yr swap jumped to 4.57% (10 Sep " +
-      "17:00 close, from 4.41% on 9 Sep) — a ~16bp move, above the in-app 10bp alert threshold and " +
-      "sharper than the gradual creep of the prior few days, suggesting the market has begun " +
-      "repricing the risk premium more decisively rather than absorbing it slowly. Separately, the " +
-      "RICS August 2026 survey (published 10 Sep) shows buyer activity stabilising even against " +
-      "this backdrop — enquiries -19% and agreed sales -17% (both the least negative in months), " +
-      "though the price balance stayed negative at -28% — so the swap-rate shock hasn't yet visibly " +
-      "dented underlying transaction demand. This remains the dominant downside risk to both " +
-      "mortgage costs and Islington prices.",
-    effective: "2026-09-11",
+      "Escalated further on 9-11 Sep with a new front: the Red Sea. Yemen's Houthis seized the " +
+      "strategic port of Mokha on 9 Sep and Perim Island on 10 Sep — both flank the Bab el-Mandeb " +
+      "strait, through which ~6-7m bpd of crude transits (roughly half of it Saudi crude loaded at " +
+      "Yanbu) and ~12% of global trade by volume passes, putting Saudi Red Sea exports and shipping " +
+      "directly in range. Saudi Arabia shut a critical export pipeline after drone strikes launched " +
+      "from Iraq by Iran-backed militias; with the alternative East-West Pipeline also having been " +
+      "targeted, nearly all of the kingdom's crude export routes are now under threat simultaneously. " +
+      "This is on top of the 9-10 Sep escalation already logged here (Jordan-airbase strike on the " +
+      "Muwaffaq Salti airbase, the Khamis Mushait Saudi-airbase attack, US tanker strikes). RBC " +
+      "Capital Markets (Helima Croft, 11 Sep) warned Brent could reach $120/bbl by year-end if the " +
+      "fighting persists, calling Bab el-Mandeb traffic 'gravely imperiled'; Brent touched close to " +
+      "$110 intraday around 11-12 Sep before paring back to settle ~$104.3-104.4 at Friday's (11 " +
+      "Sep) close — a partial pullback, not a reversal, and still well above the ~$102.6 read logged " +
+      "here two days ago. The one concrete de-escalation signal: Oman is convening GCC foreign " +
+      "ministers plus Iraq and Iran in Salalah on Monday 14 Sep to discuss the future of the Strait " +
+      "of Hormuz — who controls it and whether Iran can levy transit fees — building on an earlier " +
+      "Iran-Oman technical agreement on routing (inbound via Iranian waters, outbound via Omani " +
+      "waters) reached in August. No Iranian crude has transited Hormuz to China since the US naval " +
+      "blockade was reinstated 14 Jul. The Bank called the conflict 'the dominant source of " +
+      "uncertainty' for inflation at its 30 Jul hold (3 of 9 MPC members voted to hike); the next " +
+      "decision is 17 Sep, one day after the 16 Sep July UK-HPI/August-inflation prints, with a live " +
+      "hike risk given persistent energy-led inflation even as most economists still expect a hold. " +
+      "The 2yr swap holds at 4.57% (still the 10 Sep close as of this run — see RATES.swap2yrNow " +
+      "note; no fresher verified print found, and Monday's Oman talks are a two-sided risk to it). " +
+      "This remains the dominant downside risk to both mortgage costs and Islington prices.",
+    effective: "2026-09-13",
   },
 ];
 
