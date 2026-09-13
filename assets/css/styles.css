@@ -393,8 +393,7 @@ a.src-line:hover, .src-line a:hover { text-decoration: underline; }
 .controls-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px 26px; align-items: end; }
 .ctrl { display: flex; flex-direction: column; gap: 7px; font-size: 13.5px; color: var(--ink-soft); }
 .ctrl span strong { color: var(--ink); }
-.ctrl select { width: 100%; }
-.ctrl select { padding: 9px 11px; border-radius: 9px; border: 1px solid var(--line); background: #fff; font-size: 14px; color: var(--ink); }
+.ctrl select { width: 100%; padding: 9px 11px; border-radius: 9px; border: 1px solid var(--line); background: #fff; font-size: 14px; color: var(--ink); }
 .ctrl input[type="number"], .ctrl input[type="text"], .ctrl input[type="month"] {
   padding: 9px 11px; border-radius: 9px; border: 1px solid var(--line); background: #fff; font-size: 14px; color: var(--ink); width: 100%;
 }
