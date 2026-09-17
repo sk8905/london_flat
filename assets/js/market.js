@@ -237,31 +237,34 @@ export const LISTINGS_PER_MONTH = {
 // the UK HPI (HM Land Registry / ONS). `islingtonFlatsAvg`/`islingtonFlatsYoYPct`
 // isolate the flat market.
 // -----------------------------------------------------------------------------
-// LIVE (UK HPI, month 2026-06, HM Land Registry / ONS — published ~2 months in
+// LIVE (UK HPI, month 2026-07, HM Land Registry / ONS — published ~2 months in
 // arrears; the newest month is PROVISIONAL and gets revised, so YoY can be volatile).
-// Pulled from landregistry.data.gov.uk/data/ukhpi (release published 19 Aug 2026).
-// `n17txAvg12m` is now the trailing-12-month MEDIAN completed flat-sale price within
-// 2 km of the centroid (Homedata/HMLR completions, council-filtered, n=17 after the
-// 2026-08-27 Elmore House addition) — a hyper-local anchor for a 2-bed flat buyer, which
-// now reads a touch below the whole-borough figure that includes houses.
-// islingtonYoYPct is the ALL-PROPERTY figure (volatile month to month in a small
-// borough due to mix effects — this run's YoY base of £733k in Jun 2025 is well above
-// the Mar-2025 anchor, so treat it as noisy); islingtonFlatsYoYPct is the more
-// representative read for a 2-bed flat. englandAvg/englandYoYPct were NOT
-// independently re-verified this run — still May 2026 vintage, flag for next refresh.
+// Pulled directly from the machine-readable API (landregistry.data.gov.uk/data/ukhpi/
+// region/<name>/month/<yyyy-mm>.json), release published 16 Sep 2026. Islington's June
+// figure was itself revised from £673,384 (-8.1% YoY, used last run) to £685,304 (-6.5%)
+// in this release — small-borough HPI readings revise heavily month to month; this
+// dataset does not restate already-published historical points on every revision (see
+// dataset.js PRICE_HISTORY), it just carries the newest confirmed month here.
+// `n17txAvg12m` is the trailing-12-month MEDIAN completed flat-sale price within 2 km of
+// the centroid (Homedata/HMLR completions, council-filtered, n=17) — NOT independently
+// re-verified this run (no Homedata pull — no HOMEDATA_KEY in this environment), flag for
+// next refresh. islingtonYoYPct is the ALL-PROPERTY figure (volatile month to month in a
+// small borough due to mix effects); islingtonFlatsYoYPct is the more representative read
+// for a 2-bed flat. londonAvg/londonYoYPct and englandAvg/englandYoYPct ARE
+// independently re-verified this run against the same API.
 export const HPI = {
-  asOf: "2026-06-01",
+  asOf: "2026-07-01",
   curated: false,
   sources: ["landRegPP", "onsRents"],
-  islingtonAvg: 673384,
-  islingtonYoYPct: -8.1,
-  islingtonFlatsAvg: 560000, // Islington flats/maisonettes (UK HPI)
-  islingtonFlatsYoYPct: -8.4,
+  islingtonAvg: 674592,
+  islingtonYoYPct: -4.9,
+  islingtonFlatsAvg: 560124, // Islington flats/maisonettes (UK HPI)
+  islingtonFlatsYoYPct: -5.4,
   n17txAvg12m: 650000, // 2 km trailing-12m median completed flat sale (Homedata/HMLR, council-filtered, n=17)
-  londonAvg: 554000,
-  londonYoYPct: -2.5,
-  englandAvg: 292095,
-  englandYoYPct: 2.3,
+  londonAvg: 550037,
+  londonYoYPct: -3.3,
+  englandAvg: 293479,
+  englandYoYPct: 1.1,
 };
 
 // -----------------------------------------------------------------------------

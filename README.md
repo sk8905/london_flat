@@ -193,7 +193,7 @@ No configuration is required; it works as soon as the Access application is in p
 The header has a **notifications bell**. On each visit it diffs the live dataset against a
 snapshot saved in the browser and flags, as unread alerts:
 
-- **New N1 sales** added to `COMPS.rows`,
+- **New N1 sales** added to `SALES.rows` (`assets/js/market.js`),
 - a **change in the BoE base rate** (`RATES.baseRateNow`),
 - a **≥10bps move in the 2-year swap** (`RATES.swap2yrNow`).
 
@@ -219,52 +219,68 @@ the Worker's `env.HOMEDATA_KEY`); **never commit the key** to the repo. Auth hea
 `Authorization: Api-Key $HOMEDATA_KEY`. Network access to `homedata.co.uk` / `api.homedata.co.uk`
 must be allow-listed for the routine's environment (see *Data sources to allow-list* below).
 
-Paste the block below into your daily (08:00) Claude Code routine:
+Paste the block below into your daily (08:00) Claude Code routine. **Note (Sep 2026): this repo's
+actual daily routine develops on a fresh `claude/…` branch and opens a PR against the deploy branch
+(one per day) rather than committing directly — the block below has been corrected to match; treat
+CLAUDE.md as authoritative on branch/PR policy if the two ever disagree again.**
 
 ```text
-Refresh assets/data/dataset.js in the london_flat repo with the latest figures, then bump the
-build and commit directly to the deploy branch (see CLAUDE.md — no PR). Note: RATES.baseRateNow
-and RATES.remortgage70Now are fetched LIVE from the
-Bank of England by the Worker, so do NOT hand-edit those (only refresh their snapshot fallbacks
-if they've drifted far). Work through each item, keeping every value sourced; if nothing changed
-today, make no PR.
+Refresh assets/data/dataset.js and assets/js/market.js in the london_flat repo with the latest
+figures, then bump the build and open a PR. Note: RATES.baseRateNow and RATES.remortgage70Now are
+fetched LIVE from the Bank of England by the Worker, so do NOT hand-edit those (only refresh their
+snapshot fallbacks if they've drifted far). Work through each item, keeping every value sourced;
+if nothing changed today, make no PR.
 
 1. Recent N1 sales — search HM Land Registry + Zoopla for newly-registered sold 2-bed
-   new-build or purpose-built apartments in N1. Add each as a COMPS.rows entry
-   {addr, date "YYYY-MM", price, beds, baths, type, sqm, lat, lng}, geocoding lat/lng from the
-   street's postcode (checkmypostcode / postcodes.io). Keep only new-build/purpose-built.
-   Update COMPS.asOf. (Each new row alerts me in the app.)
+   new-build or purpose-built apartments in N1. Add each as a SALES.rows entry (market.js)
+   {addr, beds, baths, type, sqm, askingPrice?, price, listedDate?, soldDate, lat, lng}, geocoding
+   lat/lng from the street's postcode (postcodes.io). Keep only new-build/purpose-built, within
+   ~2 km of the N1 7TX centroid (51.5346, -0.0899), and exclude council/ex-council/shared-ownership
+   (see the module header). Update SALES.asOf. (Each new row alerts me in the app.)
 2. 2-year GBP swap — FIRST copy the existing RATES.swap2yrNow into RATES.swap2yrPrev (so the
    badge shows today's day-over-day change), THEN set RATES.swap2yrNow + swap2yrAsOf to the
-   current 2-year SONIA swap (no live feed, so it's manual). A move of 10bps or more alerts me.
-   (baseRatePrev and remortgage70Prev are computed live by the Worker — leave those.)
-3. Market mortgage fixes — update RATES.avg2yrFix / avg5yrFix and append to fix2yrSeries from
-   Rightmove/Moneyfacts averages.
-4. Bank Rate context — on an MPC decision day, append the new point to RATES.baseSeries and note
-   RATES.nextDecision (the live badge already shows the current value).
-5. £/m² comparables — refresh COMPARABLES.perSqm (low/median/high) and n1_7txAvg12m from the
-   latest N1 Land Registry £/m² distribution.
-6. Islington HPI / price history — extend PRICE_HISTORY.series with the newest UK HPI release
-   and update the headline Islington figures in the Market tab copy if they changed.
+   current 2-year SONIA swap (bluegamma.io primary, propertyresearch.uk cross-check — no live
+   feed, so it's manual; if both are stale/unreachable, leave it unchanged and flag it rather than
+   guessing). A move of 10bps or more alerts me. (baseRatePrev and remortgage70Prev are computed
+   live by the Worker — leave those.)
+3. Market mortgage fixes — if you have a current Rightmove/Moneyfacts average 2yr/5yr fix reading,
+   fold it into the POLICY_FACTORS macro-risk note (there is no separate avg2yrFix/fix2yrSeries
+   field in the current schema — that was removed at some point; don't recreate it speculatively).
+4. Bank Rate context — on an MPC decision day, note the outcome in the POLICY_FACTORS macro-risk
+   note (there is no separate RATES.baseSeries/nextDecision field in the current schema — the live
+   badge already shows the current value via the Worker).
+5. £/m² comparables — refresh COMPARABLES.perSqm (low/median/high) in dataset.js and
+   market.js's HPI.n17txAvg12m from the latest N1 Land Registry £/m² distribution / Homedata pull.
+6. Islington HPI / price history — extend dataset.js's PRICE_HISTORY.series with the newest UK
+   HPI release (pull the machine-readable API — landregistry.data.gov.uk/data/ukhpi/region/
+   <name>/month/<yyyy-mm>.json — not the rendered browse page, which an AI page-summarizer can
+   misread) and update market.js's HPI block (Market tab figures render from HPI, not from
+   hardcoded copy — only PRICE_HISTORY.note is prose you need to edit by hand). Small-borough
+   (Islington) monthly figures revise heavily; don't chase revisions back through already-added
+   historical series points, just add the newest month and note the revision in prose.
 7. Forecasts — if Savills / Knight Frank / Zoopla have revised, update FORECAST.scenarios
-   (base/optimistic/pessimistic by year).
+   (base/optimistic/pessimistic by year, dataset.js) and market.js's FORECASTS.rows.
 8. Policy & macro — reflect any Budget/tax changes in POLICY_FACTORS (mansion tax, Section 24
    landlord rates, SDLT, CGT) with correct effective dates; update the Market tab text.
 9. Snapshot fallbacks — if the live values have drifted materially, update the fallbacks
    (RATES.baseRateNow/baseRateAsOf, RATES.remortgage70Now/AsOf) and the same FALLBACK block in
    worker.js so offline/no-Worker views aren't stale.
-10. Sources — fix any SOURCES URLs/labels that have moved on (e.g. the latest HPI month page).
+10. Sources — fix any source URLs/labels that have moved on (e.g. a dated HPI-month press-release
+    link that should point at an evergreen or newer page instead).
 11. Local market (2 km) — refresh assets/js/market.js from Homedata (key from $HOMEDATA_KEY in the
     environment — NEVER commit it; auth header "Authorization: Api-Key $HOMEDATA_KEY"). Update the
     rows in SALES (askingPrice, price, listedDate, soldDate, sqm, lat, lng), LISTINGS (asking,
     listedDate, status), LISTINGS_PER_MONTH.series, RENT.series + currentAvg2bed, HPI, NEW_BUILDS
     and FORECASTS. Keep every row within ~2 km of the N1 7TX centroid (51.5346, -0.0899). Set each
     block's asOf and flip its `curated:` flag to false once it holds live data. One Homedata pull
-    per day only (free tier ≈100 calls/month). If Homedata is unreachable, leave the curated rows.
-12. Stamp & ship — set META.asOf to today and bump META.build (e.g. "v76 · <today>"). Caches
-    refresh automatically via the Worker's no-cache headers, so there is no `?v=` to bump.
-    Commit and push to the deploy branch (see CLAUDE.md — no PR), then confirm the deployed
-    footer shows the new build.
+    per day only (free tier ≈100 calls/month). If Homedata is unreachable (e.g. no HOMEDATA_KEY in
+    the environment), pull individual comps directly from HM Land Registry / Zoopla / the EPC
+    register instead of skipping the item — see the "Manually added" comments in market.js for the
+    pattern.
+12. Stamp & ship — set META.asOf to today and bump META.build (e.g. "v111 · <today>"). Caches
+    refresh automatically via the Worker's no-cache headers, so there is no `?v=` query string to
+    bump anywhere (none exists in the current code — don't reintroduce one). Commit, push the
+    branch and open a PR against the deploy branch, then confirm the build in the diff.
 
 Flag anything you couldn't verify from a primary source rather than guessing.
 ```
