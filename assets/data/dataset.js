@@ -10,8 +10,8 @@
 // =============================================================================
 
 export const META = {
-  asOf: "2026-09-16",
-  build: "v110 · 2026-09-16", // bump on each change so the footer confirms the live build
+  asOf: "2026-09-18",
+  build: "v111 · 2026-09-18", // bump on each change so the footer confirms the live build
 };
 
 // -----------------------------------------------------------------------------
@@ -129,17 +129,21 @@ export const RATES = {
   // 2-year GBP interest-rate swap (SONIA) — the wholesale rate UK lenders price
   // fixed-rate mortgages and real-estate lending off. Sits above Bank Rate when
   // the market expects cuts to be slow; the key driver of fixed mortgage pricing.
-  // Re-verified this run against bluegamma.io's 15 Sep 2026 16:30 London close:
-  // 4.61%, down ~2bps from the 14 Sep reading of 4.63% — a below-threshold move
-  // (the in-app alert fires at 10bps) despite Brent's push toward $108-109 on 15
-  // Sep (see POLICY_FACTORS.macroRisk), suggesting the swap curve has largely
-  // priced in the Gulf escalation already. Cross-checked against propertyresearch.uk
-  // (4.62%, 14 Sep, "Worsening" mortgage-pricing signal across 2/5/10yr) for
-  // directional sanity; bluegamma remains the primary series for day-over-day
-  // consistency with prior entries. No 16 Sep close was published by either
-  // tracker as of this run (both show the prior business day).
-  swap2yrNow: 4.61,
-  swap2yrAsOf: "2026-09-15",
+  // Re-verified this run against bluegamma.io's 17 Sep 2026 16:30 London close
+  // (confirmed via the page's own structured JSON-LD metadata, not an AI page
+  // summary): 4.48%, down 13bps from the 15 Sep reading of 4.61% used last run —
+  // ABOVE the in-app 10bp alert threshold. This eases through the 17 Sep MPC
+  // decision (held 3.75%, see POLICY_FACTORS.macroRisk) rather than spiking on
+  // it, suggesting the curve reads the hold as reducing near-term hike risk more
+  // than the hot August CPI print raised it. Cross-checked directionally against
+  // propertyresearch.uk (4.54%, 16 Sep, "Improving" mortgage-pricing signal,
+  // -11bps day-over-day) — same easing direction, different exact level (vendor
+  // methodology differs, as in prior runs); bluegamma remains the primary series
+  // for day-over-day consistency with prior entries. No independently-verified
+  // 16 Sep bluegamma point was found this run, so swap2yrPrev below rolls forward
+  // from the last confirmed dataset value (15 Sep) rather than an intermediate day.
+  swap2yrNow: 4.48,
+  swap2yrAsOf: "2026-09-17",
   // Current average 2-year fixed REMORTGAGE rate at ~70% LTV (the band that fits
   // this flat). Live-refreshed from Bank of England quoted mortgage rates,
   // interpolated between the published 60% and 75% LTV series. Snapshot fallback:
@@ -163,7 +167,7 @@ export const RATES = {
   // the Worker also supplies the prior day's figure for the live series.
   baseRatePrev: 3.75,
   remortgage70Prev: 4.79,
-  swap2yrPrev: 4.63,
+  swap2yrPrev: 4.61,
 };
 
 // -----------------------------------------------------------------------------
@@ -295,29 +299,33 @@ export const POLICY_FACTORS = [
     direction: -1,
     weightHint: "medium",
     summary:
-      "The conflict (US/Israel strikes on Iran began 28 Feb 2026) ground on with no resolution: " +
-      "after the Gulf Cooperation Council-Iran Salalah ministerial was postponed on 13-14 Sep " +
-      "(Saudi objected to changes to the Iran-Oman corridor arrangement, Bahrain declined to " +
-      "attend), Saudi Arabia intercepted a Houthi drone headed toward Mecca and halted oil " +
-      "loadings at its Yanbu port on 15-16 Sep after further drone attacks disrupted the East-West " +
-      "pipeline; Iran's FM Araghchi travelled to China on 16 Sep to meet Wang Yi as Beijing seeks " +
-      "to mediate. Hormuz vessel traffic remains down ~95% from pre-war levels. Brent touched a " +
-      "four-month high near $108-109 on 15 Sep before easing to $107.27 on 16 Sep (-1.4% on the " +
-      "day) as the China-mediation news offered some relief. UK inflation printed hot the same " +
-      "morning: August CPI +3.1% YoY (up from 2.9% in July, ONS, released 16 Sep) — the day before " +
-      "the Bank's 17 Sep MPC decision, whose summary and minutes the Bank says will publish that " +
-      "day (not yet out as of this refresh). The Bank called the conflict 'the dominant source of " +
-      "uncertainty' for inflation at its 30 Jul hold (3 of 9 MPC members voted to hike); the hotter " +
-      "CPI print adds to hike-risk odds into tomorrow's decision, though most economists (a mid-Aug " +
-      "Reuters poll) still expected a hold before this print. Lenders have hiked mortgage pricing " +
-      "for a second time this month ahead of the decision (Moneyfacts, via HomeOwners Alliance): " +
-      "average 2yr/5yr fixes were 5.65%/5.70% as of 8 Sep, both up from the prior month. Against " +
-      "that backdrop the 2yr swap actually eased ~2bps to 4.61% (15 Sep 16:30 close, from 4.63% on " +
-      "14 Sep) — below the in-app 10bp alert threshold, suggesting the curve had already priced " +
-      "most of the Gulf escalation and hotter-CPI risk in. This remains the dominant downside risk " +
-      "to both mortgage costs and Islington prices, with tomorrow's Bank Rate decision the next " +
-      "catalyst to watch.",
-    effective: "2026-09-16",
+      "The conflict (US/Israel strikes on Iran began 28 Feb 2026) ground on with no resolution. " +
+      "The Bank's 17 Sep MPC decision has now landed: held Bank Rate at 3.75% by a 6-3 vote — the " +
+      "same split as the 30 Jul hold, with the same 3 members again preferring a 0.25pt hike to " +
+      "4%. Governor Bailey said the pass-through from rising global energy costs to UK prices and " +
+      "wages had 'so far been limited', but warned that the longer the volatility persists, the " +
+      "greater the effect on inflation and the greater the chance the Bank will need to raise the " +
+      "rate to hit its 2% target — a more hawkish tilt than the pre-meeting consensus (a mid-Aug " +
+      "Reuters poll had expected a hold with little drama), following August's hot CPI print " +
+      "(+3.1% YoY, up from 2.9% in July, ONS, released 16 Sep). Despite that, the 2yr swap actually " +
+      "eased through the decision rather than spiking on it — see RATES.swap2yrNow (4.48%, 17 Sep, " +
+      "-13bps vs 15 Sep) — suggesting the market reads 'hold, with hike risk flagged' as less costly " +
+      "than the hot-CPI-driven hike fear priced in beforehand. Lenders had already hiked mortgage " +
+      "pricing twice this month ahead of the decision (Moneyfacts, via HomeOwners Alliance): average " +
+      "2yr/5yr fixes rose to 5.77%/5.83% by 16 Sep, up from 5.65%/5.70% on 8 Sep — that repricing " +
+      "predates and may not yet reflect the swap's post-decision easing. On the ground: Saudi civil " +
+      "defence said falling debris from an intercepted Houthi drone killed one person on 17 Sep, and " +
+      "the US approved visas for senior Iranian officials to attend a UN high-level meeting despite " +
+      "the two sides remaining at war; separately, US Central Command's Adm. Brad Cooper hosted the " +
+      "military chiefs of Israel, Saudi Arabia, the UAE, Bahrain, Kuwait, Qatar, Jordan and Egypt at " +
+      "a closed conference in Germany — the first such joint gathering since the war began — " +
+      "reassuring them the US military will not withdraw from the region. Hormuz vessel traffic " +
+      "remains down ~95% from pre-war levels. Brent eased further to $103.61 on 17 Sep (-2.1% on the " +
+      "day) from the $108-109 four-month high touched 15 Sep, on reports of a Saudi pipeline " +
+      "recovery plan. This remains the dominant downside risk to both mortgage costs and Islington " +
+      "prices; the next catalyst is the Bank's full minutes/MPR detail and any further pipeline or " +
+      "Hormuz developments.",
+    effective: "2026-09-18",
   },
 ];
 
