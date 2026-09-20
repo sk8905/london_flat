@@ -87,7 +87,7 @@ function withinRadius(rows, km = RADIUS_KM) {
 // is EPC-derived. `askingPrice` is omitted where Homedata held no listing price
 // (so vs-asking derives as null, not a false 0). lat/lng are the Homedata records.
 export const SALES = {
-  asOf: "2026-08-27",
+  asOf: "2026-09-20",
   curated: false,
   sources: ["landRegPP", "epcRegister", "homedata"],
   rows: [
@@ -150,6 +150,16 @@ export const SALES = {
     // Zoopla's listing-derived 72 sqm). Beds/baths per Zoopla listing schema data.
     { addr: "Apartment 13, 110 Elmore House, Elmore Street", beds: 2, baths: 2, type: "Purpose-built", sqm: 63,
       price: 620000, soldDate: "2026-05-19", lat: 51.542512, lng: -0.090636 },
+    // Manually added 2026-09-20 (no HOMEDATA_KEY in this environment, so pulled directly):
+    // Rightmove's price-paid mirror of HM Land Registry data + EPC register floor area
+    // (certificate for this exact flat, rating B). Packington Square is the post-2015
+    // private-market new-build development on the former (demolished) Packington estate
+    // site — this unit's own sale history (£693,550 in 2019 -> £735,000 now) is a normal
+    // open-market resale, not a shared-ownership staircasing transaction, so it passes the
+    // new-build/purpose-built screen. baths inferred from the block's published 2-bed/2-bath
+    // layout spec (not confirmed for this exact unit — EPC certificates don't record it).
+    { addr: "Flat 16, 1 Packington Square", beds: 2, baths: 2, type: "New build", sqm: 70,
+      price: 735000, soldDate: "2026-07-08", lat: 51.535539, lng: -0.095398 },
   ],
 };
 
@@ -241,9 +251,10 @@ export const LISTINGS_PER_MONTH = {
 // arrears; the newest month is PROVISIONAL and gets revised, so YoY can be volatile).
 // Pulled from landregistry.data.gov.uk/data/ukhpi (release published 19 Aug 2026).
 // `n17txAvg12m` is now the trailing-12-month MEDIAN completed flat-sale price within
-// 2 km of the centroid (Homedata/HMLR completions, council-filtered, n=17 after the
-// 2026-08-27 Elmore House addition) — a hyper-local anchor for a 2-bed flat buyer, which
-// now reads a touch below the whole-borough figure that includes houses.
+// 2 km of the centroid (Homedata/HMLR completions, council-filtered, n=18 after the
+// 2026-09-20 Packington Square addition, recomputed against a 2025-09-20..2026-09-20
+// trailing window) — a hyper-local anchor for a 2-bed flat buyer, which now reads a
+// touch below the whole-borough figure that includes houses.
 // islingtonYoYPct is the ALL-PROPERTY figure (volatile month to month in a small
 // borough due to mix effects — this run's YoY base of £733k in Jun 2025 is well above
 // the Mar-2025 anchor, so treat it as noisy); islingtonFlatsYoYPct is the more
@@ -257,7 +268,7 @@ export const HPI = {
   islingtonYoYPct: -8.1,
   islingtonFlatsAvg: 560000, // Islington flats/maisonettes (UK HPI)
   islingtonFlatsYoYPct: -8.4,
-  n17txAvg12m: 650000, // 2 km trailing-12m median completed flat sale (Homedata/HMLR, council-filtered, n=17)
+  n17txAvg12m: 660000, // 2 km trailing-12m median completed flat sale (Homedata/HMLR, council-filtered, n=18)
   londonAvg: 554000,
   londonYoYPct: -2.5,
   englandAvg: 292095,
