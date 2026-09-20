@@ -156,7 +156,7 @@ export const SALES = {
 // -----------------------------------------------------------------------------
 // ACTIVE LISTINGS — flats currently on the market within 2 km. `listedDate` lets
 // the UI show current time-on-market; `status` tracks the Homedata event chain
-// (Added / Reduced / Under Offer / Sold STC). All curated pending the live feed.
+// (Added / Reduced / Under Offer / Sold STC).
 // -----------------------------------------------------------------------------
 // LIVE (2026-07-26): currently-active 2-bed flat listings within 2 km (council /
 // ex-council / shared-ownership stock filtered out — see the module header), from the

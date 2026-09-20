@@ -111,7 +111,7 @@ export function rentVsSell(opts) {
   const cumulativePrincipal = years.reduce((s, y) => s + y.principal, 0); // equity built via repayments
 
   // ---- sale at the horizon (with partial-PRR CGT) ---------------------------
-  const saleValue = presentValue * valueMultiplier(property.purchaseDate, saleDate, growthByYear, presentISO);
+  const saleValue = presentValue * valueMultiplier(saleDate, growthByYear, presentISO);
   const costs = sellingCosts(saleValue, sellingCfg);
   const outstanding = sched.endBalance;
   // ERC: applies inside the current fix OR the new remortgage fix taken after it.

@@ -103,7 +103,7 @@ export function rentVsBuy(opts) {
   if (bucket) years.push(bucket);
 
   // ---- terminal wealth ------------------------------------------------------
-  const saleValueH = presentValue * valueMultiplier(property.purchaseDate, horizonISO, growthByYear, presentISO);
+  const saleValueH = presentValue * valueMultiplier(horizonISO, growthByYear, presentISO);
   const saleH = netProceedsAt(property, mortgage, sellingCfg, saleValueH, horizonISO);
   const equityAtH = saleH.net; // net equity if the owner sold at the horizon
 

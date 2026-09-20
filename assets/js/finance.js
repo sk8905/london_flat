@@ -52,8 +52,8 @@ export function balanceAfter(principal, annualRatePct, termYears, monthsPaid) {
 }
 
 // Build a year-by-year growth path and return a value multiplier at a target date,
-// relative to a base value at baseDate. growthByYear: { 2026: -2.0, 2027: 3.0, ... }.
-export function valueMultiplier(baseDate, targetDate, growthByYear, presentISO) {
+// relative to the value at presentISO. growthByYear: { 2026: -2.0, 2027: 3.0, ... }.
+export function valueMultiplier(targetDate, growthByYear, presentISO) {
   // Apply monthly-compounded annual growth from the *present* forward (integer
   // month math — timezone-safe). Before the present we trust the observed index.
   const startIdx = ymIndex(presentISO);
@@ -122,7 +122,7 @@ export function economicsForWindow(opts) {
   } = opts;
 
   // 1) Projected sale value: present value grown forward by the scenario.
-  const mult = valueMultiplier(property.purchaseDate, windowDate, growthByYear, presentISO);
+  const mult = valueMultiplier(windowDate, growthByYear, presentISO);
   const saleValue = presentValue * mult;
 
   // 2) Outstanding mortgage balance at the window date.
