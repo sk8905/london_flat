@@ -10,8 +10,8 @@
 // =============================================================================
 
 export const META = {
-  asOf: "2026-09-20",
-  build: "v112 · 2026-09-20", // bump on each change so the footer confirms the live build
+  asOf: "2026-09-21",
+  build: "v113 · 2026-09-21", // bump on each change so the footer confirms the live build
 };
 
 // -----------------------------------------------------------------------------
@@ -139,17 +139,21 @@ export const RATES = {
   // 2-year GBP interest-rate swap (SONIA) — the wholesale rate UK lenders price
   // fixed-rate mortgages and real-estate lending off. Sits above Bank Rate when
   // the market expects cuts to be slow; the key driver of fixed mortgage pricing.
-  // Re-verified this run against bluegamma.io's 17 Sep 2026 16:30 London close:
-  // 4.48%, down 13bps from the 15 Sep reading of 4.61% — ABOVE the in-app 10bp
-  // alert threshold. Cross-checked against propertyresearch.uk, which shows the
-  // same easing trend (4.54% as of 16 Sep, -11bps day-over-day, "wholesale
-  // mortgage pricing pressure has eased slightly"); bluegamma remains the
-  // primary series for day-over-day consistency with prior entries. The move
-  // came despite the MPC's hawkish 17 Sep hold (see POLICY_FACTORS.macroRisk) —
-  // Brent's retreat from its 15 Sep four-month high ($108-109) to $101.21 on 18
-  // Sep, on Iran-conflict de-escalation hopes, looks like the bigger driver.
-  swap2yrNow: 4.48,
-  swap2yrAsOf: "2026-09-17",
+  // Re-verified this run against bluegamma.io's 18 Sep 2026 16:30 London close
+  // (Friday; no fresher print published over the weekend into Monday 21 Sep):
+  // 4.57%, up 9bps from the 17 Sep reading of 4.48% — just BELOW the in-app
+  // 10bp alert threshold. Cross-checked against propertyresearch.uk, which
+  // independently shows the same level (4.57%, "latest move" +3.4bps) for the
+  // same date window — the closest the two trackers' prints have lined up in
+  // recent runs (usually several bps apart on vendor-methodology differences).
+  // The move partly tracks the market repricing toward the 5 Nov MPC decision:
+  // OIS-implied pricing put a 25bp hike at ~69% probability as of 18 Sep, up
+  // sharply from the ~40% priced in immediately after the 17 Sep hold, per
+  // rate-desk commentary ("odds on a hike... shortening rapidly" — see
+  // POLICY_FACTORS.macroRisk). Moneyfacts' average 2yr/5yr fixes (5.77%/5.83%,
+  // 16 Sep) had no fresher reading available this run.
+  swap2yrNow: 4.57,
+  swap2yrAsOf: "2026-09-18",
   // Current average 2-year fixed REMORTGAGE rate at ~70% LTV (the band that fits
   // this flat). Live-refreshed from Bank of England quoted mortgage rates,
   // interpolated between the published 60% and 75% LTV series. Snapshot fallback:
@@ -173,7 +177,7 @@ export const RATES = {
   // the Worker also supplies the prior day's figure for the live series.
   baseRatePrev: 3.75,
   remortgage70Prev: 4.79,
-  swap2yrPrev: 4.61,
+  swap2yrPrev: 4.48,
 };
 
 // -----------------------------------------------------------------------------
@@ -203,15 +207,16 @@ export const FORECAST = {
 export const LETTING = {
   sources: ["hpiMar2026", "budgetZoopla", "cgtRates"],
   note:
-    "Islington average private rent was £2,854/mo in July 2026 (+5.9% YoY, ONS Price Index of " +
-    "Private Rents borough breakdown, released 19 Aug 2026, up from £2,694 in July 2025) — the " +
-    "latest borough-specific reading, up from £2,843/+5.4% the prior month. Section 24 means " +
+    "Islington average private rent was £2,868/mo in August 2026 (+6.2% YoY, ONS Price Index of " +
+    "Private Rents borough breakdown, published via the 'Private rent and house prices, UK: " +
+    "September 2026' bulletin released 16 Sep 2026, up from £2,701 in August 2025) — the latest " +
+    "borough-specific reading, up from £2,854/+5.9% the prior month. Section 24 means " +
     "mortgage interest is NOT a deductible expense for individual landlords — instead you get a 20% tax credit on " +
     "the interest. From April 2027 the Budget raised property-income tax rates by 2 points " +
     "(to 22/42/47%). Letting your former home also erodes Private Residence Relief, so part of " +
     "the eventual gain becomes liable to CGT.",
-  monthlyRent: 2854, // Islington average (Jul 2026, ONS PIPR); editable for your specific flat
-  rentGrowthPct: 5.9, // annual; Islington rent YoY to Jul 2026 (ONS)
+  monthlyRent: 2868, // Islington average (Aug 2026, ONS PIPR); editable for your specific flat
+  rentGrowthPct: 6.2, // annual; Islington rent YoY to Aug 2026 (ONS)
   voidMonthsPerYear: 1, // assume ~1 month vacant per year
   agentFeePct: 10, // full-management letting agent fee (% of rent), excl VAT
   agentVatPct: 20,
@@ -313,23 +318,31 @@ export const POLICY_FACTORS = [
       "energy prices, and said it 'stands ready to act as necessary' — code for a hike still being " +
       "live if the conflict keeps pushing energy costs up (Brent +36% and UK wholesale gas +78% " +
       "since July, per the Bank's own numbers). The MPC also voted unanimously to run down its gilt " +
-      "holdings to zero via £20bn/yr sales by 2034. Next decision: 5 Nov 2026. Oil has since eased: " +
-      "Brent went $107.27 (16 Sep) → $101.21 (18 Sep), a ~6% two-day drop, on hopes the China-brokered " +
-      "diplomacy (see the 16 Sep Araghchi-Wang Yi meeting) and Gulf infrastructure repairs are " +
-      "gaining traction, even though Hormuz vessel traffic is still ~95% below pre-war levels. " +
-      "Despite the MPC's hawkish hold, the 2yr swap fell further and by more than the 10bp in-app " +
-      "alert threshold: 4.48% at bluegamma's 17 Sep 16:30 close, down 13bps from 4.61% on 15 Sep " +
-      "(propertyresearch.uk shows the same direction: 4.54% on 16 Sep, -11bps day-over-day) — the " +
-      "oil retreat looks like the bigger driver for the curve than the MPC's guidance. Lender " +
-      "pricing hasn't caught up yet: Moneyfacts' average 2yr/5yr fixes were still rising as of 16 " +
-      "Sep, to 5.77%/5.83% (from 5.65%/5.70% on 8 Sep), reflecting the swap spike earlier in the " +
-      "month rather than this week's easing. Separately, RICS' August Residential Market Survey " +
-      "showed further stabilisation — new buyer enquiries -19% and agreed sales -17% (both the " +
-      "least negative since Jan/Feb), though the price balance is still -28% (prices still drifting " +
-      "down) and the 12-month sales outlook improved to +6% (from +3% in July). This remains the " +
-      "dominant downside risk to both mortgage costs and Islington prices, with the swap curve's " +
-      "response to the next round of oil/diplomacy headlines the thing to watch before 5 Nov.",
-    effective: "2026-09-18",
+      "holdings to zero via £20bn/yr sales by 2034. Next decision: 5 Nov 2026 — and OIS-implied " +
+      "market pricing has moved fast toward that meeting: a 25bp hike was ~69% priced in as of 18 " +
+      "Sep (rate-desk commentary described the odds as 'shortening rapidly'), up from a more even " +
+      "split right after the 17 Sep hold. Oil has stabilised rather than kept falling: Brent eased " +
+      "from its 15 Sep four-month high ($108-109) to $101.21 on 18 Sep, then traded $101-102 into " +
+      "the new week ($101.96, 21 Sep, -1.8% day-over-day per Trading Economics) — a real but " +
+      "levelling-off retreat, on hopes the China-brokered diplomacy (16 Sep Araghchi-Wang Yi " +
+      "meeting) and Gulf infrastructure repairs are gaining traction. The conflict itself shows a " +
+      "further, tentative de-escalation signal: Iran had not struck a host state for nine straight " +
+      "days as of the 18 Sep tracking cutoff, and FM Araghchi claimed in Beijing that Iran has " +
+      "agreed a plan with Oman to reopen the Strait of Hormuz — though no Omani official has yet " +
+      "confirmed it, and Hormuz vessel traffic remains ~95% below pre-war levels. That tug-of-war " +
+      "(oil easing/stabilising vs. hardening Nov-hike odds) shows up in the swap curve: the 2yr swap " +
+      "rose 9bps to 4.57% at bluegamma's 18 Sep 16:30 close (from 4.48% on 17 Sep), just under the " +
+      "10bp in-app alert threshold, with propertyresearch.uk independently confirming the same 4.57% " +
+      "level for the same window — the MPC repricing looks like the bigger driver of this move than " +
+      "oil. Lender pricing hasn't caught up either way: Moneyfacts' average 2yr/5yr fixes had no " +
+      "fresher read past 16 Sep's 5.77%/5.83% (from 5.65%/5.70% on 8 Sep) this run. Separately, " +
+      "RICS' August Residential Market Survey showed further stabilisation — new buyer enquiries " +
+      "-19% and agreed sales -17% (both the least negative since Jan/Feb), though the price balance " +
+      "is still -28% (prices still drifting down) and the 12-month sales outlook improved to +6% " +
+      "(from +3% in July). This remains the dominant downside risk to both mortgage costs and " +
+      "Islington prices, with the swap curve's response to the next round of oil/diplomacy headlines " +
+      "— and to any pre-5-Nov MPC signalling — the thing to watch.",
+    effective: "2026-09-21",
   },
 ];
 
