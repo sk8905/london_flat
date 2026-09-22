@@ -836,7 +836,7 @@ function renderProceeds(r) {
       <p class="chart-cap">Bars = <strong>net proceeds (cash in hand)</strong>. The grey dashed line is the
       <strong>${gbp(cashIn)} you put in</strong> (${gbp(deposit)} deposit + ${gbp(buyCosts)} SDLT/buying costs); the bar
       above it is your <strong>net profit</strong> (shown under each bar). The
-      <strong style="color:#a06a3c">bronze line</strong> is the <strong>recoup-all-cash break-even</strong> — the net
+      <strong style="color:#b07d2a">bronze line</strong> is the <strong>recoup-all-cash break-even</strong> — the net
       proceeds needed to get every pound back (deposit + SDLT + buying costs + interest paid to that date); a bar above it
       means you've recouped all your cash. Scenario: <strong>${state.custom ? "Custom" : r.scenarioName}</strong>.</p></div>
     <div class="table-wrap"><table class="rank-table kv">
@@ -1196,7 +1196,7 @@ function renderLocalMarket(r) {
     const maxIdx = Math.max(...S.monthIndex);
     C.barChart(seasHost, {
       bars: S.monthIndex.map((v, i) => ({ label: MONTHS[i], value: Math.round(v * 100),
-        color: v >= maxIdx - 0.03 ? "#2f7d57" : (v >= 1.0 ? "#4a7c8c" : "#c3ccd3") })),
+        color: v >= maxIdx - 0.03 ? "#2f7d57" : (v >= 1.0 ? "#6f9c86" : "#c3ccd3") })),
       yFormat: (v) => String(v), height: 180, yUnit: "demand index", labelEvery: 1, xTicks: true, baseline: 80, hideValues: true,
     });
     const best3 = S.monthIndex.map((v, i) => ({ m: MONTHS[i], v })).sort((a, b) => b.v - a.v).slice(0, 3).map((x) => x.m);
@@ -1207,7 +1207,7 @@ function renderLocalMarket(r) {
   // ---- new listings per month ----
   const lpmHost = $("#lm-listings-chart");
   if (lpmHost) C.barChart(lpmHost, {
-    bars: lpm.map((x) => ({ label: monthName(x.month).replace(/ 20/, " '"), value: x.count, valueLabel: String(x.count), color: "#4a7c8c" })),
+    bars: lpm.map((x) => ({ label: monthName(x.month).replace(/ 20/, " '"), value: x.count, valueLabel: String(x.count), color: "#6f9c86" })),
     yFormat: (v) => v.toFixed(0), height: 220, yUnit: "new listings",
     xTicks: true, labelEvery: 3, // a notch every month, date label once a quarter
   });
@@ -1286,8 +1286,8 @@ function renderLocalMarket(r) {
   const fcPath = [{ label: "", rate: baseRate }, { label: "'30", rate: r30 }];
   _rateOpts = {
     xLabels: rateGrid.map((rt) => rt.toFixed(1) + "%"), xValues: rateGrid, height: 260,
-    left: { name: "Est. price", color: "#1f5a73", values: priceVals, format: (val) => "£" + Math.round(val / 1000) + "k" },
-    right: { name: "Time to sell", color: "#a06a3c", values: daysVals, format: (val) => Math.round(val) + "d" },
+    left: { name: "Est. price", color: "#0e9c68", values: priceVals, format: (val) => "£" + Math.round(val / 1000) + "k" },
+    right: { name: "Time to sell", color: "#b07d2a", values: daysVals, format: (val) => Math.round(val) + "d" },
     marker: { index: mIdx, label: "now ~" + baseRate.toFixed(1) + "%" }, fc: fcPath,
   };
   renderRateChart();
@@ -1393,8 +1393,8 @@ function renderLetting(r) {
 
   C.barChart($("#letting-chart"), {
     bars: [
-      { label: "Let & sell later", value: res.letTotal, color: wins ? "#2f7d57" : "#4a7c8c", valueLabel: gbp(res.letTotal) },
-      { label: "Sell now & invest", value: res.sellNowGrown, color: wins ? "#4a7c8c" : "#2f7d57", valueLabel: gbp(res.sellNowGrown) },
+      { label: "Let & sell later", value: res.letTotal, color: wins ? "#2f7d57" : "#6f9c86", valueLabel: gbp(res.letTotal) },
+      { label: "Sell now & invest", value: res.sellNowGrown, color: wins ? "#6f9c86" : "#2f7d57", valueLabel: gbp(res.sellNowGrown) },
     ],
     yFormat: (v) => "£" + Math.round(v / 1000) + "k", height: 280, yUnit: "£ total wealth",
   });
@@ -1522,8 +1522,8 @@ function renderRentBuy(r) {
 
   C.barChart($("#rb-wealth-chart"), {
     bars: [
-      { label: "Keep owning", value: T.wealthOwn, color: ownWins ? "#2f7d57" : "#4a7c8c", valueLabel: gbp(T.wealthOwn) },
-      { label: "Sell & rent", value: T.wealthRent, color: ownWins ? "#4a7c8c" : "#2f7d57", valueLabel: gbp(T.wealthRent) },
+      { label: "Keep owning", value: T.wealthOwn, color: ownWins ? "#2f7d57" : "#6f9c86", valueLabel: gbp(T.wealthOwn) },
+      { label: "Sell & rent", value: T.wealthRent, color: ownWins ? "#6f9c86" : "#2f7d57", valueLabel: gbp(T.wealthRent) },
     ],
     yFormat: (v) => "£" + Math.round(v / 1000) + "k", height: 280, yUnit: "£ total wealth",
   });
@@ -1532,7 +1532,7 @@ function renderRentBuy(r) {
   const rc = $("#rb-rent-chart");
   if (rc) C.lineChart(rc, {
     height: 260,
-    series: [{ name: "Avg 2-bed rent (2 km)", color: "#1f5a73",
+    series: [{ name: "Avg 2-bed rent (2 km)", color: "#0e9c68",
       points: MKT.RENT.series.map((s) => ({ x: monthName(s.month), y: s.rent })) }],
     yFormat: (v) => "£" + Math.round(v).toLocaleString("en-GB"), yUnit: "£/month",
   });

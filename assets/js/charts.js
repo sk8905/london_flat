@@ -318,7 +318,7 @@ export function barChart(container, opts) {
 
   // optional overlay line across the bars (e.g. break-even vs selling now & investing)
   if (opts.overlay && Array.isArray(opts.overlay.values) && opts.overlay.values.length === n) {
-    const ov = opts.overlay, col = ov.color || "#a06a3c";
+    const ov = opts.overlay, col = ov.color || "#b07d2a";
     const cxAt = (i) => m.l + slot * i + slot / 2;
     const pts = ov.values.map((v, i) => `${cxAt(i)},${yAt(v)}`).join(" ");
     el("polyline", { points: pts, fill: "none", stroke: col, "stroke-width": 2,
@@ -477,7 +477,7 @@ export function sparkline(container, values, opts = {}) {
   const min = Math.min(...vals), max = Math.max(...vals), span = max - min;
   const x = (i) => pad + (i / (vals.length - 1)) * (W - 2 * pad);
   const y = (v) => H - pad - (span < 1e-9 ? 0.5 : (v - min) / span) * (H - 2 * pad);
-  const color = opts.color || "#4a7c8c";
+  const color = opts.color || "#6f9c86";
   const d = vals.map((v, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
   el("path", { d, fill: "none", stroke: color, "stroke-width": 1.5, "stroke-linecap": "round", "stroke-linejoin": "round" }, svg);
   el("circle", { cx: x(vals.length - 1).toFixed(1), cy: y(vals[vals.length - 1]).toFixed(1), r: 2.1, fill: color }, svg);
