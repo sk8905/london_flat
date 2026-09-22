@@ -10,8 +10,8 @@
 // =============================================================================
 
 export const META = {
-  asOf: "2026-09-21",
-  build: "v113 · 2026-09-21", // bump on each change so the footer confirms the live build
+  asOf: "2026-09-22",
+  build: "v114 · 2026-09-22", // bump on each change so the footer confirms the live build
 };
 
 // -----------------------------------------------------------------------------
@@ -139,21 +139,24 @@ export const RATES = {
   // 2-year GBP interest-rate swap (SONIA) — the wholesale rate UK lenders price
   // fixed-rate mortgages and real-estate lending off. Sits above Bank Rate when
   // the market expects cuts to be slow; the key driver of fixed mortgage pricing.
-  // Re-verified this run against bluegamma.io's 18 Sep 2026 16:30 London close
-  // (Friday; no fresher print published over the weekend into Monday 21 Sep):
-  // 4.57%, up 9bps from the 17 Sep reading of 4.48% — just BELOW the in-app
-  // 10bp alert threshold. Cross-checked against propertyresearch.uk, which
-  // independently shows the same level (4.57%, "latest move" +3.4bps) for the
-  // same date window — the closest the two trackers' prints have lined up in
-  // recent runs (usually several bps apart on vendor-methodology differences).
-  // The move partly tracks the market repricing toward the 5 Nov MPC decision:
-  // OIS-implied pricing put a 25bp hike at ~69% probability as of 18 Sep, up
-  // sharply from the ~40% priced in immediately after the 17 Sep hold, per
-  // rate-desk commentary ("odds on a hike... shortening rapidly" — see
-  // POLICY_FACTORS.macroRisk). Moneyfacts' average 2yr/5yr fixes (5.77%/5.83%,
-  // 16 Sep) had no fresher reading available this run.
-  swap2yrNow: 4.57,
-  swap2yrAsOf: "2026-09-18",
+  // Re-verified this run against bluegamma.io's 21 Sep 2026 16:30 London close
+  // (Monday; the freshest print available into Tuesday 22 Sep): 4.50%, down 7bps
+  // from the 18 Sep reading of 4.57% — a pullback, not an alert (in-app threshold
+  // is a 10bp move). Cross-check: propertyresearch.uk's own most recent published
+  // point is still dated 18 Sep (4.59%, 2bps above bluegamma's same-day 4.57% —
+  // consistent), with no fresher read available from that tracker this run, so
+  // the 21 Sep level is single-sourced; flagging rather than guessing a second
+  // confirmation. The pullback comes despite the swap-rate driver — the 5 Nov MPC
+  // decision — actually pricing a bit LESS hawkish: OIS-implied pricing put a
+  // 25bp hike at 73% as of 21 Sep 16:00 (+18.3bps priced in), down slightly from
+  // 69% on 18 Sep (see POLICY_FACTORS.macroRisk) — both readings still point to a
+  // live hike risk, just not accelerating further day over day. Moneyfacts'
+  // average 2yr/5yr fixes: re-checked this run, still no fresher primary reading
+  // than the 16 Sep article confirming 5.82% avg 5yr fixed ("highest since 8 Nov
+  // 2023") — consistent with the 5.77%/5.83% snapshot already held; flagging
+  // rather than guessing a same-day figure from noisy secondary sources.
+  swap2yrNow: 4.50,
+  swap2yrAsOf: "2026-09-21",
   // Current average 2-year fixed REMORTGAGE rate at ~70% LTV (the band that fits
   // this flat). Live-refreshed from Bank of England quoted mortgage rates,
   // interpolated between the published 60% and 75% LTV series. Snapshot fallback:
@@ -177,7 +180,7 @@ export const RATES = {
   // the Worker also supplies the prior day's figure for the live series.
   baseRatePrev: 3.75,
   remortgage70Prev: 4.79,
-  swap2yrPrev: 4.48,
+  swap2yrPrev: 4.57,
 };
 
 // -----------------------------------------------------------------------------
@@ -310,39 +313,40 @@ export const POLICY_FACTORS = [
     direction: -1,
     weightHint: "medium",
     summary:
-      "The conflict (US/Israel strikes on Iran began 28 Feb 2026) remains unresolved. The Bank's 17 " +
-      "Sep MPC decision held Bank Rate at 3.75% for a second straight meeting, again by a 6-3 vote " +
-      "(Greene, Mann and Pill again preferred a 0.25pt hike to 4%) — an unchanged split from the 30 " +
-      "Jul hold. The Committee's tone was hawkish: it flagged August CPI at 3.1% 'likely to rise " +
-      "further over coming quarters', projected inflation 'slightly above 4% in 2027 Q1' on current " +
-      "energy prices, and said it 'stands ready to act as necessary' — code for a hike still being " +
-      "live if the conflict keeps pushing energy costs up (Brent +36% and UK wholesale gas +78% " +
-      "since July, per the Bank's own numbers). The MPC also voted unanimously to run down its gilt " +
-      "holdings to zero via £20bn/yr sales by 2034. Next decision: 5 Nov 2026 — and OIS-implied " +
-      "market pricing has moved fast toward that meeting: a 25bp hike was ~69% priced in as of 18 " +
-      "Sep (rate-desk commentary described the odds as 'shortening rapidly'), up from a more even " +
-      "split right after the 17 Sep hold. Oil has stabilised rather than kept falling: Brent eased " +
-      "from its 15 Sep four-month high ($108-109) to $101.21 on 18 Sep, then traded $101-102 into " +
-      "the new week ($101.96, 21 Sep, -1.8% day-over-day per Trading Economics) — a real but " +
-      "levelling-off retreat, on hopes the China-brokered diplomacy (16 Sep Araghchi-Wang Yi " +
-      "meeting) and Gulf infrastructure repairs are gaining traction. The conflict itself shows a " +
-      "further, tentative de-escalation signal: Iran had not struck a host state for nine straight " +
-      "days as of the 18 Sep tracking cutoff, and FM Araghchi claimed in Beijing that Iran has " +
-      "agreed a plan with Oman to reopen the Strait of Hormuz — though no Omani official has yet " +
-      "confirmed it, and Hormuz vessel traffic remains ~95% below pre-war levels. That tug-of-war " +
-      "(oil easing/stabilising vs. hardening Nov-hike odds) shows up in the swap curve: the 2yr swap " +
-      "rose 9bps to 4.57% at bluegamma's 18 Sep 16:30 close (from 4.48% on 17 Sep), just under the " +
-      "10bp in-app alert threshold, with propertyresearch.uk independently confirming the same 4.57% " +
-      "level for the same window — the MPC repricing looks like the bigger driver of this move than " +
-      "oil. Lender pricing hasn't caught up either way: Moneyfacts' average 2yr/5yr fixes had no " +
-      "fresher read past 16 Sep's 5.77%/5.83% (from 5.65%/5.70% on 8 Sep) this run. Separately, " +
-      "RICS' August Residential Market Survey showed further stabilisation — new buyer enquiries " +
-      "-19% and agreed sales -17% (both the least negative since Jan/Feb), though the price balance " +
-      "is still -28% (prices still drifting down) and the 12-month sales outlook improved to +6% " +
-      "(from +3% in July). This remains the dominant downside risk to both mortgage costs and " +
-      "Islington prices, with the swap curve's response to the next round of oil/diplomacy headlines " +
-      "— and to any pre-5-Nov MPC signalling — the thing to watch.",
-    effective: "2026-09-21",
+      "The conflict (US/Israel strikes on Iran began 28 Feb 2026) remains unresolved, and the " +
+      "Strait of Hormuz flashpoint flared again: on Monday 21 Sep an unidentified projectile struck " +
+      "a tanker entering the Strait, injuring two crew (UK military confirmed; the vessel continued " +
+      "to port under its own power) — a fresh reminder that the 'ceasefire' is really an ongoing " +
+      "tanker war, not a resolved conflict. Oil reacted: Brent, which had eased to $101.96 on 21 Sep " +
+      "(-1.8% day-over-day), rose back to $102.12 on 22 Sep (+1.7%, Trading Economics) as the strike " +
+      "reintroduced a war-risk premium — a partial reversal of the prior week's stabilisation, not a " +
+      "new spike. The Bank's 17 Sep MPC decision held Bank Rate at 3.75% for a second straight " +
+      "meeting, again by a 6-3 vote (Greene, Mann and Pill again preferred a 0.25pt hike to 4%) — an " +
+      "unchanged split from the 30 Jul hold. The Committee's tone was hawkish: it flagged August CPI " +
+      "at 3.1% 'likely to rise further over coming quarters', projected inflation 'slightly above 4% " +
+      "in 2027 Q1' on current energy prices, and said it 'stands ready to act as necessary' — code " +
+      "for a hike still being live if the conflict keeps pushing energy costs up. The MPC also voted " +
+      "unanimously to run down its gilt holdings to zero via £20bn/yr sales by 2034. Next decision: " +
+      "5 Nov 2026 (a forecast-round meeting, so new projections accompany the vote) — OIS-implied " +
+      "pricing put a 25bp hike at 73% as of 21 Sep 16:00 (+18.3bps priced in), down slightly from 69% " +
+      "on 18 Sep — still elevated, but not accelerating further day over day despite the fresh Hormuz " +
+      "incident. That broadly-steady-but-elevated hike pricing shows up in the swap curve: the 2yr " +
+      "swap eased 7bps to 4.50% at bluegamma's 21 Sep 16:30 close (from 4.57% on 18 Sep), a pullback " +
+      "rather than a further rise — propertyresearch.uk's own latest published point is still dated " +
+      "18 Sep (4.59%, a reasonable 2bp cross-check for that day) with nothing fresher available this " +
+      "run to independently confirm the 21 Sep level. Lender pricing hasn't moved either way: " +
+      "Moneyfacts' average 2yr/5yr fixes had no fresher primary read past the 16 Sep article " +
+      "confirming 5.82% avg 5yr fixed ('highest since 8 Nov 2023'), consistent with the 5.77%/5.83% " +
+      "snapshot already held. Separately, RICS' August Residential Market Survey showed further " +
+      "stabilisation — new buyer enquiries -19% and agreed sales -17% (both the least negative since " +
+      "Jan/Feb), though the price balance is still -28% (prices still drifting down) and the " +
+      "12-month sales outlook improved to +6% (from +3% in July). One more date to watch: the " +
+      "Chancellor confirmed the Autumn Budget for Wednesday 28 Oct 2026 — ahead of the Nov MPC " +
+      "meeting — though no tax or housing measures have been announced yet, so nothing here is " +
+      "changed on the strength of it. This remains the dominant downside risk to both mortgage costs " +
+      "and Islington prices, with the swap curve's response to further Hormuz/tanker headlines — and " +
+      "to any pre-5-Nov MPC signalling — the thing to watch.",
+    effective: "2026-09-22",
   },
 ];
 
