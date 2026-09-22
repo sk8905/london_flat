@@ -175,6 +175,7 @@ window.addEventListener("unhandledrejection", (e) => {
 });
 
 const PAGE_META = {
+  outlook: ["Outlook", "At a glance — valuation, remortgage & the quarter-by-quarter exit to end-2028"],
   localmarket: ["Local market", "Sales, listings, HPI & forecasts within 2 km"],
   finances: ["Our finances", "What we paid, and whether to sell, rent or hold"],
   map: ["Map", "Sold & on-market homes within 2 km"],
@@ -413,6 +414,7 @@ const scheduleLetting = debounceRAF(() => rerenderLetting());
 function rerender() {
   const result = runModel(effectiveData(), currentOverrides());
   window.__model = result; // handy for inspection
+  renderOutlook(result);
   renderPaid(result);
   renderBreakEven(result);
   renderProceeds(result);
@@ -1022,6 +1024,191 @@ function trendMeta(dir, goodIsUp) {
 
 // Sell-timing verdict at the top of Local market — a compact read of the composite
 // model (the same engine the Finances tab uses for the full sell-vs-hold).
+// ---------------------------------------------------------------------------
+// Outlook — at-a-glance landing view (curated from the live model + market data)
+// ---------------------------------------------------------------------------
+function renderOutlook(r) {
+  if (!$("#tab-outlook")) return;
+  const p = r.inputs.property, m = r.inputs.mortgage;
+  const area = p.floorAreaSqm || 0;
+
+  // ---- model read (best window) ----
+  const vh = $("#ol-verdict");
+  if (vh && r.best) {
+    const best = r.best, sig = signalLabel(best.composite), next = r.ranked[1];
+    const drivers = Object.entries(best.contributions)
+      .sort((a, b) => Math.abs(b[1]) - Math.abs(a[1])).slice(0, 2)
+      .map(([k, v]) => `${FACTOR_LABELS[k] || k} ${v >= 0 ? "+" : "−"}${Math.abs(Math.round(v))}`);
+    vh.innerHTML = `
+      <div class="verdict-kicker">Best time to sell — model read</div>
+      <div class="lm-verdict-head">
+        <div class="lm-verdict-window">${best.window.label}</div>
+        <span class="pill pill-${sig.tone}">${sig.label} · ${signed(best.composite)}</span>
+      </div>
+      <p class="lm-verdict-lead">Projected sale value <strong>${gbp(best.saleValue)}</strong> → net proceeds
+        <strong>${gbp(best.net)}</strong>. Top drivers: ${drivers.join(" · ")}.
+        Next best: <strong>${next.window.label}</strong> (${signed(next.composite)}).</p>`;
+  }
+
+  // ---- two-basis valuation: completed sold prices vs current asking ----
+  const listings = MKT.deriveListings(MKT.RADIUS_KM, DATA.META.asOf);
+  const askPsmArr = listings.map((x) => x.perSqm).filter(Number.isFinite);
+  const askPsm = askPsmArr.length ? MKT.median(askPsmArr) : null;
+  const askingVal = (askPsm && area) ? Math.round(askPsm * area) : null;
+  const soldVal = r.presentValue;
+  const soldPsm = area ? Math.round(soldVal / area) : null;
+  const vv = $("#ol-valuations");
+  if (vv) vv.innerHTML = `
+    <div class="val-head">Desktop valuation — your flat</div>
+    <div class="ol-duo">
+      <div class="ol-box">
+        <div class="ol-lbl">Completed sales</div>
+        <div class="ol-big">${gbp(soldVal)}</div>
+        <div class="ol-sub">${soldPsm ? gbp(soldPsm) + "/m² · sold-price basis" : "sold-price basis"}</div>
+      </div>
+      <div class="ol-box">
+        <div class="ol-lbl">Current asking</div>
+        <div class="ol-big amber">${askingVal ? gbp(askingVal) : "—"}</div>
+        <div class="ol-sub">${askPsm ? gbp(askPsm) + "/m² · " + askPsmArr.length + " live listings" : "live listings"}</div>
+      </div>
+    </div>
+    <div class="val-note">Completed = your flat trended by local sold prices &amp; £/m² comps. Asking = median £/m² of homes on the market now × ${area}&nbsp;m². The two bases diverge as the market shifts; sold-vs-asking runs at ${(() => { const mv = MKT.median(MKT.salesStats().rows.map((x) => x.vsAskingPct)); return mv != null ? signed(mv, (x) => x.toFixed(1)) + "%" : "—"; })()} locally.</div>`;
+
+  // ---- remortgage outlook (same LTV) ----
+  const hcd = r.holdingCost;
+  const rh = $("#ol-remortgage");
+  if (rh) rh.innerHTML = `
+    <div class="val-head">Remortgage outlook — same LTV</div>
+    <div class="ol-trio">
+      <div class="ol-box">
+        <div class="ol-lbl">Now · fixed to ${monthName(m.fixEndDate)}</div>
+        <div class="ol-big">${pct(m.ratePct)}</div>
+        <div class="ol-sub">${gbp(hcd.now)}/mo</div>
+      </div>
+      <div class="ol-arrow">→</div>
+      <div class="ol-box">
+        <div class="ol-lbl">Reprice · assumed</div>
+        <div class="ol-big amber">${pct(m.remortgageRatePctAssumed)}</div>
+        <div class="ol-sub">${gbp(hcd.after)}/mo</div>
+      </div>
+      <div class="ol-box">
+        <div class="ol-lbl">Monthly change</div>
+        <div class="ol-big ${hcd.deltaMonthly >= 0 ? "neg" : "pos"}">${signed(hcd.deltaMonthly, gbp)}</div>
+        <div class="ol-sub">${signed(hcd.deltaAnnual, gbp)}/yr</div>
+      </div>
+    </div>`;
+
+  // ---- quarter-by-quarter economics (now → end 2028) ----
+  const S = DATA.SEASONALITY;
+  const sMin = S ? Math.min(...S.monthIndex) : 0, sMax = S ? Math.max(...S.monthIndex) : 1;
+  const cashIn = cashInvested(r).total;
+  const startIdx = ymIndex(DATA.META.asOf), endIdx = ymIndex("2028-12");
+  const qrows = [];
+  for (let idx = startIdx; idx <= endIdx; idx += 3) {
+    const iso = ymToISO(idx);
+    const e = economicsForWindow({
+      property: p, mortgage: m, sellingCfg: r.inputs.sellingCfg,
+      presentValue: r.presentValue, presentISO: DATA.META.asOf,
+      growthByYear: r.growthByYear, windowDate: iso, cgtCfg: r.cgtCfg,
+    });
+    const mi = parseInt(iso.slice(5, 7), 10) - 1;
+    const demand = S ? S.monthIndex[mi] : 1;
+    qrows.push({ iso, mi, label: monthName(iso).replace(/ 20/, " '"), ...e, demand });
+  }
+  const maxNet = Math.max(...qrows.map((q) => q.net));
+
+  // net proceeds by quarter — bar chart
+  const pc = $("#ol-proceeds-chart");
+  if (pc) C.barChart(pc, {
+    bars: qrows.map((q) => ({
+      label: q.label, value: Math.round(q.net),
+      color: q.net === maxNet ? "#2f7d57" : "#a9c6b6",
+    })),
+    yFormat: (v) => "£" + Math.round(v / 1000) + "k", height: 210, yUnit: "£ net proceeds",
+    xTicks: true, labelEvery: 2, hideValues: true, baseline: Math.min(...qrows.map((q) => q.net)) * 0.985,
+  });
+  const pcap = $("#ol-proceeds-cap");
+  if (pcap) {
+    const bestQ = qrows.find((q) => q.net === maxNet);
+    pcap.innerHTML = `Cash in hand after clearing the mortgage, ERC &amp; selling costs. Peaks at
+      <strong>${bestQ.label}</strong> (${gbp(bestQ.net)}, ${signed(bestQ.net - qrows[0].net, gbp)} vs selling now).
+      Scenario: <strong>${state.custom ? "Custom" : r.scenarioName}</strong>.`;
+  }
+
+  // quarter-by-quarter table
+  const qt = $("#ol-qtable");
+  if (qt) {
+    const dbar = (v) => {
+      const w = sMax > sMin ? Math.round(((v - sMin) / (sMax - sMin)) * 100) : 50;
+      const tag = v >= sMax - 0.03 ? "High" : v >= 1.0 ? "Good" : "Low";
+      return `<span class="dbar-wrap"><span class="dbar" style="width:${Math.max(8, w)}%"></span></span><span class="dbar-tag">${tag}</span>`;
+    };
+    qt.innerHTML = `<div class="table-wrap"><table class="rank-table ol-qt">
+      <thead><tr><th>Quarter</th><th>Sale value</th><th>Net proceeds</th><th>Profit</th><th>ERC</th><th>Demand</th></tr></thead>
+      <tbody>${qrows.map((q) => {
+        const profit = q.net - cashIn;
+        const peak = q.mi >= 2 && q.mi <= 4; // spring (Mar–May)
+        return `<tr class="${q.net === maxNet ? "best-row" : ""}${peak ? " peak" : ""}">
+          <td>${q.label}${peak ? ' <span class="peak-tag">spring</span>' : ""}</td>
+          <td>${gbp(q.saleValue)}</td>
+          <td>${gbp(q.net)}</td>
+          <td class="${profit >= 0 ? "" : "neg-cell"}">${signed(profit, gbp)}</td>
+          <td>${q.erc > 0 ? gbp(q.erc) : "—"}</td>
+          <td class="dbar-cell">${dbar(q.demand)}</td></tr>`;
+      }).join("")}</tbody>
+    </table></div>`;
+  }
+  const qcap = $("#ol-qtable-cap");
+  if (qcap) qcap.innerHTML = `Each quarter from now to end-2028 at the <strong>${state.custom ? "custom" : r.scenarioName}</strong> growth
+    scenario. <strong>Profit</strong> = net proceeds − the ${gbp(cashIn)} you put in. Spring quarters (shaded) carry the
+    strongest listing demand; ERC applies while inside a fixed deal.`;
+
+  // ---- market activity ----
+  const allStats = MKT.salesStats();
+  const rowsWA = allStats.rows.filter((x) => Number.isFinite(x.vsAsking));
+  const pctBelow = rowsWA.length ? Math.round(rowsWA.filter((x) => x.vsAsking < 0).length / rowsWA.length * 100) : null;
+  const medVsAsk = MKT.median(allStats.rows.map((x) => x.vsAskingPct));
+  const lpm = MKT.LISTINGS_PER_MONTH.series;
+  const avgLpm = lpm.length ? Math.round(lpm.reduce((s, x) => s + x.count, 0) / lpm.length) : 0;
+  const mos = MKT.monthsOfSupply(MKT.RADIUS_KM, DATA.META.asOf);
+  const arow = (l, v, s) => `<div class="statrow"><span class="sr-label">${l}</span><span class="sr-value">${v}</span><span class="sr-sub">${s || ""}</span></div>`;
+  const av = $("#ol-activity");
+  if (av) av.innerHTML = `<div class="statrows">
+    ${arow("On the market now", String(listings.length), "within 2 km")}
+    ${arow("New listings / mo", String(avgLpm), "avg last " + lpm.length + " mo")}
+    ${arow("Recent sales", String(allStats.count), "comps in window")}
+    ${arow("Sold below asking", pctBelow != null ? pctBelow + "%" : "—", medVsAsk != null ? "median " + signed(medVsAsk, (x) => x.toFixed(1)) + "%" : "")}
+    ${arow("Months of supply", mos.months != null ? "~" + Math.round(mos.months) + " mo" : "—", mos.months != null ? (mos.months > 6 ? "buyer's market" : mos.months < 4 ? "seller's market" : "balanced") : "")}
+  </div>`;
+
+  // ---- best months to list (seasonality) ----
+  const seasHost = $("#ol-season");
+  if (seasHost && S) {
+    C.barChart(seasHost, {
+      bars: S.monthIndex.map((v, i) => ({
+        label: MONTHS[i], value: Math.round(v * 100),
+        color: v >= sMax - 0.03 ? "#2f7d57" : (v >= 1.0 ? "#6f9c86" : "#c3ccd3"),
+      })),
+      yFormat: (v) => String(v), height: 170, yUnit: "demand index", labelEvery: 1, xTicks: true, baseline: 80, hideValues: true,
+    });
+    const best3 = S.monthIndex.map((v, i) => ({ m: MONTHS[i], v })).sort((a, b) => b.v - a.v).slice(0, 3).map((x) => x.m);
+    const sc = $("#ol-season-cap");
+    if (sc) sc.innerHTML = `Strongest months: <strong>${best3.join(", ")}</strong> — spring peaks as buyers return; December is weakest.`;
+  }
+
+  // ---- your position ----
+  const bal = balanceNow(r);
+  const equity = r.presentValue - bal;
+  const vsPur = r.presentValue - p.purchasePrice;
+  const pos = $("#ol-position");
+  if (pos) pos.innerHTML = `<div class="statrows">
+    ${arow("Purchase price", gbp(p.purchasePrice), monthName(p.purchaseDate))}
+    ${arow("Est. value now", gbp(r.presentValue), (vsPur >= 0 ? "+" : "") + gbp(vsPur) + " vs purchase")}
+    ${arow("Mortgage balance", gbp(bal), "outstanding")}
+    ${arow("Est. equity now", gbp(equity), "value − balance")}
+  </div>`;
+}
+
 function renderTimingVerdict(r) {
   const host = $("#lm-verdict");
   if (!host) return;

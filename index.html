@@ -57,7 +57,10 @@
         </div>
       </div>
       <nav class="bottomnav">
-        <button class="nav-item active" data-tab="localmarket">
+        <button class="nav-item active" data-tab="outlook">
+          <svg viewBox="0 0 24 24"><path d="M3 17l5-5 4 4 8-9M21 7h-5M21 7v5"/></svg>
+          <span>Outlook</span></button>
+        <button class="nav-item" data-tab="localmarket">
           <svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V8l7-4 7 4v13M9 21v-6h6v6"/></svg>
           <span>Market</span></button>
         <button class="nav-item" data-tab="map">
@@ -98,8 +101,8 @@
   <main class="wrap content">
     <div class="page-head">
       <div>
-        <h1 class="page-title" id="page-title">Local market</h1>
-        <div class="page-sub" id="page-sub">Sales & listings within 2 km — DOM, asking, £/m², HPI & forecasts</div>
+        <h1 class="page-title" id="page-title">Outlook</h1>
+        <div class="page-sub" id="page-sub">At a glance — valuation, remortgage, and the quarter-by-quarter exit to end-2028</div>
       </div>
       <div class="topbar-right">
         <a class="badge" id="live-rate" href="https://www.bankofengland.co.uk/monetary-policy/the-interest-rate-bank-rate" target="_blank" rel="noopener" title="Bank of England base rate — click for source">—</a>
@@ -109,8 +112,51 @@
       </div>
     </div>
 
+      <!-- ================= OUTLOOK (at-a-glance dashboard) ================= -->
+      <section class="tab active" id="tab-outlook">
+        <div class="panel" id="ol-verdict-panel">
+          <div id="ol-verdict" class="loading">Loading…</div>
+        </div>
+
+        <div class="panel" id="ol-val-panel">
+          <div id="ol-valuations" class="loading">Loading…</div>
+        </div>
+
+        <div class="panel" id="ol-remo-panel">
+          <div id="ol-remortgage" class="loading">Loading…</div>
+        </div>
+
+        <div class="panel">
+          <h3 class="panel-h">Net proceeds by quarter</h3>
+          <div id="ol-proceeds-chart"></div>
+          <p class="chart-cap" id="ol-proceeds-cap"></p>
+        </div>
+
+        <div class="panel">
+          <h3 class="panel-h">Market activity (2&nbsp;km)</h3>
+          <div id="ol-activity"></div>
+        </div>
+
+        <div class="panel dash-wide">
+          <h3 class="panel-h">Quarter-by-quarter exit — now to end 2028</h3>
+          <div id="ol-qtable" class="loading">Loading…</div>
+          <p class="chart-cap" id="ol-qtable-cap"></p>
+        </div>
+
+        <div class="panel">
+          <h3 class="panel-h">Best months to list</h3>
+          <div id="ol-season"></div>
+          <p class="chart-cap" id="ol-season-cap"></p>
+        </div>
+
+        <div class="panel">
+          <h3 class="panel-h">Your position</h3>
+          <div id="ol-position"></div>
+        </div>
+      </section>
+
       <!-- ================= LOCAL MARKET (within 2 km) ================= -->
-      <section class="tab active" id="tab-localmarket">
+      <section class="tab" id="tab-localmarket">
         <!-- sell-timing verdict -->
         <div class="panel" id="lm-verdict-panel">
           <div id="lm-verdict" class="loading">Loading…</div>
