@@ -371,7 +371,7 @@ export const FORECASTS = {
       activity: "Buyer enquiries and agreed sales are both improving off their lows, but the price " +
         "balance stays firmly negative — a market stabilising in activity, not yet in price.",
       url: "https://www.rics.org/news-insights/market-surveys/uk-residential-market-survey",
-      note: "August 2026 survey (published 10 Sep 2026): new buyer enquiries balance -19% (the least " +
+      note: "August 2026 survey (published 7 Sep 2026 — date corrected 23 Sep 2026 refresh): new buyer enquiries balance -19% (the least " +
         "negative since January, a fifth straight monthly improvement, up from -28% in July), agreed " +
         "sales balance -17% (least negative since February, vs an April low of -38%), 3-month sales " +
         "expectations -3% (up sharply from -13% in July), 12-month sales-volume outlook +6% (up from " +
