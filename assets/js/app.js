@@ -1022,8 +1022,6 @@ function trendMeta(dir, goodIsUp) {
   return { arrow: up ? "↑" : "↓", color: good ? "var(--pos)" : "var(--neg)" };
 }
 
-// Sell-timing verdict at the top of Local market — a compact read of the composite
-// model (the same engine the Finances tab uses for the full sell-vs-hold).
 // ---------------------------------------------------------------------------
 // Outlook — at-a-glance landing view (curated from the live model + market data)
 // ---------------------------------------------------------------------------
@@ -1209,6 +1207,8 @@ function renderOutlook(r) {
   </div>`;
 }
 
+// Sell-timing verdict at the top of Local market — a compact read of the composite
+// model (the same engine the Finances tab uses for the full sell-vs-hold).
 function renderTimingVerdict(r) {
   const host = $("#lm-verdict");
   if (!host) return;
