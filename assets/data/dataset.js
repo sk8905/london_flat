@@ -60,7 +60,7 @@ export const MORTGAGE = {
   // ERC: 1% of the outstanding balance while still inside the current fixed period.
   ercPctWhileFixed: 1.0,
   // Assumed remortgage rate once the fix ends (editable). Anchored to the
-  // current ~4.87% 2yr fix (see RATES.remortgage70Now) with a modest easing assumption by spring 2027.
+  // current ~4.87% 2yr fix (see RATES.remortgage70Now) with a modest margin above that anchor by spring 2027.
   remortgageRatePctAssumed: 5.1,
   // The NEW deal taken when the current fix ends also has its own fixed term and
   // ERC — selling inside it triggers that charge too. Set the term to 0 (or the
@@ -172,8 +172,8 @@ export const RATES = {
   // curve (month-end 2026-06, statistics/yield-curves). Change vs the current fix,
   // in percentage points, at ~2028 and ~2030: the 2-yr swap forward starting in T
   // years (avg instantaneous fwd over [T,T+2]) moves 4.02% (now) → 4.02% (2028) →
-  // 4.24% (2030), i.e. broadly flat then edging up — so the fix holds ~4.75% now,
-  // ~4.95% by 2030. Refresh from the monthly OIS spreadsheet. NOT re-pulled this run —
+  // 4.24% (2030), i.e. broadly flat then edging up — so the fix holds ~4.87% now,
+  // ~5.07% by 2030. Refresh from the monthly OIS spreadsheet. NOT re-pulled this run —
   // still June 2026 vintage; flag for next refresh.
   oisFix2yForecast: { asOf: "BoE OIS, Jun 2026", d30: 0.2 },
   // Previous CALENDAR-DAY values, so each badge can show a day-over-day % change.
