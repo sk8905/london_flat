@@ -56,10 +56,10 @@ export function rentVsBuy(opts) {
   const months = Math.max(0, endIdx - startIdx);
 
   // mortgage schedule (switch from fixed rate to remortgage rate at fix end)
-  const monthsPaidStart = monthsBetween(property.purchaseDate, presentISO);
+  const monthsPaidAtStart = monthsBetween(property.purchaseDate, presentISO);
   let balance = io ? mortgage.principal
-    : balanceAfter(mortgage.principal, mortgage.ratePct, mortgage.termYears, monthsPaidStart);
-  const remTermYearsStart = Math.max(1, mortgage.termYears - monthsPaidStart / 12);
+    : balanceAfter(mortgage.principal, mortgage.ratePct, mortgage.termYears, monthsPaidAtStart);
+  const remTermYearsStart = Math.max(1, mortgage.termYears - monthsPaidAtStart / 12);
   let curRate = mortgage.ratePct;
   let payment = io ? balance * (curRate / 100 / 12) : monthlyPayment(balance, curRate, remTermYearsStart);
   let switched = false;

@@ -14,6 +14,7 @@ const $ = (sel, root = document) => root.querySelector(sel);
 const gbp = (n) => (n < 0 ? "−" : "") + "£" + Math.abs(Math.round(n)).toLocaleString("en-GB");
 const signed = (n, f = (x) => x.toFixed(0)) => (n >= 0 ? "+" : "") + f(n);
 const pct = (n) => n.toFixed(2) + "%";
+const kFmt = (v) => "£" + Math.round(v / 1000) + "k";
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const monthName = (iso) => MONTHS[parseInt(iso.slice(5, 7), 10) - 1] + " " + iso.slice(0, 4);
 
@@ -854,7 +855,7 @@ function renderProceeds(r) {
       put in (${gbp(deposit)} deposit + ${gbp(buyCosts)} SDLT/buying costs), leaving the true gain on your cash —
       your repaid mortgage principal and price growth, net of all costs.</p></div>`;
   C.barChart($("#proceeds-chart"), {
-    bars, yFormat: (v) => "£" + Math.round(v / 1000) + "k", height: 300, yUnit: "£ proceeds",
+    bars, yFormat: kFmt, height: 300, yUnit: "£ proceeds",
     yRef: cashIn, yRefLabel: "you put in " + gbp(cashIn) + " (deposit + SDLT)",
     overlay: { values: breakEvenValues(r) },
   });
@@ -1122,7 +1123,7 @@ function renderOutlook(r) {
       label: q.label, value: Math.round(q.net),
       color: q.net === maxNet ? "#2f7d57" : "#a9c6b6",
     })),
-    yFormat: (v) => "£" + Math.round(v / 1000) + "k", height: 210, yUnit: "£ net proceeds",
+    yFormat: kFmt, height: 210, yUnit: "£ net proceeds",
     xTicks: true, labelEvery: 2, hideValues: true, baseline: Math.min(...qrows.map((q) => q.net)) * 0.985,
   });
   const pcap = $("#ol-proceeds-cap");
@@ -1366,7 +1367,7 @@ function renderLocalMarket(r) {
       band: { lower: lo, upper: hi, color: "#2f7d57" },
       markers: [{ x: labels[bestIdx], label: "best window" }],
       yRef: cashIn, yRefLabel: "you put in " + gbp(cashIn),
-      yFormat: (v) => "£" + Math.round(v / 1000) + "k", height: 250, yUnit: "£ net proceeds",
+      yFormat: kFmt, height: 250, yUnit: "£ net proceeds",
     });
     const pcap = $("#lm-proceeds-cap");
     if (pcap) {
@@ -1583,7 +1584,7 @@ function renderLetting(r) {
       { label: "Let & sell later", value: res.letTotal, color: wins ? "#2f7d57" : "#6f9c86", valueLabel: gbp(res.letTotal) },
       { label: "Sell now & invest", value: res.sellNowGrown, color: wins ? "#6f9c86" : "#2f7d57", valueLabel: gbp(res.sellNowGrown) },
     ],
-    yFormat: (v) => "£" + Math.round(v / 1000) + "k", height: 280, yUnit: "£ total wealth",
+    yFormat: kFmt, height: 280, yUnit: "£ total wealth",
   });
 
   // year-by-year table + CGT/relief breakdown
@@ -1712,7 +1713,7 @@ function renderRentBuy(r) {
       { label: "Keep owning", value: T.wealthOwn, color: ownWins ? "#2f7d57" : "#6f9c86", valueLabel: gbp(T.wealthOwn) },
       { label: "Sell & rent", value: T.wealthRent, color: ownWins ? "#6f9c86" : "#2f7d57", valueLabel: gbp(T.wealthRent) },
     ],
-    yFormat: (v) => "£" + Math.round(v / 1000) + "k", height: 280, yUnit: "£ total wealth",
+    yFormat: kFmt, height: 280, yUnit: "£ total wealth",
   });
 
   // rent series chart
