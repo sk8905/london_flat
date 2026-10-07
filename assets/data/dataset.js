@@ -10,8 +10,8 @@
 // =============================================================================
 
 export const META = {
-  asOf: "2026-09-28",
-  build: "v121 · 2026-09-28", // bump on each change so the footer confirms the live build
+  asOf: "2026-10-07",
+  build: "v122 · 2026-10-07", // bump on each change so the footer confirms the live build
 };
 
 // -----------------------------------------------------------------------------
@@ -139,31 +139,17 @@ export const RATES = {
   // 2-year GBP interest-rate swap (SONIA) — the wholesale rate UK lenders price
   // fixed-rate mortgages and real-estate lending off. Sits above Bank Rate when
   // the market expects cuts to be slow; the key driver of fixed mortgage pricing.
-  // Re-verified this run against bluegamma.io's 25 Sep 2026 16:30 London close —
-  // the latest available print, since markets don't trade over the 26-27 Sep
-  // weekend: 4.58%, DOWN 4bps from the 23 Sep reading of 4.62% — below the in-app
-  // 10bp alert threshold. Cross-check: propertyresearch.uk's own most recent
-  // published point is more stale still (17 Sep, 4.57%), so today's move is
-  // single-sourced against bluegamma. IMPORTANT: this print predates the
-  // weekend's escalation — Trump publicly rejected a new Iranian 7-day plan to
-  // reopen the Strait of Hormuz on 26 Sep (Iran wanted the US to accept an
-  // Iran-Oman transit route plus the June MoU terms; Trump called it unacceptable,
-  // Iran's FM Araghchi said no rejection had yet reached them through official
-  // channels), and Brent jumped to ~$105.8-106.5/bbl on 28 Sep, +1.4-2.7% on the
-  // day (Trading Economics, two intraday reads) — see POLICY_FACTORS.macroRisk.
-  // So this easing may not hold; the next print (Mon 28 Sep close, not yet
-  // published) is the one to watch. OIS-implied pricing for the 5 Nov MPC decision
-  // has jumped sharply since: bluegamma's own BoE forecast page now puts a hike at
-  // 85% as of 28 Sep (+21bp implied move), up from 75% on 23 Sep; centralbank.watch's
-  // separate methodology now reads 85.7% (25 Sep) too — the two trackers, which
-  // diverged materially last run (75% vs 88%), have now converged. Moneyfacts'
-  // average 2yr/5yr fixes: search results this run were too inconsistent to cite a
-  // new primary figure with confidence (readings from 5.52% to 5.9%+ turned up
-  // depending on source/date, several likely conflating US mortgage-rate content) —
-  // still relying on the 16 Sep article's 5.77%/5.82% avg 2yr/5yr fixed ("highest
-  // since 8 Nov 2023" for the 5yr) as the last clean reading; flag for next refresh.
-  swap2yrNow: 4.58,
-  swap2yrAsOf: "2026-09-25",
+  // Re-verified this run against bluegamma.io's 6 Oct 2026 close (the page's
+  // "Yesterday" print): 4.56%, down 2bps from 4.58% (25 Sep) — below the in-app
+  // 10bp alert threshold. Single-sourced (bluegamma only). Moneyfacts' Treasury
+  // Report (reported by Mortgage Strategy, 5 Oct 2026): average 2yr fixed 5.98%,
+  // 5yr fixed 6.00% — both ~3-year highs; sub-5% fixed deals down 99% since early
+  // September (1,494 -> 9), with lenders citing renewed swap-rate volatility. The
+  // previous clean reading was 5.77%/5.82% (16 Sep). OIS-implied odds of a hike at
+  // the 5 Nov MPC were ~85% as of the last checked trackers (bluegamma / centralbank.watch,
+  // late Sep); not re-verified from a primary source this run.
+  swap2yrNow: 4.56,
+  swap2yrAsOf: "2026-10-06",
   // Current average 2-year fixed REMORTGAGE rate at ~70% LTV (the band that fits
   // this flat). Live-refreshed from Bank of England quoted mortgage rates,
   // interpolated between the published 60% and 75% LTV series. Snapshot fallback:
@@ -187,7 +173,7 @@ export const RATES = {
   // the Worker also supplies the prior day's figure for the live series.
   baseRatePrev: 3.75,
   remortgage70Prev: 4.79,
-  swap2yrPrev: 4.62,
+  swap2yrPrev: 4.58,
 };
 
 // -----------------------------------------------------------------------------
@@ -340,16 +326,7 @@ export const POLICY_FACTORS = [
       "OIS-implied pricing has moved sharply: bluegamma's BoE forecast page now puts a hike at 85% " +
       "as of 28 Sep (+21bp implied move), up from 75% on 23 Sep, and centralbank.watch's separately-" +
       "methodologied tracker now reads 85.7% (25 Sep) too — the two trackers, which diverged " +
-      "materially last run (75% vs 88%), have converged. The swap curve, by contrast, eased slightly " +
-      "into the weekend: the 2yr swap re-verified at 4.58% (bluegamma, 25 Sep 16:30 close, the latest " +
-      "print — markets don't trade 26-27 Sep), down 4bps from 4.62% on 23 Sep, BELOW the in-app 10bp " +
-      "alert threshold (see RATES.swap2yrNow) — but that print predates Trump's rejection and " +
-      "Monday's oil jump, so it likely understates where the curve sits once Monday trades; treat it " +
-      "as a data lag, not a genuine de-escalation signal. Lender pricing: Moneyfacts' average 2yr/5yr " +
-      "fixes had no reliable fresher read this run — sources returned inconsistent figures (5.52% to " +
-      "5.9%+) that look partly contaminated by US mortgage-rate content — so the 16 Sep article's " +
-      "5.82% avg 5yr fixed ('highest since 8 Nov 2023') remains the last clean primary reading; flag " +
-      "for next refresh. RICS' August Residential Market Survey (published 7 Sep 2026) remains the " +
+      "materially last run (75% vs 88%), have converged. Update 7 Oct: the 2yr swap is 4.56% (bluegamma, 6 Oct close; -2bps vs 4.58% on 25 Sep, below the 10bp alert threshold — see RATES.swap2yrNow). Lender pricing: Moneyfacts' average 2yr/5yr fixes jumped to 5.98%/6.00% (5 Oct 2026, ~3-year highs; up from 5.77%/5.82% on 16 Sep), with sub-5% fixed deals down 99% since early September. RICS' August Residential Market Survey (published 7 Sep 2026) remains the " +
       "latest — new buyer enquiries -19%, agreed sales -17%, price balance -28%, 12-month sales " +
       "outlook +6% (from +3% in July); the September survey is scheduled for 8 Oct 2026. The " +
       "Chancellor's Autumn Budget stays confirmed for Wed 28 Oct 2026; the one new (still " +
