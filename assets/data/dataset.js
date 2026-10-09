@@ -10,8 +10,8 @@
 // =============================================================================
 
 export const META = {
-  asOf: "2026-09-28",
-  build: "v121 · 2026-09-28", // bump on each change so the footer confirms the live build
+  asOf: "2026-10-09",
+  build: "v122 · 2026-10-09", // bump on each change so the footer confirms the live build
 };
 
 // -----------------------------------------------------------------------------
@@ -139,31 +139,15 @@ export const RATES = {
   // 2-year GBP interest-rate swap (SONIA) — the wholesale rate UK lenders price
   // fixed-rate mortgages and real-estate lending off. Sits above Bank Rate when
   // the market expects cuts to be slow; the key driver of fixed mortgage pricing.
-  // Re-verified this run against bluegamma.io's 25 Sep 2026 16:30 London close —
-  // the latest available print, since markets don't trade over the 26-27 Sep
-  // weekend: 4.58%, DOWN 4bps from the 23 Sep reading of 4.62% — below the in-app
-  // 10bp alert threshold. Cross-check: propertyresearch.uk's own most recent
-  // published point is more stale still (17 Sep, 4.57%), so today's move is
-  // single-sourced against bluegamma. IMPORTANT: this print predates the
-  // weekend's escalation — Trump publicly rejected a new Iranian 7-day plan to
-  // reopen the Strait of Hormuz on 26 Sep (Iran wanted the US to accept an
-  // Iran-Oman transit route plus the June MoU terms; Trump called it unacceptable,
-  // Iran's FM Araghchi said no rejection had yet reached them through official
-  // channels), and Brent jumped to ~$105.8-106.5/bbl on 28 Sep, +1.4-2.7% on the
-  // day (Trading Economics, two intraday reads) — see POLICY_FACTORS.macroRisk.
-  // So this easing may not hold; the next print (Mon 28 Sep close, not yet
-  // published) is the one to watch. OIS-implied pricing for the 5 Nov MPC decision
-  // has jumped sharply since: bluegamma's own BoE forecast page now puts a hike at
-  // 85% as of 28 Sep (+21bp implied move), up from 75% on 23 Sep; centralbank.watch's
-  // separate methodology now reads 85.7% (25 Sep) too — the two trackers, which
-  // diverged materially last run (75% vs 88%), have now converged. Moneyfacts'
-  // average 2yr/5yr fixes: search results this run were too inconsistent to cite a
-  // new primary figure with confidence (readings from 5.52% to 5.9%+ turned up
-  // depending on source/date, several likely conflating US mortgage-rate content) —
-  // still relying on the 16 Sep article's 5.77%/5.82% avg 2yr/5yr fixed ("highest
-  // since 8 Nov 2023" for the 5yr) as the last clean reading; flag for next refresh.
-  swap2yrNow: 4.58,
-  swap2yrAsOf: "2026-09-25",
+  // bluegamma.io 8 Oct 2026 16:30 London close (latest print): 4.63%, UP 5bps from
+  // 4.58% (25 Sep) and 3bps above 4.60% (30 Sep) — below the in-app 10bp alert
+  // threshold. Single-sourced (bluegamma; live intraday is paywalled). Moneyfacts'
+  // average fixes (moneyfactscompare.co.uk, 5 Oct 2026): 2yr 5.98% (from 5.96% on
+  // 2 Oct; highest since mid-Dec 2023), 5yr 6.00% (first time since Sep 2023) after
+  // repeated September lender repricing. Markets price a hike at the 5 Nov MPC
+  // (secondary press reports; not re-verified against OIS this run).
+  swap2yrNow: 4.63,
+  swap2yrAsOf: "2026-10-08",
   // Current average 2-year fixed REMORTGAGE rate at ~70% LTV (the band that fits
   // this flat). Live-refreshed from Bank of England quoted mortgage rates,
   // interpolated between the published 60% and 75% LTV series. Snapshot fallback:
@@ -187,7 +171,7 @@ export const RATES = {
   // the Worker also supplies the prior day's figure for the live series.
   baseRatePrev: 3.75,
   remortgage70Prev: 4.79,
-  swap2yrPrev: 4.62,
+  swap2yrPrev: 4.58,
 };
 
 // -----------------------------------------------------------------------------
