@@ -57,15 +57,15 @@
         </div>
       </div>
       <nav class="bottomnav">
-        <button class="nav-item active" data-tab="outlook">
-          <svg viewBox="0 0 24 24"><path d="M3 17l5-5 4 4 8-9M21 7h-5M21 7v5"/></svg>
-          <span>Outlook</span></button>
         <button class="nav-item" data-tab="localmarket">
           <svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V8l7-4 7 4v13M9 21v-6h6v6"/></svg>
           <span>Market</span></button>
-        <button class="nav-item" data-tab="map">
-          <svg viewBox="0 0 24 24"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14"/></svg>
-          <span>Map</span></button>
+        <button class="nav-item" data-tab="forecast">
+          <svg viewBox="0 0 24 24"><path d="M3 17l5-5 4 4 8-9M21 7h-5M21 7v5"/></svg>
+          <span>Forecast</span></button>
+        <button class="nav-item active" data-tab="outlook">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+          <span>Outlook</span></button>
         <button class="nav-item" data-tab="finances">
           <svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 9v6M18 9v6"/></svg>
           <span>Finances</span></button>
@@ -112,7 +112,64 @@
       </div>
     </div>
 
-      <!-- ================= OUTLOOK (at-a-glance dashboard) ================= -->
+      <!-- ================= MARKET (current state, within 2 km) ================= -->
+      <section class="tab" id="tab-localmarket">
+        <div class="panel">
+          <div id="lm-valuation" class="loading">Loading…</div>
+          <div id="lm-kpis"></div>
+          <p class="src-line" id="lm-source-note"></p>
+        </div>
+
+        <div class="panel">
+          <h3 class="panel-h">House Price Index</h3>
+          <div id="lm-hpi" class="loading">Loading…</div>
+        </div>
+
+        <div class="panel dash-wide">
+          <h3 class="panel-h">Sales &amp; listings (2&nbsp;km)</h3>
+          <div class="toggle" id="lm-comps-toggle">
+            <button type="button" class="toggle-btn active" data-comps="sold">Recently sold</button>
+            <button type="button" class="toggle-btn" data-comps="listed">On the market</button>
+          </div>
+          <div id="lm-comp-filters" class="comp-filters"></div>
+          <div id="lm-comps-body" class="loading">Loading…</div>
+        </div>
+
+        <div class="panel dash-wide">
+          <h3 class="panel-h">Where they are</h3>
+          <div id="lm-map" class="chart-wrap"></div>
+          <div id="lm-legend"></div>
+          <p class="chart-cap"><span class="dot-key sold"></span> sold · <span class="dot-key listed"></span> on the market ·
+            <span class="dot-key you"></span> your flat · numbered by price.</p>
+        </div>
+      </section>
+
+      <!-- ================= FORECAST (forward-looking) ================= -->
+      <section class="tab" id="tab-forecast">
+        <div class="panel">
+          <h3 class="panel-h">Projected net proceeds</h3>
+          <div id="lm-proceeds-chart"></div>
+          <p class="chart-cap" id="lm-proceeds-cap"></p>
+        </div>
+
+        <div class="panel">
+          <h3 class="panel-h">Price &amp; time-to-sell vs mortgage rates</h3>
+          <div id="lm-rate-sens"></div>
+          <p class="chart-cap" id="lm-rate-cap"></p>
+        </div>
+
+        <div class="panel">
+          <h3 class="panel-h">Analyst forecasts</h3>
+          <div id="lm-forecasts" class="loading">Loading…</div>
+        </div>
+
+        <div class="panel">
+          <h3 class="panel-h">New-build pipeline nearby</h3>
+          <div id="lm-newbuilds" class="loading">Loading…</div>
+        </div>
+      </section>
+
+      <!-- ================= OUTLOOK (at-a-glance, default landing) ================= -->
       <section class="tab active" id="tab-outlook">
         <div class="panel" id="ol-verdict-panel">
           <div id="ol-verdict" class="loading">Loading…</div>
@@ -126,17 +183,6 @@
           <div id="ol-remortgage" class="loading">Loading…</div>
         </div>
 
-        <div class="panel">
-          <h3 class="panel-h">Net proceeds by quarter</h3>
-          <div id="ol-proceeds-chart"></div>
-          <p class="chart-cap" id="ol-proceeds-cap"></p>
-        </div>
-
-        <div class="panel">
-          <h3 class="panel-h">Market activity (2&nbsp;km)</h3>
-          <div id="ol-activity"></div>
-        </div>
-
         <div class="panel dash-wide">
           <h3 class="panel-h">Quarter-by-quarter exit — now to end 2028</h3>
           <div id="ol-qtable" class="loading">Loading…</div>
@@ -148,181 +194,50 @@
           <div id="ol-season"></div>
           <p class="chart-cap" id="ol-season-cap"></p>
         </div>
-
-        <div class="panel">
-          <h3 class="panel-h">Your position</h3>
-          <div id="ol-position"></div>
-        </div>
       </section>
 
-      <!-- ================= LOCAL MARKET (within 2 km) ================= -->
-      <section class="tab" id="tab-localmarket">
-        <!-- sell-timing verdict -->
-        <div class="panel" id="lm-verdict-panel">
-          <div id="lm-verdict" class="loading">Loading…</div>
-        </div>
-
-        <div class="panel">
-          <div id="lm-valuation" class="loading">Loading…</div>
-          <div id="lm-kpis"></div>
-          <p class="src-line" id="lm-source-note"></p>
-        </div>
-
-        <div class="panel">
-          <h3 class="panel-h">Sales &amp; listings (2&nbsp;km)</h3>
-          <div class="toggle" id="lm-comps-toggle">
-            <button type="button" class="toggle-btn active" data-comps="sold">Recently sold</button>
-            <button type="button" class="toggle-btn" data-comps="listed">On the market</button>
-          </div>
-          <div id="lm-comp-filters" class="comp-filters"></div>
-          <div id="lm-comps-body" class="loading">Loading…</div>
-        </div>
-
-        <div class="panel">
-          <h3 class="panel-h">When to list — projected proceeds</h3>
-          <div id="lm-proceeds-chart"></div>
-          <p class="chart-cap" id="lm-proceeds-cap"></p>
-        </div>
-
-        <div class="panel">
-          <h3 class="panel-h">Best months to list (seasonality)</h3>
-          <div id="lm-seasonality"></div>
-          <p class="chart-cap" id="lm-seasonality-cap"></p>
-        </div>
-
-        <div class="panel">
-          <h3 class="panel-h">New listings / month (2-bed)</h3>
-          <div id="lm-listings-chart"></div>
-          <p class="chart-cap" id="lm-listings-cap"></p>
-        </div>
-
-        <div class="panel">
-          <h3 class="panel-h">House Price Index</h3>
-          <div id="lm-hpi" class="loading">Loading…</div>
-        </div>
-
-        <div class="panel">
-          <h3 class="panel-h">Price &amp; time-to-sell vs mortgage rates</h3>
-          <div class="toggle" id="lm-rate-toggle">
-            <button type="button" class="toggle-btn active" data-rate="sensitivity">Sensitivity</button>
-            <button type="button" class="toggle-btn" data-rate="forecast">Rate forecast</button>
-          </div>
-          <div id="lm-rate-sens"></div>
-          <p class="chart-cap" id="lm-rate-cap"></p>
-        </div>
-
-        <div class="panel">
-          <h3 class="panel-h">New-build pipeline nearby</h3>
-          <div id="lm-newbuilds" class="loading">Loading…</div>
-        </div>
-
-        <div class="panel">
-          <h3 class="panel-h">Forecasts</h3>
-          <div id="lm-forecasts" class="loading">Loading…</div>
-        </div>
-      </section>
-
-      <!-- ================= MAP ================= -->
-      <section class="tab" id="tab-map">
-        <div class="panel dash-wide">
-          <h2>Where they are</h2>
-          <div id="lm-map" class="chart-wrap"></div>
-          <div id="lm-legend"></div>
-          <p class="chart-cap"><span class="dot-key sold"></span> sold · <span class="dot-key listed"></span> on the market ·
-            <span class="dot-key you"></span> your flat. Numbered by price (1 = dearest).</p>
-        </div>
-      </section>
-
-      <!-- ================= OUR FINANCES (incl. rent-vs-buy & sell-vs-let) ================= -->
+      <!-- ================= FINANCES ================= -->
       <section class="tab" id="tab-finances">
         <div class="panel">
           <h2>Our finances</h2>
-          <p class="section-lead">What we've paid, what the mortgage costs, and the price to recoup every pound.
-            Edit figures on <strong>Inputs</strong>.</p>
           <div id="paid-body" class="loading">Loading…</div>
         </div>
         <div class="panel">
           <h2>Break-even — recoup all cash</h2>
-          <p class="section-lead">The sale price that returns every pound sunk in — deposit, Stamp Duty, costs and interest
-            paid — after clearing the mortgage, ERC, agent (+VAT), legal and EPC.</p>
           <div id="breakeven-body" class="loading">Loading…</div>
         </div>
         <div class="panel dash-wide">
           <h2>What you'd walk away with</h2>
-          <p class="section-lead">Projected sale value minus mortgage, ERC, agent + VAT, legal and EPC. CGT £0 (main
-            residence).</p>
           <div id="proceeds-body" class="loading">Loading…</div>
         </div>
 
-        <!-- Rent vs buy (folded in) -->
+        <!-- Rent vs buy (compact) -->
         <div class="panel">
           <h2>Own it, or rent the equivalent?</h2>
-          <p class="section-lead">Like-for-like against renting a similar 2-bed nearby, on real local rents — the monthly
-            cost of owning vs rent, and total wealth over your horizon.</p>
           <div id="rb-summary" class="loading">Loading…</div>
-        </div>
-        <div class="panel">
-          <h3 class="panel-h">2-bed rent nearby (2&nbsp;km) over time</h3>
-          <div id="rb-rent-chart"></div>
-          <p class="chart-cap" id="rb-rent-cap"></p>
-        </div>
-        <div class="panel dash-wide">
-          <h3 class="panel-h">Year-by-year: rent vs owning</h3>
-          <div id="rb-table" class="loading">Loading…</div>
-        </div>
-        <div class="panel">
-          <h3 class="panel-h">Adjust</h3>
-          <div id="rb-controls" class="loading">Loading…</div>
-          <p class="muted small">Rent defaults to the average 2-bed within 2 km. Owning cost excludes principal (it builds
-            equity) and nets off price growth.</p>
+          <div id="rb-table"></div>
+          <div id="rb-controls"></div>
         </div>
 
-        <!-- Sell vs let (folded in) -->
+        <!-- Sell vs let (compact) -->
         <div class="panel dash-wide">
           <h2>Sell now, or let and sell later?</h2>
-          <p class="section-lead">A wealth comparison to your horizon with UK tax: Section 24, the April-2027 +2% landlord
-            rate, and the partial CGT-relief loss from moving out.</p>
           <div id="letting-summary" class="loading">Loading…</div>
-          <h3 class="panel-h">Year-by-year rental cash flow</h3>
-          <div id="letting-table" class="loading">Loading…</div>
-          <h3 class="panel-h">Adjust the letting assumptions</h3>
-          <div id="letting-controls" class="loading">Loading…</div>
-          <p class="muted small">Sources:
-            <a href="https://www.ons.gov.uk/economy/inflationandpriceindices/bulletins/privaterentandhousepricesuk/latest" target="_blank" rel="noopener">Islington rents</a> ·
-            <a href="https://www.gov.uk/capital-gains-tax/rates" target="_blank" rel="noopener">CGT rates</a> ·
-            <a href="https://www.gov.uk/tax-sell-home" target="_blank" rel="noopener">Private Residence Relief</a></p>
-          <p class="disclaimer"><strong>Tax is simplified.</strong> Real liabilities depend on your circumstances — confirm
-            with an accountant before letting.</p>
+          <div id="letting-table"></div>
+          <div id="letting-controls"></div>
+          <p class="disclaimer"><strong>Tax simplified</strong> — not advice; confirm with an accountant before letting.</p>
         </div>
       </section>
 
-      <!-- INPUTS (includes forecast assumptions) -->
+      <!-- INPUTS -->
       <section class="tab" id="tab-inputs">
         <div class="panel">
           <h2>Your figures</h2>
-          <p class="section-lead">Replace the defaults with your real numbers. Everything — the recommendation, net
-            proceeds, break-even and rent-vs-buy — recomputes from these, and they're saved in this browser
-            so they persist between visits.</p>
           <div id="inputs-body" class="loading">Loading…</div>
         </div>
         <div class="panel">
           <h2>Forecast &amp; assumptions</h2>
-          <p class="section-lead">Set the growth scenario, remortgage rate and current valuation — every figure and chart
-            updates live.</p>
           <div id="controls-body" class="loading">Loading…</div>
-        </div>
-        <div class="panel">
-          <h2>Methodology &amp; sources</h2>
-          <p><strong>Local market</strong> data (sales, listings, days-on-market, sold-vs-asking, £/m², rents and the
-            new-build pipeline) is filtered to a strict 2 km radius of the N1 7TX centroid, from live
-            <a href="https://homedata.co.uk/" target="_blank" rel="noopener">Homedata</a>, HM Land Registry, the EPC
-            register, ONS and PlanIt — with a curated fallback where a live source isn't available. Council,
-            ex-council and shared-ownership flats are excluded so the comps read a private 2-bed.</p>
-          <p class="muted small">Figures are a mix of live pulls and forward-looking estimates; some will go stale. Full
-            sources are linked throughout.</p>
-          <p class="disclaimer"><strong>Not advice.</strong> An informational model, not financial, tax, mortgage or
-            legal advice. Forecasts are uncertain and often wrong. Verify against the linked sources and a qualified
-            adviser before acting.</p>
         </div>
       </section>
 
