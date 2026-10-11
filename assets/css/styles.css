@@ -213,7 +213,6 @@ a.badge:hover { text-decoration: none; border-color: var(--brand); color: var(--
 }
 .panel h2 { margin: 0 0 6px; font-size: 16px; }
 .panel-h { margin: 0 0 12px; font-size: 14px; color: var(--ink); }
-.section-lead { color: var(--ink-soft); margin: 0 0 14px; max-width: none; font-size: 12.5px; }
 .muted { color: var(--muted); }
 .small { font-size: 12.5px; }
 .loading { color: var(--muted); padding: 16px 0; }
@@ -233,7 +232,6 @@ a.badge:hover { text-decoration: none; border-color: var(--brand); color: var(--
 .val-main .val-sub { font-size: 14px; font-weight: 400; color: var(--ink-soft); letter-spacing: 0; }
 
 /* ---------- cards (position / letting) ---------- */
-.cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
 .card { background: transparent; border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 13px 14px; }
 
 /* ---------- spreadsheet-style calculation tables ---------- */
@@ -393,9 +391,6 @@ a.badge:hover { text-decoration: none; border-color: var(--brand); color: var(--
 .lm-verdict-window { font-family: var(--font); font-weight: 800; font-size: 17px; letter-spacing: -0.01em; color: var(--ink); }
 .lm-verdict-lead { font-size: 12.5px; color: var(--ink-soft); margin: 4px 0 8px; line-height: 1.5; }
 .lm-verdict-head .pill { font-size: 12px; padding: 4px 10px; margin: 0; }
-.kpi-group { margin-top: 10px; }
-.kpi-group:first-child { margin-top: 2px; }
-.kpi-group-h { text-transform: uppercase; letter-spacing: .06em; font-size: 10px; font-weight: 700; color: var(--muted); margin-bottom: 2px; }
 /* trend sparkline + arrow live on the sub-line (right), so KPI values stay aligned */
 .kpi-stat .sr-sub { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .kpi-trend { display: inline-flex; align-items: center; gap: 4px; flex: 0 0 auto; }
@@ -463,8 +458,6 @@ a.src-line:hover, .src-line a:hover { text-decoration: underline; }
 
 /* ---------- letting ---------- */
 .letting-lead { font-size: 15px; color: var(--ink); max-width: none; margin: 4px 0 18px; }
-.cgt-box { background: var(--line-soft); border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: var(--radius-sm); padding: 15px 17px; margin-top: 16px; font-size: 13px; color: var(--ink-soft); }
-.cgt-box strong { color: var(--ink); }
 
 /* ---------- controls ---------- */
 .controls-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px 26px; align-items: end; }
@@ -516,7 +509,6 @@ a.src-line:hover, .src-line a:hover { text-decoration: underline; }
   .topbar-right .badge-delta { display: none; }
   .badge { font-size: 10.5px; padding: 4px 5px; white-space: nowrap; }
   .panel { padding: 15px 15px; }
-  .cards { grid-template-columns: repeat(2, 1fr); }
   .map-legend { grid-template-columns: 1fr; }
   .controls-grid { grid-template-columns: 1fr; }
 }
@@ -532,7 +524,6 @@ a.src-line:hover, .src-line a:hover { text-decoration: underline; }
   /* keep the 4 rate chips on one row on the oldest, narrowest iPhones (SE 320px) */
   .topbar-right { gap: 4px; }
   .badge { font-size: 10px; padding: 4px 4px; }
-  .cards { grid-template-columns: 1fr; }
 }
 @media (max-width: 520px) {
   .brand-sub { display: none; }
