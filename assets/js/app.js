@@ -798,11 +798,6 @@ function breakEvenValues(r) {
   return r.windows.map((w) => fixedCash + interestPaidToDate(m, w.window.date));
 }
 
-function valueDelta(d) {
-  const cls = d >= 0 ? "up" : "down";
-  return `<span class="delta ${cls}">${signed(d, gbp)}</span> vs purchase`;
-}
-
 function card(label, big, sub, tone) {
   return `<div class="card ${tone || ""}"><div class="card-label">${label}</div>
     <div class="card-value">${big}</div><div class="card-sub">${sub}</div></div>`;
@@ -851,8 +846,6 @@ function fmtDayMon(iso) {
 let _compsView = "sold";
 let _comps = { sold: [], listed: [] };
 const _compsSort = { sold: { key: "soldDate", dir: "desc" }, listed: { key: "listedDate", dir: "desc" } };
-const _nbSort = { key: "units", dir: "desc" };
-const _fcSort = { key: "priceYoY", dir: "desc" };
 const shortAddr = (a) => {
   const seg = a.split(",").map((s) => s.trim());
   const s = seg[0]
