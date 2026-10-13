@@ -537,7 +537,6 @@ function renderPaid(r) {
   const cashInAtPurchase = deposit + sdlt + buyCosts;
   const interestPaid = interestPaidToDate(m, DATA.META.asOf);
   const paymentsToDate = monthsBetween(p.purchaseDate, DATA.META.asOf) * payNow;
-  const principalRepaid = Math.max(0, m.principal - balanceNow(r));
   const totalPaidSoFar = cashInAtPurchase + paymentsToDate; // all cash out of pocket to date
 
   const months = monthsBetween(p.purchaseDate, DATA.META.asOf);
@@ -1159,8 +1158,6 @@ function renderLocalMarket(r) {
   };
   const sales = stats.rows;
   const listings = MKT.deriveListings(MKT.RADIUS_KM, DATA.META.asOf);
-  const lpm = MKT.LISTINGS_PER_MONTH.series;
-  const avgLpm = lpm.length ? Math.round(lpm.reduce((s, x) => s + x.count, 0) / lpm.length) : 0;
   const yourPsm = p.floorAreaSqm ? Math.round(p.purchasePrice / p.floorAreaSqm) : null;
   const soldDates = sales.map((s) => s.soldDate).filter(Boolean).sort();
   const salesPeriod = soldDates.length ? monthName(soldDates[0]) + " – " + monthName(soldDates[soldDates.length - 1]) : "";
@@ -1386,10 +1383,6 @@ function renderLetting(r) {
   const wins = res.advantageLet >= 0;
   const horizonLabel = (LET_HORIZONS.find((h) => h.date === state.letting.horizon) || {}).label || res.saleDate;
   const bandLabel = { basic: "basic-rate (20%)", higher: "higher-rate (40→42%)", additional: "additional-rate (45→47%)" }[res.band];
-  // cash you put in that ISN'T equity (i.e. excluding principal repayments)
-  const trueCashCost = res.cumulativeNetRent + (res.interestOnly ? 0 : res.cumulativePrincipal);
-  const cashIn = cashInvested(r).total;
-  const saleProfit = res.sale.netSaleProceeds - cashIn;
 
   host.innerHTML = `
     <div class="verdict-kicker">Sell now vs. let &amp; sell in ${horizonLabel}</div>
