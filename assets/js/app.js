@@ -797,11 +797,6 @@ function breakEvenValues(r) {
   return r.windows.map((w) => fixedCash + interestPaidToDate(m, w.window.date));
 }
 
-function card(label, big, sub, tone) {
-  return `<div class="card ${tone || ""}"><div class="card-label">${label}</div>
-    <div class="card-value">${big}</div><div class="card-sub">${sub}</div></div>`;
-}
-
 // ---------------------------------------------------------------------------
 // Net proceeds chart + table
 // ---------------------------------------------------------------------------
