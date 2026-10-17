@@ -10,8 +10,8 @@
 // =============================================================================
 
 export const META = {
-  asOf: "2026-09-28",
-  build: "v122 · 2026-10-10", // bump on each change so the footer confirms the live build
+  asOf: "2026-10-17",
+  build: "v123 · 2026-10-17", // bump on each change so the footer confirms the live build
 };
 
 // -----------------------------------------------------------------------------
@@ -60,7 +60,7 @@ export const MORTGAGE = {
   // ERC: 1% of the outstanding balance while still inside the current fixed period.
   ercPctWhileFixed: 1.0,
   // Assumed remortgage rate once the fix ends (editable). Anchored to the
-  // current ~4.87% 2yr fix (see RATES.remortgage70Now) with a modest margin above that anchor by spring 2027.
+  // current ~5.06% 2yr fix (see RATES.remortgage70Now) with a modest margin above that anchor by spring 2027.
   remortgageRatePctAssumed: 5.1,
   // The NEW deal taken when the current fix ends also has its own fixed term and
   // ERC — selling inside it triggers that charge too. Set the term to 0 (or the
@@ -162,8 +162,13 @@ export const RATES = {
   // depending on source/date, several likely conflating US mortgage-rate content) —
   // still relying on the 16 Sep article's 5.77%/5.82% avg 2yr/5yr fixed ("highest
   // since 8 Nov 2023" for the 5yr) as the last clean reading; flag for next refresh.
-  swap2yrNow: 4.58,
-  swap2yrAsOf: "2026-09-25",
+  // Manual refresh 17 Oct 2026: 4.73% on 15 Oct (mortgage-compare.uk, estimated from the
+  // BoE fitted curve, not a dealer quote — a different method from the bluegamma closes
+  // used previously, so the +15bp move vs 4.58% is partly a source difference). Month-end
+  // Sep on the same source was 4.75%. Moneyfacts avg fixes (5 Oct 2026): 2yr 5.98% (highest
+  // since Dec 2023), 5yr 6.00%. Bank Rate unchanged at 3.75%; next MPC 5 Nov 2026.
+  swap2yrNow: 4.73,
+  swap2yrAsOf: "2026-10-15",
   // Current average 2-year fixed REMORTGAGE rate at ~70% LTV (the band that fits
   // this flat). Live-refreshed from Bank of England quoted mortgage rates,
   // interpolated between the published 60% and 75% LTV series. Snapshot fallback:
@@ -172,8 +177,10 @@ export const RATES = {
   // vs the prior 2026-07-31 reading of 4.66%/4.79%) — interpolated 70% LTV =
   // 4.87%, up from 4.75%, a material ~12bps drift reflecting lenders repricing
   // up through the Middle East-driven swap-rate volatility.
-  remortgage70Now: 4.87,
-  remortgage70AsOf: "2026-08",
+  // Re-verified 17 Oct 2026 against the BoE IADB CSV: newest month 2026-09-30 (60% LTV
+  // 4.93%, 75% LTV 5.13%) -> interpolated 70% LTV = 5.06%, up ~19bps from 4.87% (Aug).
+  remortgage70Now: 5.06,
+  remortgage70AsOf: "2026-09",
   // Forecast 2-yr-fix path from the Bank of England OIS instantaneous forward
   // curve (month-end 2026-06, statistics/yield-curves). Change vs the current fix,
   // in percentage points, at ~2028 and ~2030: the 2-yr swap forward starting in T
@@ -186,8 +193,8 @@ export const RATES = {
   // The daily 08:00 routine rolls "*Now" into "*Prev" before writing the new value;
   // the Worker also supplies the prior day's figure for the live series.
   baseRatePrev: 3.75,
-  remortgage70Prev: 4.79,
-  swap2yrPrev: 4.62,
+  remortgage70Prev: 4.87,
+  swap2yrPrev: 4.58,
 };
 
 // -----------------------------------------------------------------------------
