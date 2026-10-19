@@ -1264,7 +1264,7 @@ function renderLocalMarket(r) {
   _comps = { sold, listed };
   renderComps();
 
-  // ---- map (own tab): sold blue, listings amber, your flat green; pins by price rank ----
+  // ---- map: sold blue, listings amber, your flat green; pins by price rank ----
   const tipHtml = (a, b, c2) => `<strong>${a}</strong><span>${b}</span><span>${c2}</span>`;
   const tipPlain = (a, b, c2) => `${a} — ${b} · ${c2}`;
   const salePins = sold.map((x) => ({ lat: x.lat, lng: x.lng, n: x._rank,
