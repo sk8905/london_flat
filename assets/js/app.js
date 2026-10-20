@@ -642,7 +642,6 @@ function renderBreakEven(r) {
     property: p, mortgage: m, sellingCfg: cfg, saleDateISO: DATA.META.asOf, cgtCfg: r.cgtCfg, rentCfg,
   });
   const ci = be.inputs, value = r.presentValue, rentSaved = be.rentSaved;
-  const monthsOwned = monthsBetween(p.purchaseDate, DATA.META.asOf);
   const credit = beRentCredit ? rentSaved : 0;
 
   const kfmt = (v) => {
