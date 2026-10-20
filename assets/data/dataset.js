@@ -10,8 +10,8 @@
 // =============================================================================
 
 export const META = {
-  asOf: "2026-09-28",
-  build: "v122 · 2026-10-10", // bump on each change so the footer confirms the live build
+  asOf: "2026-10-13",
+  build: "v123 · 2026-10-13", // bump on each change so the footer confirms the live build
 };
 
 // -----------------------------------------------------------------------------
@@ -157,11 +157,11 @@ export const RATES = {
   // 85% as of 28 Sep (+21bp implied move), up from 75% on 23 Sep; centralbank.watch's
   // separate methodology now reads 85.7% (25 Sep) too — the two trackers, which
   // diverged materially last run (75% vs 88%), have now converged. Moneyfacts'
-  // average 2yr/5yr fixes: search results this run were too inconsistent to cite a
-  // new primary figure with confidence (readings from 5.52% to 5.9%+ turned up
-  // depending on source/date, several likely conflating US mortgage-rate content) —
-  // still relying on the 16 Sep article's 5.77%/5.82% avg 2yr/5yr fixed ("highest
-  // since 8 Nov 2023" for the 5yr) as the last clean reading; flag for next refresh.
+  // average 2yr/5yr fixes: 5.98% / 6.00% on Mon 5 Oct 2026 (Moneyfacts via ITV and
+  // Moneyfacts Compare) — 2yr highest since mid-Dec 2023, 5yr first 6% in ~3 years; up
+  // from 5.77%/5.82% on 16 Sep. The 2yr swap below was NOT refreshed this run: bluegamma
+  // was unavailable and no primary print found (press only says swaps rose above 4.70%
+  // in recent weeks) — flag for next refresh.
   swap2yrNow: 4.58,
   swap2yrAsOf: "2026-09-25",
   // Current average 2-year fixed REMORTGAGE rate at ~70% LTV (the band that fits
@@ -345,11 +345,7 @@ export const POLICY_FACTORS = [
       "print — markets don't trade 26-27 Sep), down 4bps from 4.62% on 23 Sep, BELOW the in-app 10bp " +
       "alert threshold (see RATES.swap2yrNow) — but that print predates Trump's rejection and " +
       "Monday's oil jump, so it likely understates where the curve sits once Monday trades; treat it " +
-      "as a data lag, not a genuine de-escalation signal. Lender pricing: Moneyfacts' average 2yr/5yr " +
-      "fixes had no reliable fresher read this run — sources returned inconsistent figures (5.52% to " +
-      "5.9%+) that look partly contaminated by US mortgage-rate content — so the 16 Sep article's " +
-      "5.82% avg 5yr fixed ('highest since 8 Nov 2023') remains the last clean primary reading; flag " +
-      "for next refresh. RICS' August Residential Market Survey (published 7 Sep 2026) remains the " +
+      "as a data lag, not a genuine de-escalation signal. Lender pricing: Moneyfacts' average 2yr/5yr fixes hit 5.98%/6.00% on 5 Oct 2026 (2yr highest since mid-Dec 2023; 5yr first 6% in ~3 years), up from 5.77%/5.82% on 16 Sep, with NatWest, Santander, HSBC, Lloyds and TSB reported to have repriced up twice since early September as swaps rose above 4.70%. RICS' August Residential Market Survey (published 7 Sep 2026) remains the " +
       "latest — new buyer enquiries -19%, agreed sales -17%, price balance -28%, 12-month sales " +
       "outlook +6% (from +3% in July); the September survey is scheduled for 8 Oct 2026. The " +
       "Chancellor's Autumn Budget stays confirmed for Wed 28 Oct 2026; the one new (still " +
