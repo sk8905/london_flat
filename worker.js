@@ -2,9 +2,9 @@
 // worker.js — Cloudflare Worker entry for the Flat Forecaster
 // -----------------------------------------------------------------------------
 // The site is 99% static assets (served by the [assets] binding). This Worker
-// adds ONE small dynamic route — GET /api/rates — that fetches the live Bank of
-// England Bank Rate so the dashboard's "as of" data can refresh itself, while
-// every other request is served straight from the static assets.
+// adds two small dynamic routes — GET /api/rates (live Bank of England rates) and
+// GET /api/map-config (optional MapTiler key from the environment) — while every
+// other request is served straight from the static assets.
 //
 // Design notes:
 //   • The page renders fully from the curated snapshot in dataset.js FIRST and
@@ -47,6 +47,12 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     if (url.pathname === "/api/rates") return handleRates(request, ctx);
+    // Optional MapTiler basemap key (Cloudflare secret MAPTILER_KEY). It is a
+    // browser-side key — restrict it to this site's origin in the MapTiler console.
+    if (url.pathname === "/api/map-config") {
+      return new Response(JSON.stringify({ maptilerKey: (env && env.MAPTILER_KEY) || "" }),
+        { headers: { ...JSON_HEADERS, "cache-control": "no-store" } });
+    }
     if (!env || !env.ASSETS) return new Response("Not found", { status: 404 });
 
     const res = await env.ASSETS.fetch(request);

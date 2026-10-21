@@ -1,5 +1,5 @@
 // =============================================================================
-// charts.js  —  Tiny dependency-free SVG charts (line, dual-axis line, band, bar, scatter map, sparkline)
+// charts.js  —  Tiny dependency-free SVG charts (line, dual-axis line, band, scatter map)
 // -----------------------------------------------------------------------------
 // All charts render into a container as inline SVG with a viewBox, so they scale
 // fluidly. No external libraries — works offline and inside Zero Trust.
@@ -243,102 +243,13 @@ export function dualAxisLine(container, opts) {
 }
 
 // ---------------------------------------------------------------------------
-// Vertical bar chart. opts: { bars:[{label,value,color,sub}], yFormat, height,
-//                             baseline (default 0) }
-// ---------------------------------------------------------------------------
-export function barChart(container, opts) {
-  const W = chartW(container), H = opts.height || 300;
-  const m = { t: 24, r: 16, b: 56, l: 70 };
-  const iw = W - m.l - m.r, ih = H - m.t - m.b;
-  const svg = svgRoot(container, W, H);
-  yUnitLabel(svg, opts.yUnit);
-
-  const vals = opts.bars.map((b) => b.value);
-  const base = opts.baseline ?? 0;
-  const extra = opts.yRef != null ? [opts.yRef] : [];
-  if (opts.overlay && Array.isArray(opts.overlay.values)) extra.push(...opts.overlay.values.filter((v) => Number.isFinite(v)));
-  let yMin = Math.min(base, ...vals, ...extra), yMax = Math.max(base, ...vals, ...extra);
-  const ticks = niceTicks(yMin, yMax, 5);
-  yMin = ticks[0]; yMax = ticks[ticks.length - 1];
-  const yAt = (v) => m.t + ih - ((v - yMin) / (yMax - yMin)) * ih;
-  const yFormat = opts.yFormat || ((v) => v.toFixed(0));
-
-  ticks.forEach((t) => {
-    el("line", { x1: m.l, y1: yAt(t), x2: W - m.r, y2: yAt(t), class: "grid" }, svg);
-    const tx = el("text", { x: m.l - 8, y: yAt(t) + 4, class: "axis-y" }, svg);
-    tx.textContent = yFormat(t);
-  });
-
-  // optional reference line (e.g. total cash invested)
-  if (opts.yRef != null) {
-    el("line", { x1: m.l, y1: yAt(opts.yRef), x2: W - m.r, y2: yAt(opts.yRef), class: "ref-line" }, svg);
-    if (opts.yRefLabel) {
-      const rt = el("text", { x: m.l + 4, y: yAt(opts.yRef) - 5, class: "ref-label" }, svg);
-      rt.textContent = opts.yRefLabel;
-    }
-  }
-
-  const n = opts.bars.length;
-  const slot = iw / n;
-  const bw = Math.min(116, slot * 0.62);
-  // Thin x-labels so they never overlap: keep roughly one label per ~46px, and
-  // always show the last bar's label. Or, if `labelEvery` is set, label strictly
-  // every Nth bar (e.g. a monthly series labelled once a quarter).
-  const labelStep = Math.max(1, Math.round(46 / slot));
-  const labelEvery = opts.labelEvery || null;
-  // optional per-bar axis notches (e.g. a tick for every month)
-  if (opts.xTicks) {
-    const yb = yAt(base);
-    opts.bars.forEach((b, i) => {
-      const cx = m.l + slot * i + slot / 2;
-      el("line", { x1: cx, y1: yb, x2: cx, y2: yb + 5, stroke: "var(--muted)", "stroke-width": 1, opacity: 0.55 }, svg);
-    });
-  }
-  opts.bars.forEach((b, i) => {
-    const cx = m.l + slot * i + slot / 2;
-    const y0 = yAt(base), y1 = yAt(b.value);
-    el("rect", {
-      x: cx - bw / 2, y: Math.min(y0, y1), width: bw, height: Math.abs(y1 - y0),
-      rx: 4, fill: b.color || "#33566b",
-    }, svg);
-    if (!opts.hideValues) {
-      const vt = el("text", { x: cx, y: Math.min(y0, y1) - 6, class: "bar-value" }, svg);
-      vt.textContent = b.valueLabel || yFormat(b.value);
-    }
-    const showLabel = labelEvery ? (i % labelEvery === 0) : (i % labelStep === 0 || i === n - 1);
-    if (showLabel) {
-      const lt = el("text", { x: cx, y: H - 30, class: "bar-label" }, svg);
-      lt.textContent = b.label;
-    }
-    if (b.sub) {
-      const st = el("text", { x: cx, y: H - 14, class: "bar-sub" }, svg);
-      st.textContent = b.sub;
-    }
-  });
-
-  // optional overlay line across the bars (e.g. break-even vs selling now & investing)
-  if (opts.overlay && Array.isArray(opts.overlay.values) && opts.overlay.values.length === n) {
-    const ov = opts.overlay, col = ov.color || "#b07d2a";
-    const cxAt = (i) => m.l + slot * i + slot / 2;
-    const pts = ov.values.map((v, i) => `${cxAt(i)},${yAt(v)}`).join(" ");
-    el("polyline", { points: pts, fill: "none", stroke: col, "stroke-width": 2,
-      "stroke-dasharray": "5 4", "stroke-linejoin": "round" }, svg);
-    ov.values.forEach((v, i) => el("circle", { cx: cxAt(i), cy: yAt(v), r: 3, fill: col }, svg));
-    if (ov.label) {
-      const t = el("text", { x: cxAt(n - 1), y: yAt(ov.values[n - 1]) - 9, class: "overlay-label" }, svg);
-      t.setAttribute("text-anchor", "end");
-      t.textContent = ov.label;
-    }
-  }
-}
-
-
-// ---------------------------------------------------------------------------
-// Location map — real OpenStreetMap basemap (CARTO light raster tiles) with the
+// Location map — real OpenStreetMap basemap (OSM standard raster tiles; CARTO's
+// keyless basemaps now return "API key required") with the
 // sales overlaid as pins. No mapping library: tiles are plain <img> elements
 // positioned in a responsive % grid, markers are absolutely-positioned divs.
 // Needs network for the tile images; if they fail, the pins still show on the
-// map's background fill. opts.points: [{lat,lng,n,you,tip,plain,listing}]
+// map's background fill. opts.points: [{lat,lng,n,you,tip,plain,listing}];
+// opts.tiles: optional {url with {z}/{x}/{y}, attr} to swap in a keyed provider.
 // ---------------------------------------------------------------------------
 const lon2px = (lon, z) => ((lon + 180) / 360) * Math.pow(2, z) * 256;
 const lat2px = (lat, z) => {
@@ -374,6 +285,7 @@ export function scatterMap(container, opts) {
   container.appendChild(wrap);
 
   // tile layer
+  const tileUrl = (opts.tiles && opts.tiles.url) || "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
   const nTiles = Math.pow(2, z);
   const pct = (v, span) => (v / span) * 100 + "%";
   for (let tx = Math.floor(xMin / 256); tx <= Math.floor(xMax / 256); tx++) {
@@ -382,7 +294,7 @@ export function scatterMap(container, opts) {
       const wx = ((tx % nTiles) + nTiles) % nTiles;
       const img = document.createElement("img");
       img.className = "map-tile"; img.alt = ""; img.loading = "lazy";
-      img.src = `https://a.basemaps.cartocdn.com/light_all/${z}/${wx}/${ty}@2x.png`;
+      img.src = tileUrl.replace("{z}", z).replace("{x}", wx).replace("{y}", ty);
       img.style.left = pct(tx * 256 - xMin, Wpx);
       img.style.top = pct(ty * 256 - yMin, Hpx);
       img.style.width = pct(256, Wpx);
@@ -393,7 +305,7 @@ export function scatterMap(container, opts) {
 
   const attr = document.createElement("div");
   attr.className = "map-attr";
-  attr.innerHTML = '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> · <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>';
+  attr.innerHTML = (opts.tiles && opts.tiles.attr) || '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors';
   wrap.appendChild(attr);
   const compass = document.createElement("div");
   compass.className = "map-compass2"; compass.textContent = "N ↑";
@@ -463,22 +375,4 @@ function drawLegend(container, items) {
     legend.appendChild(span);
   });
   container.appendChild(legend);
-}
-
-// ---------------------------------------------------------------------------
-// Sparkline — a tiny axis-free trend line for inline KPI use. `values` run
-// oldest → newest; the last point gets a dot. Colour signals good/bad direction.
-// ---------------------------------------------------------------------------
-export function sparkline(container, values, opts = {}) {
-  const W = opts.width || 62, H = opts.height || 18, pad = 2;
-  const vals = (values || []).filter(Number.isFinite);
-  const svg = svgRoot(container, W, H);
-  if (vals.length < 2) return;
-  const min = Math.min(...vals), max = Math.max(...vals), span = max - min;
-  const x = (i) => pad + (i / (vals.length - 1)) * (W - 2 * pad);
-  const y = (v) => H - pad - (span < 1e-9 ? 0.5 : (v - min) / span) * (H - 2 * pad);
-  const color = opts.color || "#6f9c86";
-  const d = vals.map((v, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
-  el("path", { d, fill: "none", stroke: color, "stroke-width": 1.5, "stroke-linecap": "round", "stroke-linejoin": "round" }, svg);
-  el("circle", { cx: x(vals.length - 1).toFixed(1), cy: y(vals[vals.length - 1]).toFixed(1), r: 2.1, fill: color }, svg);
 }

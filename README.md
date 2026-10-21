@@ -15,23 +15,24 @@ material** throughout. Every assumption is editable live via sliders.
 
 ## What it does
 
-Three headline sections, plus the sell-timing tools:
+Three tabs:
 
-1. **Local market — within 2 km of N1 7TX** (`Local market` tab). Recent listings and
-   completed sales inside a **strict 2 km radius**: new listings per month, days on market,
-   sold-vs-asking (£ and %), £/m², a map of sales + live listings, the latest **HPI** figures,
-   the nearby **new-build pipeline**, and **RICS / estate-agent** price & activity forecasts.
-2. **Our finances** (`Our finances` tab). Everything paid (deposit, SDLT, buying costs,
-   interest and principal to date), what the mortgage is costing, and the **recoup-all-cash
-   break-even** — the sale price at which net proceeds return every pound sunk in, shown as a
-   waterfall, plus the projected net-proceeds-by-window chart.
-3. **Rent vs buy** (`Rent vs buy` tab). Own this flat or rent the equivalent nearby, using
-   **real local rental data**: the monthly economic cost of owning vs the rent, and total
-   wealth over a chosen horizon (keep owning vs sell, invest the proceeds and rent).
+1. **Market** — actual sold and for-sale flats inside a **strict 2 km radius**, focused on
+   **£/m²** (sold vs asking medians, quarterly sold £/m² vs asking now) and **price achieved
+   vs asking** (per-sale diverging bars, median discount, share sold below asking), with
+   comp filters, a sortable sold / for-sale table and a map.
+2. **Forecast** — the best-window sell-timing signal, editable assumptions (scenario, growth
+   by year, remortgage rate, value now, Bear/Base/Bull presets), projected net proceeds with
+   a bear→bull band, the quarter-by-quarter exit to end-2028, price & time-to-sell vs
+   mortgage rates, and analyst forecasts.
+3. **Finances** — a **calculator**: pick a calculation from the drop-down and edit any input
+   (defaults come from your figures and the forecast assumptions). Calculations: sell — net
+   proceeds & profit; break-even sale price; what we've paid so far; remortgage payment;
+   mortgage overpayment; keep owning vs sell & rent; let vs sell; Stamp Duty on a purchase.
+   "Your figures" (purchase, mortgage, selling costs) feed every calculation and save to the
+   browser.
 
-Retained tools: the **When to sell** timing signal (weighted blend of five factors across four
-windows), **Sell vs let** (keep-and-let vs sell, full UK tax), the **map**, the
-**notifications** bell, and the **live rate badges**. Editable **Inputs** drive everything.
+The **notifications** bell and the **live rate badges** sit in the header.
 
 Local-market data is a curated snapshot from HM Land Registry, the EPC register and local
 listing/planning records, designed to be refreshed from the **Homedata** feed (see
@@ -58,7 +59,7 @@ Weights and factor logic live in `assets/data/dataset.js` and `assets/js/model.j
 london_flat/
 ├── index.html                 # single page
 ├── _headers                   # security + caching headers (Cloudflare Pages)
-├── worker.js                  # Cloudflare Worker entry — serves assets + /api/rates
+├── worker.js                  # Cloudflare Worker entry — serves assets + /api/rates + /api/map-config
 ├── wrangler.jsonc             # Worker + static-assets deploy config
 ├── assets/
 │   ├── css/styles.css
@@ -111,6 +112,15 @@ Every push to the connected branch redeploys automatically.
 
 > **Cloudflare Pages** is an equally good target (`Workers & Pages → Create → Pages`) if your
 > dashboard offers it. Either works — the site is the same static files.
+
+### Map tiles (optional MapTiler key)
+
+The map uses keyless **OpenStreetMap** tiles by default (CARTO's keyless basemaps now return
+"API key required"). For a cleaner basemap, add a free **MapTiler** key: create one at
+[cloud.maptiler.com](https://cloud.maptiler.com/account/keys/), restrict it to this site's
+origin, then in Cloudflare → *Workers & Pages → londonflat → Settings → Variables and Secrets*
+add a secret `MAPTILER_KEY` (or `npx wrangler secret put MAPTILER_KEY`). The Worker serves it
+at `/api/map-config` and the map switches over on the next load — nothing is committed.
 
 ### Live rates (Worker-native)
 
