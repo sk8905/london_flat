@@ -10,8 +10,8 @@
 // =============================================================================
 
 export const META = {
-  asOf: "2026-10-21",
-  build: "v124 · 2026-10-21", // bump on each change so the footer confirms the live build
+  asOf: "2026-10-22",
+  build: "v125 · 2026-10-22", // bump on each change so the footer confirms the live build
 };
 
 // -----------------------------------------------------------------------------
@@ -164,8 +164,10 @@ export const RATES = {
   // since 8 Nov 2023" for the 5yr) as the last clean reading; flag for next refresh.
   // Refreshed 21 Oct 2026 from bluegamma.io 2yr SONIA swap page: 4.66% at the 20 Oct close
   // (+3bp on the day, 4.58% on 16 Oct); +8bp vs the prior stored 4.58% — below the 10bp alert.
-  swap2yrNow: 4.66,
-  swap2yrAsOf: "2026-10-20",
+  // 22 Oct 2026: bluegamma.io 2yr SONIA swap page, 4.64% at the 21 Oct close (-2bp on the day, -2bp vs
+  // the stored 4.66%) — below the 10bp alert.
+  swap2yrNow: 4.64,
+  swap2yrAsOf: "2026-10-21",
   // Current average 2-year fixed REMORTGAGE rate at ~70% LTV (the band that fits
   // this flat). Live-refreshed from Bank of England quoted mortgage rates,
   // interpolated between the published 60% and 75% LTV series. Snapshot fallback:
@@ -189,7 +191,7 @@ export const RATES = {
   // the Worker also supplies the prior day's figure for the live series.
   baseRatePrev: 3.75,
   remortgage70Prev: 4.79,
-  swap2yrPrev: 4.58,
+  swap2yrPrev: 4.66,
 };
 
 // -----------------------------------------------------------------------------
