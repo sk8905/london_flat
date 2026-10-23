@@ -10,8 +10,8 @@
 // =============================================================================
 
 export const META = {
-  asOf: "2026-10-21",
-  build: "v124 · 2026-10-21", // bump on each change so the footer confirms the live build
+  asOf: "2026-10-23",
+  build: "v125 · 2026-10-23", // bump on each change so the footer confirms the live build
 };
 
 // -----------------------------------------------------------------------------
@@ -83,9 +83,11 @@ export const SELLING_COSTS = {
 // flat-specific signal but keep London softness visible.
 // -----------------------------------------------------------------------------
 export const PRICE_HISTORY = {
-  source: "hpiJul2026",
+  source: "hpiAug2026",
   note:
-    "Islington average price £673k (Mar 2025, revised) → £678k (Mar 2026, +0.7%) → £670k " +
+    "LATEST (UK HPI Aug 2026, published 21 Oct 2026, HM Land Registry): Islington all-property average " +
+    "£654,286, -8.6% YoY (down from £675k in July); Islington FLATS £542,886, -9.1% YoY; London £554,430, " +
+    "-2.2% YoY (official bulletin). Earlier path: Islington average price £673k (Mar 2025, revised) → £678k (Mar 2026, +0.7%) → £670k " +
     "(May 2026) → £673k (June 2026) → £675k (July 2026, latest UK HPI release, ONS Islington " +
     "dashboard last updated 16 Sep 2026), as the Middle East conflict's swap-rate shock pushed " +
     "mortgage costs up over spring/summer 2026 and cooled the market fast, before prices steadied " +
@@ -126,6 +128,9 @@ export const PRICE_HISTORY = {
     // for London is still -3.3%, so treat the raw-ratio jump as mix/noise, not a genuine
     // month-on-month recovery.
     { date: "2026-07", islington: 100.2, london: 99.6 },
+    // 2026-08 (UK HPI, published 21 Oct 2026; Land Registry linked-data API): Islington
+    // £654,286 / £673,478 base = 97.1; London £554,430 / £552,073 base = 100.4.
+    { date: "2026-08", islington: 97.1, london: 100.4 },
   ],
 };
 
@@ -164,8 +169,9 @@ export const RATES = {
   // since 8 Nov 2023" for the 5yr) as the last clean reading; flag for next refresh.
   // Refreshed 21 Oct 2026 from bluegamma.io 2yr SONIA swap page: 4.66% at the 20 Oct close
   // (+3bp on the day, 4.58% on 16 Oct); +8bp vs the prior stored 4.58% — below the 10bp alert.
-  swap2yrNow: 4.66,
-  swap2yrAsOf: "2026-10-20",
+  // Refreshed 23 Oct 2026 from bluegamma.io: 4.64% at the 21 Oct close (-2bp vs prior stored 4.66%, below the 10bp alert).
+  swap2yrNow: 4.64,
+  swap2yrAsOf: "2026-10-21",
   // Current average 2-year fixed REMORTGAGE rate at ~70% LTV (the band that fits
   // this flat). Live-refreshed from Bank of England quoted mortgage rates,
   // interpolated between the published 60% and 75% LTV series. Snapshot fallback:
@@ -189,7 +195,7 @@ export const RATES = {
   // the Worker also supplies the prior day's figure for the live series.
   baseRatePrev: 3.75,
   remortgage70Prev: 4.79,
-  swap2yrPrev: 4.58,
+  swap2yrPrev: 4.66,
 };
 
 // -----------------------------------------------------------------------------
